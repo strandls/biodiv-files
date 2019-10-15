@@ -1,0 +1,20 @@
+target/
+build/
+.directory
+.project
+.classpath
+.settings/
+.svn/
+bin/
+# Intellij
+*.ipr
+*.iml
+.idea
+out/
+.DS_Store
+/bootstrap
+/dependencies.xml
+.java-version
+WebContent/META-INF/MANIFEST.MF
+.vscode
+deployOnVenus.sh

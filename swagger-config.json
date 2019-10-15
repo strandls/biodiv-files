@@ -1,0 +1,14 @@
+{
+  "modelPackage": "com.strandls.file.model",
+  "apiPackage": "com.strandls.file.api",
+  "invokerPackage": "com.strandls.file",
+  "groupId": "biodiv",
+  "artifactId": "file-upload-client",
+  "artifactVersion": "1.0.0-SNAPSHOT",
+  "fullJavaUtil": true,
+  "dateLibrary": "legacy",
+  "library": "jersey1",
+  "developerName": "Vilay Kandi",
+  "developerEmail": "vilayk@strandls.com",
+  "java8": true
+}
