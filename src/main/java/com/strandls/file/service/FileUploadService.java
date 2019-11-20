@@ -138,7 +138,13 @@ public class FileUploadService {
 
 	private void generateMultipleFiles(String filePath, String dirPath, long fileId, String extension) throws IOException {
 		File file = new File(filePath);
+		
 		BufferedImage image = ImageIO.read(file);
+		
+		// If unable to parse the image file
+		if(image == null) {
+			return;
+		}
 		
 		// Generate the gallery image.
 		generateGallaryImage(image, dirPath, fileId, extension);
