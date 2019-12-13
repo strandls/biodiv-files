@@ -41,7 +41,7 @@
 		<!-- end Build plugins -->
 
 		<!-- Project property -->
-		<warName>file</warName>
+		<warName>files-api</warName>
 		<srcDir>src/main/webapp</srcDir>
 		<base-path>/file/api</base-path>
 		<location>com.strandls.file</location>
