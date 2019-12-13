@@ -15,10 +15,13 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.google.inject.Inject;
 import com.strandls.file.ApiContants;
+import com.strandls.file.model.FileMetaData;
+import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.service.FileDownloadService;
 
 import io.swagger.annotations.Api;
@@ -30,6 +33,20 @@ public class FileDownloadApi {
 
 	@Inject
 	private FileDownloadService fileDownloadService;
+	
+	@Path("ping")
+	@GET
+	@ApiOperation(value = "Dummy URI to print FileMetaData model", response = FileMetaData.class)
+	public Response ping() {
+		return Response.status(Status.OK).entity(new FileMetaData()).build();
+	}
+	
+	@Path("model")
+	@GET
+	@ApiOperation(value = "Dummy URI to print FileUploadModel model", response = FileUploadModel.class)
+	public Response model() {
+		return Response.status(Status.OK).entity(new FileUploadModel()).build();
+	}
 
 	@Path("custom/{hashKey}/{fileName}")
 	@GET
