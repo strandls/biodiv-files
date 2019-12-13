@@ -9,8 +9,10 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -29,7 +31,7 @@ public class FileDownloadApi {
 	@Inject
 	private FileDownloadService fileDownloadService;
 
-	@Path("{hashKey}/{fileName}")
+	@Path("custom/{hashKey}/{fileName}")
 	@GET
 	@Consumes(MediaType.TEXT_PLAIN)
 	@ApiOperation(value = "Get the image by url", response = StreamingOutput.class)
@@ -48,5 +50,20 @@ public class FileDownloadApi {
 			@PathParam("fileName") String fileName, @PathParam("width") int outputWidth,
 			@PathParam("height") int outputHeight) throws IOException {
 		return fileDownloadService.getCustomSizeFile(hashKey, fileName, outputWidth, outputHeight);
+	}
+
+	@Path("{hashKey}/{fileName}")
+	@GET
+	@Consumes(MediaType.TEXT_PLAIN)
+	@ApiOperation(value = "Get the image resource with custom height & width by url", response = StreamingOutput.class)
+	public Response getImageResource(@Context HttpServletRequest request, @PathParam("hashKey") String hashKey,
+			@PathParam("fileName") String fileName, @QueryParam("w") Integer width, @QueryParam("h") Integer height,
+			@DefaultValue("webp") @QueryParam("fm") String format) throws IOException {
+		String hAccept = request.getHeader(HttpHeaders.ACCEPT);
+		String userRequestedFormat = 
+				hAccept.contains("webp") && 
+				format.equalsIgnoreCase("webp") ? 
+						"webp" : !format.equalsIgnoreCase("webp") ? format : "jpg";
+		return fileDownloadService.getImageResource(hashKey, fileName, width, height, userRequestedFormat);
 	}
 }

@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 
 import javax.imageio.ImageIO;
@@ -41,6 +42,21 @@ public class FileUploadService {
 	@Inject
 	private FileMetaDataService fileMetaDataService;
 	
+	String storageBasePath = null;
+	
+	public FileUploadService() {
+		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+
+		Properties properties = new Properties();
+		try {
+			properties.load(in);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
+	}
+	
 	public List<FileUploadModel> uploadMultipleFiles(FormDataBodyPart body, HttpServletRequest request, String hashKey) throws IOException {
 
 		List<FileUploadModel> mutipleFiles = new ArrayList<FileUploadModel>();
@@ -65,7 +81,7 @@ public class FileUploadService {
         String fileExtension = Files.getFileExtension(fileName);
         
         String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
-        String dirPath = ApiContants.ROOT_PATH + File.separatorChar + folderName; 
+        String dirPath = storageBasePath + File.separatorChar + folderName; 
         
         String probeContentType = java.nio.file.Files.probeContentType(Paths.get(fileName));
         

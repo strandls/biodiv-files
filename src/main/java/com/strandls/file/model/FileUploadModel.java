@@ -4,7 +4,7 @@ public class FileUploadModel {
 
 	private String hashKey;
 	private String fileName;
-	private Boolean isUploaded;
+	private boolean isUploaded;
 	private String type;
 	private String uri;
 	private String error;

@@ -160,6 +160,11 @@
 			<version>${com.fasterxml.jackson}</version>
 		</dependency>
 		<dependency>
+		    <groupId>io.github.biezhi</groupId>
+		    <artifactId>webp-io</artifactId>
+		    <version>0.0.5</version>
+		</dependency>		
+		<dependency>
 			<groupId>io.swagger</groupId>
 			<artifactId>swagger-annotations</artifactId>
 			<version>${swagger.version}</version>
