@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.strandls.biodiv</groupId>
-	<artifactId>file-upload</artifactId>
+	<artifactId>files</artifactId>
 	<packaging>war</packaging>
 	<version>0.0.1-SNAPSHOT</version>
 
-	<name>file-upload Maven Webapp</name>
+	<name>Biodiv Files API</name>
 	<!-- FIXME change it to the project's web site -->
 	<url>http://maven.apache.org</url>
 
@@ -158,11 +158,6 @@
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
 			<version>${com.fasterxml.jackson}</version>
-		</dependency>
-		<dependency>
-		    <groupId>io.github.biezhi</groupId>
-		    <artifactId>webp-io</artifactId>
-		    <version>0.0.5</version>
 		</dependency>		
 		<dependency>
 			<groupId>io.swagger</groupId>

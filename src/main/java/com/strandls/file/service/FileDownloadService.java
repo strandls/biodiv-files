@@ -10,12 +10,14 @@ import java.io.OutputStream;
 import java.util.Properties;
 
 import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.google.common.io.Files;
 import com.strandls.file.ApiContants;
+import com.strandls.file.util.ImageUtil;
 
 import io.github.biezhi.webp.WebpIO;
 
@@ -115,7 +117,7 @@ public class FileDownloadService {
 		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation)).build();
 	}
 
-	public Response getImageResource(String hashKey, String fileName, Integer width, Integer height, String format) throws IOException {
+	public Response getImageResource(HttpServletRequest req, String hashKey, String fileName, Integer width, Integer height, String format) throws Exception {
 
 		String dirPath = storageBasePath + File.separatorChar + hashKey + File.separatorChar;
 		String fileLocation = dirPath + fileName;
@@ -147,7 +149,7 @@ public class FileDownloadService {
 		File webpOutput = null;
 		if (isWebp) {
 			webpOutput = new File(dirPath + fileNameWithoutExtension + "_" + imgWidth + "*" + imgHeight + "." + format);
-			WebpIO.create().toWEBP(output, webpOutput);
+			ImageUtil.toWEBP(req, output, webpOutput);
 		}
 		InputStream in = new FileInputStream(isWebp ? webpOutput : output);
 		StreamingOutput sout;
