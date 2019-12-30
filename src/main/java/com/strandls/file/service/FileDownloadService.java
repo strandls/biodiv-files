@@ -19,8 +19,6 @@ import com.google.common.io.Files;
 import com.strandls.file.ApiContants;
 import com.strandls.file.util.ImageUtil;
 
-import io.github.biezhi.webp.WebpIO;
-
 public class FileDownloadService {
 	
 	String storageBasePath = null;
