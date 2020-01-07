@@ -40,6 +40,13 @@ public class FileDownloadApi {
 	public Response ping() {
 		return Response.status(Status.OK).entity(new FileMetaData()).build();
 	}
+	
+	@Path("model")
+	@GET
+	@ApiOperation(value = "Dummy URI to print FileUploadModel model", response = FileUploadModel.class)
+	public Response model() {
+		return Response.status(Status.OK).entity(new FileUploadModel()).build();
+	}
 
 	@Path("{directory}/{hashKey}/{fileName}")
 	@GET
