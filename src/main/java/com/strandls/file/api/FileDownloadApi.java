@@ -27,7 +27,7 @@ import com.strandls.file.service.FileDownloadService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
-@Path(ApiContants.DOWNLOAD)
+@Path(ApiContants.GET)
 @Api("Download")
 public class FileDownloadApi {
 

@@ -57,13 +57,13 @@ public class FileUploadService {
 		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
 	}
 	
-	public List<FileUploadModel> uploadMultipleFiles(FormDataBodyPart body, HttpServletRequest request, String hashKey) throws IOException {
+	public List<FileUploadModel> uploadMultipleFiles(String directory, FormDataBodyPart body, HttpServletRequest request, String hashKey) throws IOException {
 
 		List<FileUploadModel> mutipleFiles = new ArrayList<FileUploadModel>();
 		for(BodyPart part : body.getParent().getBodyParts()) {
 			InputStream is = part.getEntityAs(InputStream.class);
 			ContentDisposition contentDisposition = part.getContentDisposition();
-			FileUploadModel file = uploadFile(is, (FormDataContentDisposition) contentDisposition, request, hashKey);
+			FileUploadModel file = uploadFile(directory, is, (FormDataContentDisposition) contentDisposition, request, hashKey);
 			if(hashKey == null || "".equals(hashKey))
 				hashKey = file.getHashKey();
 			mutipleFiles.add(file);
@@ -71,7 +71,7 @@ public class FileUploadService {
 		return mutipleFiles;
 	}
 
-    public FileUploadModel uploadFile(InputStream inputStream, FormDataContentDisposition fileDetails,
+    public FileUploadModel uploadFile(String directory, InputStream inputStream, FormDataContentDisposition fileDetails,
             HttpServletRequest request, String hashKey) throws IOException {
     	
     	FileUploadModel fileUploadModel = new FileUploadModel();
@@ -81,7 +81,7 @@ public class FileUploadService {
         String fileExtension = Files.getFileExtension(fileName);
         
         String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
-        String dirPath = storageBasePath + File.separatorChar + folderName; 
+        String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName; 
         
         String probeContentType = java.nio.file.Files.probeContentType(Paths.get(fileName));
         
