@@ -115,9 +115,9 @@ public class FileDownloadService {
 		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation)).build();
 	}
 
-	public Response getImageResource(HttpServletRequest req, String hashKey, String fileName, Integer width, Integer height, String format) throws Exception {
+	public Response getImageResource(HttpServletRequest req, String directory, String hashKey, String fileName, Integer width, Integer height, String format) throws Exception {
 
-		String dirPath = storageBasePath + File.separatorChar + hashKey + File.separatorChar;
+		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + hashKey + File.separatorChar;
 		String fileLocation = dirPath + fileName;
 		File file = new File(fileLocation);
 		boolean isWebp = format.equalsIgnoreCase("webp");

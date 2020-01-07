@@ -69,11 +69,11 @@ public class FileDownloadApi {
 		return fileDownloadService.getCustomSizeFile(hashKey, fileName, outputWidth, outputHeight);
 	}
 
-	@Path("{hashKey}/{fileName}")
+	@Path("{directory}/{hashKey}/{fileName}")
 	@GET
 	@Consumes(MediaType.TEXT_PLAIN)
 	@ApiOperation(value = "Get the image resource with custom height & width by url", response = StreamingOutput.class)
-	public Response getImageResource(@Context HttpServletRequest request, @PathParam("hashKey") String hashKey,
+	public Response getImageResource(@Context HttpServletRequest request, @PathParam("directory") String directory, @PathParam("hashKey") String hashKey,
 			@PathParam("fileName") String fileName, @QueryParam("w") Integer width, @QueryParam("h") Integer height,
 			@DefaultValue("webp") @QueryParam("fm") String format) throws Exception {
 		String hAccept = request.getHeader(HttpHeaders.ACCEPT);
@@ -81,6 +81,6 @@ public class FileDownloadApi {
 				hAccept.contains("webp") && 
 				format.equalsIgnoreCase("webp") ? 
 						"webp" : !format.equalsIgnoreCase("webp") ? format : "jpg";
-		return fileDownloadService.getImageResource(request, hashKey, fileName, width, height, userRequestedFormat);
+		return fileDownloadService.getImageResource(request, directory, hashKey, fileName, width, height, userRequestedFormat);
 	}
 }
