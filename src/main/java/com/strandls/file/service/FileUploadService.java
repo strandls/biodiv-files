@@ -119,12 +119,9 @@ public class FileUploadService {
         
         if (uploaded) {
         	String resultPath = folderName + File.separatorChar + generatedFileName;
-            String uri = request.getContextPath() + request.getServletPath() +
-            		File.separatorChar + ApiContants.DOWNLOAD +
-            		File.separatorChar + resultPath ;
             fileUploadModel.setHashKey(folderName);
             fileUploadModel.setFileName(generatedFileName);
-            fileUploadModel.setUri(uri);
+            fileUploadModel.setUri(resultPath);
             return fileUploadModel;
         } else {
         	fileUploadModel.setError("enable to upload image");
