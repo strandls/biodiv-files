@@ -119,7 +119,7 @@ public class FileUploadService {
         	generateMultipleFiles(filePath, dirPath, fileMetaData.getId(),  fileExtension);
         
         if (uploaded) {
-        	String resultPath = folderName + File.separatorChar + generatedFileName;
+        	String resultPath = File.separatorChar + folderName + File.separatorChar + generatedFileName;
             fileUploadModel.setHashKey(folderName);
             fileUploadModel.setFileName(generatedFileName);
             fileUploadModel.setUri(resultPath);
