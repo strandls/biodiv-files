@@ -8,7 +8,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -17,9 +16,10 @@ import java.util.UUID;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.tika.Tika;
+
 import com.google.common.io.Files;
 import com.google.inject.Inject;
-import com.strandls.file.ApiContants;
 import com.strandls.file.model.FileMetaData;
 import com.strandls.file.model.FileUploadModel;
 import com.sun.jersey.core.header.ContentDisposition;
@@ -83,9 +83,10 @@ public class FileUploadService {
         String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
         String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName; 
         
-        String probeContentType = java.nio.file.Files.probeContentType(Paths.get(fileName));
+        Tika tika = new Tika();
+        String probeContentType = tika.detect(fileName);
         
-        if(!probeContentType.startsWith("image") && !probeContentType.startsWith("audio") && !probeContentType.startsWith("video")) {
+        if(probeContentType == null || !probeContentType.startsWith("image") && !probeContentType.startsWith("audio") && !probeContentType.startsWith("video")) {
         	fileUploadModel.setError("Invalid file type. Allowed types are image, audio and video");
         	return fileUploadModel;
         } else {

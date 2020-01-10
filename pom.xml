@@ -51,12 +51,12 @@
 		<repository>
 			<id>central</id>
 			<name>jfrog-releases</name>
-			<url>https://venus.strandls.com/artifactory/libs-release-local</url>
+			<url>http://pamba.strandls.com/artifactory/libs-release-local</url>
 		</repository>
 		<snapshotRepository>
 			<id>snapshots</id>
 			<name>jfrog-snapshots</name>
-			<url>https://venus.strandls.com/artifactory/libs-snapshot-local</url>
+			<url>http://pamba.strandls.com/artifactory/libs-snapshot-local</url>
 		</snapshotRepository>
 	</distributionManagement>
 
@@ -67,13 +67,13 @@
 			</snapshots>
 			<id>central</id>
 			<name>libs-release</name>
-			<url>https://venus.strandls.com/artifactory/libs-release</url>
+			<url>http://pamba.strandls.com/artifactory/libs-release</url>
 		</repository>
 		<repository>
 			<snapshots />
 			<id>snapshots</id>
 			<name>libs-snapshot</name>
-			<url>https://venus.strandls.com/artifactory/libs-snapshot</url>
+			<url>http://pamba.strandls.com/artifactory/libs-snapshot</url>
 		</repository>
 	</repositories>
 
@@ -129,6 +129,13 @@
 			<artifactId>hibernate-core</artifactId>
 			<version>${hibernate-core.version}</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.tika/tika-core -->
+		<dependency>
+		    <groupId>org.apache.tika</groupId>
+		    <artifactId>tika-core</artifactId>
+		    <version>1.23</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.pac4j</groupId>
 			<artifactId>pac4j-core</artifactId>
@@ -265,7 +272,7 @@
 							<locations>
 								${location}
 							</locations>
-							<schemes>http,https</schemes>
+							<schemes>http</schemes>
 							<host>localhost:8080</host>
 							<basePath>${base-path}</basePath>
 							<info>
