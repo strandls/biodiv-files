@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.Response.Status;
 
 import com.google.common.io.Files;
 import com.strandls.file.ApiContants;
@@ -33,7 +34,7 @@ public class FileDownloadService {
 			e.printStackTrace();
 		}
 		
-		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
+		storageBasePath = properties.getProperty("storage_dir", "/home/sethuraman/apps/biodiv-image");
 	}
 
 	public Response getFile(String hashKey, String fileName, String imageVariation) throws FileNotFoundException {
@@ -120,6 +121,9 @@ public class FileDownloadService {
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + hashKey + File.separatorChar;
 		String fileLocation = dirPath + fileName;
 		File file = new File(fileLocation);
+		if (!file.exists()) {
+			return Response.status(Status.NOT_FOUND).entity("File not found").build();
+		}
 		boolean isWebp = format.equalsIgnoreCase("webp");
 		BufferedImage image = ImageIO.read(file);
 		int imgHeight = image.getHeight();
