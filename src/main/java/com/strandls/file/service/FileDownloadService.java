@@ -34,7 +34,7 @@ public class FileDownloadService {
 			e.printStackTrace();
 		}
 		
-		storageBasePath = properties.getProperty("storage_dir", "/home/sethuraman/apps/biodiv-image");
+		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
 	}
 
 	public Response getFile(String hashKey, String fileName, String imageVariation) throws FileNotFoundException {
