@@ -48,7 +48,7 @@ public class FileDownloadApi {
 		return Response.status(Status.OK).entity(new FileUploadModel()).build();
 	}
 
-	@Path("{directory}/{fileName}")
+	@Path("{directory:.+}/{fileName}")
 	@GET
 	@Consumes(MediaType.TEXT_PLAIN)
 	@ApiOperation(value = "Get the image resource with custom height & width by url", response = StreamingOutput.class)
