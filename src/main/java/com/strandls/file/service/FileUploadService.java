@@ -224,7 +224,7 @@ public class FileUploadService {
 
 	public static BufferedImage getScaledImage(BufferedImage image, int w, int h) {
 		Image scaledImage = image.getScaledInstance(w, h, Image.SCALE_SMOOTH);
-		BufferedImage resizedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+		BufferedImage resizedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2 = resizedImage.createGraphics();
 		g2.drawImage(scaledImage, 0, 0, null);
 		g2.dispose();
