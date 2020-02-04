@@ -62,4 +62,12 @@ public class FileDownloadApi {
 						"webp" : !format.equalsIgnoreCase("webp") ? format : "jpg";
 		return fileDownloadService.getImageResource(request, directory, fileName, width, height, userRequestedFormat);
 	}
+	
+	@Path("audio/{directory:.+}/{fileName}")
+	@GET
+	public Response getAudioResource(@PathParam("directory") String directory,
+			@PathParam("fileName") String fileName) throws Exception {
+		System.out.println(directory + " " + fileName);
+		return fileDownloadService.getAudioResource(directory, fileName);
+	}
 }

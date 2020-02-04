@@ -13,8 +13,8 @@ import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 
 import com.google.common.io.Files;
 import com.strandls.file.ApiContants;
@@ -143,7 +143,9 @@ public class FileDownloadService {
 			}
 		}
 		image = image.getSubimage(0, 0, imgWidth, imgHeight);
+		int[] rgb = image.getRGB(0, 0, newWidth, newHeight, null, 0, newWidth);
 		BufferedImage outputImage = FileUploadService.getScaledImage(image, width == null ? newWidth : width, height == null ? newHeight : height);
+		outputImage.setRGB(0, 0, newWidth, newHeight, rgb, 0, newWidth);
 		String extension = Files.getFileExtension(fileName);
 		String fileNameWithoutExtension = Files.getNameWithoutExtension(fileName);
 		File output = new File(dirPath + fileNameWithoutExtension + "_" + imgWidth + "*" + imgHeight + "." + format);
@@ -169,6 +171,31 @@ public class FileDownloadService {
 			}
 		};
 		return Response.ok(sout).type("image/" + format).build();
+	}
+	
+	public Response getAudioResource(String directory, String fileName) throws Exception {
+		String inputFile = storageBasePath + File.separatorChar + directory + File.separatorChar + fileName;
+		File file = new File(inputFile);
+		if (!file.exists()) {
+			return Response.status(Status.NOT_FOUND).entity("File not found").build();
+		}
+		InputStream in = new FileInputStream(inputFile);
+		StreamingOutput sout;
+		sout = new StreamingOutput() {
+			
+			@Override
+			public void write(OutputStream output) throws IOException, WebApplicationException {
+				byte[] buf = new byte[8192];
+				int c;
+				while ((c = in.read(buf, 0, buf.length)) > 0) {
+					output.write(buf, 0, c);
+					output.flush();
+				}
+				in.close();
+				output.close();				
+			}
+		};
+		return Response.ok(sout).type("audio/mpeg").build();
 	}
 
 }
