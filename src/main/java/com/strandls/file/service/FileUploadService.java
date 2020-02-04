@@ -224,7 +224,16 @@ public class FileUploadService {
 
 	public static BufferedImage getScaledImage(BufferedImage image, int w, int h) {
 		Image scaledImage = image.getScaledInstance(w, h, Image.SCALE_SMOOTH);
-		BufferedImage resizedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage resizedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g2 = resizedImage.createGraphics();
+		g2.drawImage(scaledImage, 0, 0, null);
+		g2.dispose();
+		return resizedImage;
+	}
+
+	public static BufferedImage getScaledImage(BufferedImage image, int w, int h, int rgbType) {
+		Image scaledImage = image.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+		BufferedImage resizedImage = new BufferedImage(w, h, rgbType);
 		Graphics2D g2 = resizedImage.createGraphics();
 		g2.drawImage(scaledImage, 0, 0, null);
 		g2.dispose();
