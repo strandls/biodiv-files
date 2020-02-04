@@ -143,9 +143,7 @@ public class FileDownloadService {
 			}
 		}
 		image = image.getSubimage(0, 0, imgWidth, imgHeight);
-		int[] rgb = image.getRGB(0, 0, imgWidth, imgHeight, null, 0, imgWidth);
 		BufferedImage outputImage = FileUploadService.getScaledImage(image, width == null ? newWidth : width, height == null ? newHeight : height);
-		outputImage.setRGB(0, 0, imgWidth, imgHeight, rgb, 0, imgWidth);
 		String extension = Files.getFileExtension(fileName);
 		String fileNameWithoutExtension = Files.getNameWithoutExtension(fileName);
 		File output = new File(dirPath + fileNameWithoutExtension + "_" + imgWidth + "*" + imgHeight + "." + format);
