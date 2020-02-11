@@ -16,8 +16,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.tika.Tika;
+
 import com.google.common.io.Files;
 import com.strandls.file.ApiContants;
+import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil;
 
 public class FileDownloadService {
@@ -61,7 +64,7 @@ public class FileDownloadService {
 				out.close();
 			}
 		};
-		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation)).build();
+		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation)).cacheControl(AppUtil.getCacheControl()).build();
 	}
 
 	public Response getCustomSizeFile(String hashKey, String fileName, int outputWidth, int outputHeight)
@@ -113,7 +116,7 @@ public class FileDownloadService {
 				out.close();
 			}
 		};
-		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation)).build();
+		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation)).cacheControl(AppUtil.getCacheControl()).build();
 	}
 
 	public Response getImageResource(HttpServletRequest req, String directory, String fileName, Integer width, Integer height, String format) throws Exception {
@@ -124,6 +127,9 @@ public class FileDownloadService {
 		if (!file.exists()) {
 			return Response.status(Status.NOT_FOUND).entity("File not found").build();
 		}
+		
+		Tika tika = new Tika(); 
+		String contentType = tika.detect(fileLocation);
 		boolean isWebp = format.equalsIgnoreCase("webp");
 		BufferedImage image = ImageIO.read(file);
 		int imgHeight = image.getHeight();
@@ -172,7 +178,7 @@ public class FileDownloadService {
 				out.close();
 			}
 		};
-		return Response.ok(sout).type("image/" + format).build();
+		return Response.ok(sout).type(isWebp ? "image/webp" : contentType).cacheControl(AppUtil.getCacheControl()).build();
 	}
 	
 	public Response getAudioResource(String directory, String fileName) throws Exception {
@@ -197,7 +203,7 @@ public class FileDownloadService {
 				output.close();				
 			}
 		};
-		return Response.ok(sout).type("audio/mpeg").build();
+		return Response.ok(sout).type("audio/mpeg").cacheControl(AppUtil.getCacheControl()).build();
 	}
 
 }
