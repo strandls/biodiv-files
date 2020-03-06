@@ -55,6 +55,10 @@ public class FileDownloadApi {
 	public Response getImageResource(@Context HttpServletRequest request, @PathParam("directory") String directory,
 			@PathParam("fileName") String fileName, @QueryParam("w") Integer width, @QueryParam("h") Integer height,
 			@DefaultValue("webp") @QueryParam("fm") String format) throws Exception {
+		
+		if (directory.contains("..") || fileName.contains("..")) {
+			return Response.status(Status.NOT_ACCEPTABLE).build();
+		}
 		String hAccept = request.getHeader(HttpHeaders.ACCEPT);
 		String userRequestedFormat = 
 				hAccept.contains("webp") && 
@@ -67,7 +71,10 @@ public class FileDownloadApi {
 	@GET
 	public Response getAudioResource(@PathParam("directory") String directory,
 			@PathParam("fileName") String fileName) throws Exception {
-		System.out.println(directory + " " + fileName);
+		
+		if (directory.contains("..") || fileName.contains("..")) {
+			return Response.status(Status.NOT_ACCEPTABLE).build();
+		}
 		return fileDownloadService.getAudioResource(directory, fileName);
 	}
 }
