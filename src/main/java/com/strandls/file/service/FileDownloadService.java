@@ -1,4 +1,4 @@
-	package com.strandls.file.service;
+package com.strandls.file.service;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -25,9 +25,9 @@ import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil;
 
 public class FileDownloadService {
-	
+
 	String storageBasePath = null;
-	
+
 	public FileDownloadService() {
 		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
 
@@ -37,7 +37,7 @@ public class FileDownloadService {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
 	}
 
@@ -65,7 +65,8 @@ public class FileDownloadService {
 				out.close();
 			}
 		};
-		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation)).cacheControl(AppUtil.getCacheControl()).build();
+		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation))
+				.cacheControl(AppUtil.getCacheControl()).build();
 	}
 
 	public Response getCustomSizeFile(String hashKey, String fileName, int outputWidth, int outputHeight)
@@ -117,10 +118,12 @@ public class FileDownloadService {
 				out.close();
 			}
 		};
-		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation)).cacheControl(AppUtil.getCacheControl()).build();
+		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation))
+				.cacheControl(AppUtil.getCacheControl()).build();
 	}
 
-	public Response getImageResource(HttpServletRequest req, String directory, String fileName, Integer width, Integer height, String format) throws Exception {
+	public Response getImageResource(HttpServletRequest req, String directory, String fileName, Integer width,
+			Integer height, String format) throws Exception {
 
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
 		String fileLocation = dirPath + fileName;
@@ -128,8 +131,8 @@ public class FileDownloadService {
 		if (!file.exists()) {
 			return Response.status(Status.NOT_FOUND).entity("File not found").build();
 		}
-		
-		Tika tika = new Tika(); 
+
+		Tika tika = new Tika();
 		String contentType = tika.detect(fileLocation);
 		boolean isWebp = format.equalsIgnoreCase("webp");
 		BufferedImage image = ImageIO.read(file);
@@ -141,7 +144,7 @@ public class FileDownloadService {
 			if (imgHeight > height) {
 				newHeight = height;
 				newWidth = (height * imgWidth) / imgHeight;
-			}			
+			}
 		}
 		if (width != null) {
 			if (imgWidth > width) {
@@ -151,9 +154,7 @@ public class FileDownloadService {
 		}
 		image = image.getSubimage(0, 0, imgWidth, imgHeight);
 		String extension = Files.getFileExtension(fileName);
-		BufferedImage outputImage = FileUploadService.getScaledImage(
-				image, 
-				width == null ? newWidth : width, 
+		BufferedImage outputImage = FileUploadService.getScaledImage(image, width == null ? newWidth : width,
 				height == null ? newHeight : height,
 				extension.equalsIgnoreCase("png") ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
 		String fileNameWithoutExtension = Files.getNameWithoutExtension(fileName);
@@ -179,19 +180,22 @@ public class FileDownloadService {
 				out.close();
 			}
 		};
-		return Response.ok(sout).type(isWebp ? "image/webp" : contentType).cacheControl(AppUtil.getCacheControl()).build();
+		return Response.ok(sout).type(isWebp ? "image/webp" : contentType).cacheControl(AppUtil.getCacheControl())
+				.build();
 	}
-	
-	public Response getAudioResource(String directory, String fileName) throws Exception {
+
+	public Response getRawResource(String directory, String fileName) throws Exception {
 		String inputFile = storageBasePath + File.separatorChar + directory + File.separatorChar + fileName;
 		File file = new File(inputFile);
 		if (!file.exists()) {
 			return Response.status(Status.NOT_FOUND).entity("File not found").build();
 		}
 		InputStream in = new FileInputStream(inputFile);
+		Tika tika = new Tika();
+		String contentType = tika.detect(inputFile);
 		StreamingOutput sout;
 		sout = new StreamingOutput() {
-			
+
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
 				byte[] buf = new byte[8192];
@@ -201,10 +205,10 @@ public class FileDownloadService {
 					output.flush();
 				}
 				in.close();
-				output.close();				
+				output.close();
 			}
 		};
-		return Response.ok(sout).type("audio/mpeg").cacheControl(AppUtil.getCacheControl()).build();
+		return Response.ok(sout).type(contentType).cacheControl(AppUtil.getCacheControl()).build();
 	}
 
 }

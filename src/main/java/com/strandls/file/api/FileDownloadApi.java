@@ -67,14 +67,14 @@ public class FileDownloadApi {
 		return fileDownloadService.getImageResource(request, directory, fileName, width, height, userRequestedFormat);
 	}
 	
-	@Path("audio/{directory:.+}/{fileName}")
+	@Path("raw/{directory:.+}/{fileName}")
 	@GET
-	public Response getAudioResource(@PathParam("directory") String directory,
+	public Response getRawResource(@PathParam("directory") String directory,
 			@PathParam("fileName") String fileName) throws Exception {
 		
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 		}
-		return fileDownloadService.getAudioResource(directory, fileName);
+		return fileDownloadService.getRawResource(directory, fileName);
 	}
 }
