@@ -11,4 +11,5 @@ public class ApiContants {
 			"apps" + File.separatorChar + "biodiv-image";
 	
 	public static final String ORIGINAL = "original";
+	public static final String DOWNLOAD = "download";
 }

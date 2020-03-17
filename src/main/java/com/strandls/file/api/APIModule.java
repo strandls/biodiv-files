@@ -9,5 +9,6 @@ public class APIModule extends AbstractModule {
 	protected void configure() {
 		bind(FileUploadApi.class).in(Scopes.SINGLETON);
 		bind(FileDownloadApi.class).in(Scopes.SINGLETON);
+		bind(FileDownloadOthers.class).in(Scopes.SINGLETON);
 	}
 }

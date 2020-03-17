@@ -8,5 +8,6 @@ public class ServiceModule extends AbstractModule{
 	@Override
 	protected void configure() {
 		bind(FileMetaDataService.class).in(Scopes.SINGLETON);
+		bind(FileAccessService.class).in(Scopes.SINGLETON);
 	}
 }

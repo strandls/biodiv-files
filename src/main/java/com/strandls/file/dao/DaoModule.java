@@ -8,5 +8,6 @@ public class DaoModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(FileMetaDataDao.class).in(Scopes.SINGLETON);
+		bind(FileAccessDao.class).in(Scopes.SINGLETON);
 	}
 }
