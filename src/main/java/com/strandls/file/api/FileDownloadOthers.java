@@ -10,7 +10,6 @@ import javax.ws.rs.core.Response.Status;
 import com.google.inject.Inject;
 import com.strandls.file.ApiContants;
 import com.strandls.file.model.FileDownloadCredentials;
-import com.strandls.file.model.FileDownloads;
 import com.strandls.file.service.FileAccessService;
 
 @Path(ApiContants.DOWNLOAD)

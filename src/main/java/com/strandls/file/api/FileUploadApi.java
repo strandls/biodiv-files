@@ -23,7 +23,6 @@ import com.strandls.file.ApiContants;
 import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.service.FileUploadService;
 import com.strandls.file.util.ImageUtil;
-import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataParam;
