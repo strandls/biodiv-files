@@ -160,6 +160,8 @@ public class FileDownloadService {
 		String fileNameWithoutExtension = Files.getNameWithoutExtension(fileName);
 		File output = new File(dirPath + fileNameWithoutExtension + "_" + imgWidth + "*" + imgHeight + "." + format);
 		ImageIO.write(outputImage, extension, output);
+                image.flush();
+                image = null;
 		outputImage.flush();
 		outputImage = null;
 		File webpOutput = null;
