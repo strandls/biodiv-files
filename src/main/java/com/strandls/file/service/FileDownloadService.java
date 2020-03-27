@@ -12,7 +12,6 @@ import java.util.Properties;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
@@ -160,10 +159,6 @@ public class FileDownloadService {
 		String fileNameWithoutExtension = Files.getNameWithoutExtension(fileName);
 		File output = new File(dirPath + fileNameWithoutExtension + "_" + imgWidth + "*" + imgHeight + "." + format);
 		ImageIO.write(outputImage, extension, output);
-                image.flush();
-                image = null;
-		outputImage.flush();
-		outputImage = null;
 		File webpOutput = null;
 		if (isWebp) {
 			webpOutput = new File(dirPath + fileNameWithoutExtension + "_" + imgWidth + "*" + imgHeight + "." + format);
