@@ -12,4 +12,5 @@ public class ApiContants {
 	
 	public static final String ORIGINAL = "original";
 	public static final String DOWNLOAD = "download";
+	public static final String DWCFILE = "/dwcfile";
 }
