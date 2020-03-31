@@ -61,13 +61,15 @@ public class FileAccessService {
 			Query<FileDownloadCredentials> query = session.createQuery(sql);
 			query.setParameter("key", accessKey);
 			credentials = query.getSingleResult();
+			
+			saveDownload(credentials);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		return credentials;
 	}
 
-	public FileDownloads saveDownload(FileDownloadCredentials credentials, String fileName) {
+	private FileDownloads saveDownload(FileDownloadCredentials credentials) {
 		FileDownloads download = new FileDownloads();
 		try {
 			download.setUserId(credentials);
