@@ -60,21 +60,19 @@ public class FileAccessService {
 		try {
 			Query<FileDownloadCredentials> query = session.createQuery(sql);
 			query.setParameter("key", accessKey);
-			credentials = query.getSingleResult();
-			
-			saveDownload(credentials);
+			credentials = query.getSingleResult();			
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		return credentials;
 	}
 
-	private FileDownloads saveDownload(FileDownloadCredentials credentials) {
+	private FileDownloads saveDownload(FileDownloadCredentials credentials, String fileName) {
 		FileDownloads download = new FileDownloads();
 		try {
 			download.setUserId(credentials);
 			download.setDate(new Date());
-			download.setFileName("");
+			download.setFileName(fileName);
 			download = fileAccessDao.save(download);
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -93,6 +91,7 @@ public class FileAccessService {
 			throw new FileNotFoundException("Folder is empty");
 		}
 		File inputFile = file.get().toFile();
+		saveDownload(credentials, inputFile.getName());
 		InputStream in = new FileInputStream(inputFile);
 		Tika tika = new Tika();
 		String contentType = tika.detect(inputFile);
