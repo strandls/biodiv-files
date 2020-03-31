@@ -1,5 +1,8 @@
 package com.strandls.file.api;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -8,6 +11,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -22,6 +26,7 @@ import com.google.inject.Inject;
 import com.strandls.file.ApiContants;
 import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.service.FileUploadService;
+import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataBodyPart;
@@ -29,6 +34,8 @@ import com.sun.jersey.multipart.FormDataParam;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 @Path(ApiContants.UPLOAD)
 @Api("Upload")
@@ -80,4 +87,30 @@ public class FileUploadApi {
 		FileUploadModel uploadedFile = fileUploadService.uploadFile(directory, inputStream, fileDetails, request, hashKey);
 		return Response.ok(uploadedFile).build();
 	}
+	
+	@GET
+	@Path(ApiContants.DWCFILE)
+	@Produces(MediaType.TEXT_PLAIN)
+
+	@ApiOperation(value = "Mapping of Document", notes = "Returns Document", response = Response.class)
+	@ApiResponses(value = { @ApiResponse(code = 500, message = "ERROR", response = String.class) })
+
+	public Response createDwcFILE() throws Exception {
+		// folder where script is placed
+		String filePath= "/app/configurations/scripts/";
+		// folder where the new file will be placed
+		String csvFilePath = "/app/data/biodiv/data-archive/gbif/" + AppUtil.getDatePrefix() + "dWC.csv";
+		String script = "gbif_dwc.sh";
+		try {
+			Process process = Runtime.getRuntime().exec("sh " + script+" "+csvFilePath, null, new File(filePath));
+			int exitCode = process.waitFor();
+			if(exitCode == 0)
+				return Response.status(Status.OK).build();
+		}
+		catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+			return Response.status(Status.BAD_REQUEST).build(); 
+	}
+	
 }
