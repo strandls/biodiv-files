@@ -72,7 +72,7 @@ public class FileAccessService {
 		try {
 			download.setUserId(credentials);
 			download.setDate(new Date());
-			download.setFileName(fileName);
+			download.setFileName("");
 			download = fileAccessDao.save(download);
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -81,7 +81,8 @@ public class FileAccessService {
 	}
 
 	public Response downloadFile(FileDownloadCredentials credentials) throws IOException {
-		String dirPath = storageBasePath + File.separatorChar + "Data-Exported" + File.separatorChar;
+		String dirPath = storageBasePath + File.separatorChar + "data-archive" + File.separatorChar + "gbif"
+				+ File.separatorChar;
 
 		Path path = Paths.get(dirPath);
 		Optional<Path> file = Files.list(path).filter(f -> !Files.isDirectory(f))
