@@ -2,6 +2,7 @@ package com.strandls.file;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -11,9 +12,13 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.ws.rs.core.Application;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
@@ -24,16 +29,35 @@ public class ApplicationConfig extends Application {
 	/**
 	 * 
 	 */
+	
+	private static final Logger logger = LoggerFactory.getLogger(ApplicationConfig.class);
+	
 	public ApplicationConfig() {
-		BeanConfig beanConfig = new BeanConfig();
-		beanConfig.setVersion("1.0");
-		beanConfig.setTitle("File Module MicroServices");
-		beanConfig.setSchemes(new String[] { "http" });
-		beanConfig.setHost("localhost:8080");
-		beanConfig.setBasePath("/file/api");
-		beanConfig.setResourcePackage("com.strandls.file");
-		beanConfig.setScan(true);
-		beanConfig.setPrettyPrint(true);
+		try {
+			InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+
+			Properties properties = new Properties();
+			try {
+				properties.load(in);
+			} catch (IOException e) {
+				logger.error(e.getMessage());
+			}
+
+			BeanConfig beanConfig = new BeanConfig();
+			beanConfig.setVersion(properties.getProperty("version"));
+			beanConfig.setTitle(properties.getProperty("title"));
+			beanConfig.setSchemes(properties.getProperty("schemes").split(","));
+			beanConfig.setHost(properties.getProperty("host"));
+			beanConfig.setBasePath(properties.getProperty("basePath"));
+			beanConfig.setResourcePackage(properties.getProperty("resourcePackage"));
+			beanConfig.setPrettyPrint(new Boolean(properties.getProperty("prettyPrint")));
+			beanConfig.setScan(new Boolean(properties.getProperty("scan")));
+
+			in.close();
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 	}
 
 	
