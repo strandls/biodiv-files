@@ -43,7 +43,7 @@
 		<!-- Project property -->
 		<warName>files-api</warName>
 		<srcDir>src/main/webapp</srcDir>
-		<base-path>/file/api</base-path>
+		<base-path>/files-api/api</base-path>
 		<location>com.strandls.file</location>
 	</properties>
 
