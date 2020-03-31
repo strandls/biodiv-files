@@ -105,12 +105,12 @@ public class FileUploadApi {
 			Process process = Runtime.getRuntime().exec("sh " + script+" "+csvFilePath, null, new File(filePath));
 			int exitCode = process.waitFor();
 			if(exitCode == 0)
-				return Response.status(Status.OK).build();
+				return Response.status(Status.OK).entity("File Creation Successful!").build();
 		}
 		catch (Exception e) {
-			System.out.println(e.getMessage());
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build(); 
 		}
-			return Response.status(Status.BAD_REQUEST).build(); 
+		return Response.status(Status.BAD_REQUEST).entity("File Creation Failed").build(); 
 	}
 	
 }
