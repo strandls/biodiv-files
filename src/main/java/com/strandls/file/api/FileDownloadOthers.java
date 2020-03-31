@@ -23,7 +23,7 @@ public class FileDownloadOthers {
 		try {
 			FileDownloadCredentials credentials = accessService.getCredentials(accessKey);
 
-			return accessService.downloadFile(credentials);
+			return Response.status(Status.OK).entity(credentials).build();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();

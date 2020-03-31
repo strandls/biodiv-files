@@ -56,7 +56,7 @@ public class FileAccessService {
 	public FileDownloadCredentials getCredentials(String accessKey) {
 		Session session = factory.openSession();
 		FileDownloadCredentials credentials = null;
-		String sql = "from FileDownloadCredentials f where f.accessKey = :key and f.isDeleted = false";
+		String sql = "from FileDownloadCredentials f where f.accessKey = :key";
 		try {
 			Query<FileDownloadCredentials> query = session.createQuery(sql);
 			query.setParameter("key", accessKey);
