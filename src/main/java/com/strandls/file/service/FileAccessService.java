@@ -6,13 +6,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Calendar;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Properties;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.tika.Tika;
@@ -40,7 +43,7 @@ public class FileAccessService {
 			e.printStackTrace();
 		}
 
-		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
+		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv");
 	}
 
 	@Inject
@@ -65,7 +68,6 @@ public class FileAccessService {
 	}
 
 	public FileDownloads saveDownload(FileDownloadCredentials credentials, String fileName) {
-		Session session = factory.openSession();
 		FileDownloads download = new FileDownloads();
 		try {
 			download.setUserId(credentials);
@@ -78,14 +80,16 @@ public class FileAccessService {
 		return download;
 	}
 
-	public Response downloadFile(FileDownloadCredentials credentials, String fileName) throws FileNotFoundException {
-		String inputFile = storageBasePath + File.separatorChar + "Data-Exported" + File.separatorChar + fileName;
+	public Response downloadFile(FileDownloadCredentials credentials) throws IOException {
+		String dirPath = storageBasePath + File.separatorChar + "Data-Exported" + File.separatorChar;
 
-		File file = new File(inputFile);
-		if (!file.exists()) {
-			return Response.status(Status.NOT_FOUND).entity("File not found").build();
+		Path path = Paths.get(dirPath);
+		Optional<Path> file = Files.list(path).filter(f -> !Files.isDirectory(f))
+				.max(Comparator.comparingLong(f -> f.toFile().lastModified()));
+		if (!file.isPresent()) {
+			throw new FileNotFoundException("Folder is empty");
 		}
-		FileDownloads download = saveDownload(credentials, fileName);
+		File inputFile = file.get().toFile();
 		InputStream in = new FileInputStream(inputFile);
 		Tika tika = new Tika();
 		String contentType = tika.detect(inputFile);
@@ -105,7 +109,7 @@ public class FileAccessService {
 			}
 		};
 		return Response.ok(sout).type(contentType)
-				.header("Content-Disposition", "attachment; filename=\"" + fileName + "\"")
+				.header("Content-Disposition", "attachment; filename=\"" + inputFile.getName() + "\"")
 				.cacheControl(AppUtil.getCacheControl()).build();
 	}
 

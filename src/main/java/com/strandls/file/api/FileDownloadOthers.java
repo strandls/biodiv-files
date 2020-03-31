@@ -2,7 +2,6 @@ package com.strandls.file.api;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -18,13 +17,13 @@ public class FileDownloadOthers {
 	@Inject
 	private FileAccessService accessService;
 
-	@Path("file/{fileName}")
+	@Path("file")
 	@GET
-	public Response getFile(@PathParam("fileName") String fileName, @QueryParam("accessKey") String accessKey) {
+	public Response getFile(@QueryParam("accessKey") String accessKey) {
 		try {
 			FileDownloadCredentials credentials = accessService.getCredentials(accessKey);
 
-			return accessService.downloadFile(credentials, fileName);
+			return accessService.downloadFile(credentials);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
