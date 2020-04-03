@@ -193,7 +193,7 @@ public class FileDownloadService {
 		}
 		
 		String contentType = URLConnection.guessContentTypeFromName(file.getName());
-		String command = AppUtil.generateCommand(file.getName(), width, height, format, null);
+		String command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, format, null);
 		File resizedFile = AppUtil.getResizedImage(command);
 		InputStream in = new FileInputStream(resizedFile);
 		StreamingOutput sout;
