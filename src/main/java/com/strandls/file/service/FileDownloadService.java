@@ -125,11 +125,11 @@ public class FileDownloadService {
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
 		String fileLocation = dirPath + fileName;
 		File file = AppUtil.findFile(fileLocation);
-		
+
 		if (file == null) {
 			return Response.status(Status.NOT_FOUND).entity("File not found").build();
 		}
-		
+
 		String contentType = URLConnection.guessContentTypeFromName(fileLocation);
 		boolean isWebp = format.equalsIgnoreCase("webp");
 		BufferedImage image = ImageIO.read(file);
@@ -180,22 +180,22 @@ public class FileDownloadService {
 		return Response.ok(sout).type(isWebp ? "image/webp" : contentType).cacheControl(AppUtil.getCacheControl())
 				.build();
 	}
-	
-	public Response getImage(HttpServletRequest req, String directory, String fileName, Integer width,
-			Integer height, String format) throws Exception {
+
+	public Response getImage(HttpServletRequest req, String directory, String fileName, Integer width, Integer height,
+			String format) throws Exception {
 
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
 		String fileLocation = dirPath + fileName;
 		File file = AppUtil.findFile(fileLocation);
-		
+
 		if (file == null) {
 			return Response.status(Status.NOT_FOUND).entity("File not found").build();
 		}
-		
-		String contentType = URLConnection.guessContentTypeFromName(file.getName());
+
 		String command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, format, null);
 		boolean fileGenerated = AppUtil.generateFile(command);
-		File resizedFile = AppUtil.getResizedImage(fileGenerated ? command: fileLocation);
+		File resizedFile = AppUtil.getResizedImage(fileGenerated ? command : fileLocation);
+		String contentType = URLConnection.guessContentTypeFromName(resizedFile.getName());
 		InputStream in = new FileInputStream(resizedFile);
 		StreamingOutput sout;
 		sout = new StreamingOutput() {
@@ -211,8 +211,8 @@ public class FileDownloadService {
 				out.close();
 			}
 		};
-		return Response.ok(sout).type(contentType).cacheControl(AppUtil.getCacheControl())
-				.build();
+		return Response.ok(sout).type(format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
+				.cacheControl(AppUtil.getCacheControl()).build();
 	}
 
 	public Response getRawResource(String directory, String fileName) throws Exception {
