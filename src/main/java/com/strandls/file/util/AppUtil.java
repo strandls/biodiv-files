@@ -63,8 +63,6 @@ public class AppUtil {
 
 	public static String generateCommand(String filePath, Integer w, Integer h, String format, Integer quality) {
 		List<String> commands = new ArrayList<>();
-		commands.add("/bin/sh");
-		commands.add("-c");
 		StringBuilder command = new StringBuilder();
 		String fileName = filePath.substring(0, filePath.lastIndexOf("."));
 		command.append("convert").append(" ").append(filePath).append(" ").append("-auto-orient").append(" ")
