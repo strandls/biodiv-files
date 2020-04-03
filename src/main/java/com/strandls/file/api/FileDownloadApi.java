@@ -63,14 +63,16 @@ public class FileDownloadApi {
 		return fileDownloadService.getImageResource(request, directory, fileName, width, height, userRequestedFormat);
 	}
 	
-	@Path("test/{directory:.+}/{fileName}")
+	@Path("crop/{directory:.+}/{fileName}")
 	@GET
 	@Consumes(MediaType.TEXT_PLAIN)
 	@ApiOperation(value = "Get the image resource with custom height & width by url", response = StreamingOutput.class)
 	public Response getImage(@Context HttpServletRequest request, @PathParam("directory") String directory,
 			@PathParam("fileName") String fileName, @QueryParam("w") Integer width, @QueryParam("h") Integer height,
 			@DefaultValue("webp") @QueryParam("fm") String format) throws Exception {
-		
+		if (height == null && width == null) {
+			return Response.status(Status.BAD_REQUEST).entity("Height or Width required").build();			
+		}
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 		}
