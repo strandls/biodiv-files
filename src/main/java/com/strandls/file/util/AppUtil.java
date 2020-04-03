@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.CacheControl;
 
@@ -24,6 +25,23 @@ public class AppUtil {
 		SimpleDateFormat sdf = new SimpleDateFormat("MMM");
 		return prefix.append(sdf.format(new Date())).append("_").append(new GregorianCalendar().get(Calendar.YEAR))
 				.append("_").toString();
+	}
+	
+	public static boolean generateFile(String command) {
+		Process p = null;
+		boolean isFileGenerated = false;
+		try {
+			String[] commands = {
+					"/bin/sh",
+					"-c",
+					command
+			};
+			p = Runtime.getRuntime().exec(commands);
+			isFileGenerated = p.waitFor(5, TimeUnit.SECONDS);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return isFileGenerated;
 	}
 	
 	public static File findFile(String filePath) throws IOException {
