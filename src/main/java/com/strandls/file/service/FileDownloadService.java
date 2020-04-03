@@ -180,6 +180,39 @@ public class FileDownloadService {
 		return Response.ok(sout).type(isWebp ? "image/webp" : contentType).cacheControl(AppUtil.getCacheControl())
 				.build();
 	}
+	
+	public Response getImage(HttpServletRequest req, String directory, String fileName, Integer width,
+			Integer height, String format) throws Exception {
+
+		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
+		String fileLocation = dirPath + fileName;
+		File file = AppUtil.findFile(fileLocation);
+		
+		if (file == null) {
+			return Response.status(Status.NOT_FOUND).entity("File not found").build();
+		}
+		
+		String contentType = URLConnection.guessContentTypeFromName(file.getName());
+		String command = AppUtil.generateCommand(file.getName(), width, height, format, null);
+		File resizedFile = AppUtil.getResizedImage(command);
+		InputStream in = new FileInputStream(resizedFile);
+		StreamingOutput sout;
+		sout = new StreamingOutput() {
+			@Override
+			public void write(OutputStream out) throws IOException, WebApplicationException {
+				byte[] buf = new byte[8192];
+				int c;
+				while ((c = in.read(buf, 0, buf.length)) > 0) {
+					out.write(buf, 0, c);
+					out.flush();
+				}
+				in.close();
+				out.close();
+			}
+		};
+		return Response.ok(sout).type(contentType).cacheControl(AppUtil.getCacheControl())
+				.build();
+	}
 
 	public Response getRawResource(String directory, String fileName) throws Exception {
 		String inputFile = storageBasePath + File.separatorChar + directory + File.separatorChar + fileName;

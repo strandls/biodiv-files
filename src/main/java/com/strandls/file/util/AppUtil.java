@@ -33,7 +33,8 @@ public class AppUtil {
 		String fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);
 		File file = new File(dir);
 		for (File f: file.listFiles()) {
-			if (!f.isDirectory() && f.getCanonicalFile().getName().startsWith(fileName) && 
+			String name = f.getCanonicalFile().getName();
+			if (!f.isDirectory() && name.substring(0, name.indexOf(".")).equals(fileName) && 
 					f.getCanonicalFile().getName().endsWith(fileExtension.toLowerCase())) {
 				expectedFile = f;
 				break;
@@ -42,7 +43,7 @@ public class AppUtil {
 		return expectedFile;
 	}
 
-	public static String[] generateCommand(String filePath, Integer w, Integer h, String format, Integer quality) {
+	public static String generateCommand(String filePath, Integer w, Integer h, String format, Integer quality) {
 		List<String> commands = new ArrayList<>();
 		commands.add("/bin/sh");
 		commands.add("-c");
@@ -62,9 +63,20 @@ public class AppUtil {
 			command.append("-quality").append(" ").append(quality == null ? 90: quality);
 		}
 		command.append(" ");
-		command.append(fileName).append("_").append("").append(".").append(format);
+		command.append(fileName).append("_").append(w).append("x").append(h).append(".").append(format);
 		commands.add(command.toString());
-		return commands.toArray(new String[0]);
+		return String.join(" ", commands);
+	}
+	
+	public static File getResizedImage(String command) {
+		File resizedImage = null; 
+		try {
+			String[] commands = command.split(" ");
+			resizedImage = new File(commands[commands.length - 1]);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return resizedImage;
 	}
 
 }
