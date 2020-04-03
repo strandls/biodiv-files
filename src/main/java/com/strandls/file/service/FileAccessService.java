@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,7 +19,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
-import org.apache.tika.Tika;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -93,8 +93,7 @@ public class FileAccessService {
 		File inputFile = file.get().toFile();
 		saveDownload(credentials, inputFile.getName());
 		InputStream in = new FileInputStream(inputFile);
-		Tika tika = new Tika();
-		String contentType = tika.detect(inputFile);
+		String contentType = URLConnection.guessContentTypeFromStream(in);
 		StreamingOutput sout;
 		sout = new StreamingOutput() {
 

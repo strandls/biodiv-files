@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLConnection;
 import java.util.Properties;
 
 import javax.imageio.ImageIO;
@@ -15,8 +16,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
-
-import org.apache.tika.Tika;
 
 import com.google.common.io.Files;
 import com.strandls.file.ApiContants;
@@ -49,7 +48,6 @@ public class FileDownloadService {
 
 		String fileLocation = storageBasePath + File.separatorChar + hashKey + File.separatorChar + fileName;
 
-		@SuppressWarnings("resource")
 		InputStream in = new FileInputStream(new File(fileLocation));
 		StreamingOutput sout;
 		sout = new StreamingOutput() {
@@ -126,13 +124,13 @@ public class FileDownloadService {
 
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
 		String fileLocation = dirPath + fileName;
-		File file = new File(fileLocation);
-		if (!file.exists()) {
+		File file = AppUtil.findFile(fileLocation);
+		
+		if (file == null) {
 			return Response.status(Status.NOT_FOUND).entity("File not found").build();
 		}
-
-		Tika tika = new Tika();
-		String contentType = tika.detect(fileLocation);
+		
+		String contentType = URLConnection.guessContentTypeFromName(fileLocation);
 		boolean isWebp = format.equalsIgnoreCase("webp");
 		BufferedImage image = ImageIO.read(file);
 		int imgHeight = image.getHeight();
@@ -185,13 +183,12 @@ public class FileDownloadService {
 
 	public Response getRawResource(String directory, String fileName) throws Exception {
 		String inputFile = storageBasePath + File.separatorChar + directory + File.separatorChar + fileName;
-		File file = new File(inputFile);
-		if (!file.exists()) {
+		File file = AppUtil.findFile(inputFile);
+		if (file == null) {
 			return Response.status(Status.NOT_FOUND).entity("File not found").build();
 		}
 		InputStream in = new FileInputStream(inputFile);
-		Tika tika = new Tika();
-		String contentType = tika.detect(inputFile);
+		String contentType = URLConnection.guessContentTypeFromName(inputFile);
 		StreamingOutput sout;
 		sout = new StreamingOutput() {
 
