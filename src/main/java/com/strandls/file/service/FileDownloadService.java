@@ -124,9 +124,9 @@ public class FileDownloadService {
 
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
 		String fileLocation = dirPath + fileName;
-		File file = new File(fileLocation);
-
-		if (!file.exists()) {
+//		File file = new File(fileLocation);
+		File file = AppUtil.findFile(fileLocation);
+		if (file == null) {
 			return Response.status(Status.NOT_FOUND).entity("File not found").build();
 		}
 
@@ -217,7 +217,8 @@ public class FileDownloadService {
 
 	public Response getRawResource(String directory, String fileName) throws Exception {
 		String inputFile = storageBasePath + File.separatorChar + directory + File.separatorChar + fileName;
-		File file = new File(inputFile);
+//		File file = new File(inputFile);
+		File file = AppUtil.findFile(inputFile);
 		if (!file.exists()) {
 			return Response.status(Status.NOT_FOUND).entity("File not found").build();
 		}
