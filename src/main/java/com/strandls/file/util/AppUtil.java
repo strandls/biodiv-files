@@ -52,8 +52,9 @@ public class AppUtil {
 		File file = new File(dir);
 		for (File f: file.listFiles()) {
 			String name = f.getCanonicalFile().getName();
+			String ext = name.substring(name.indexOf(".") + 1);
 			if (!f.isDirectory() && name.substring(0, name.indexOf(".")).equals(fileName) && 
-					name.endsWith(fileExtension.toLowerCase())) {
+					ext.toLowerCase().equalsIgnoreCase(fileExtension.toLowerCase())) {
 				expectedFile = f;
 				break;
 			}
