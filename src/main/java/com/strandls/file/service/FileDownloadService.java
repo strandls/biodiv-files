@@ -17,12 +17,17 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.io.Files;
 import com.strandls.file.ApiContants;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil;
 
 public class FileDownloadService {
+
+	private static final Logger logger = LoggerFactory.getLogger(FileDownloadService.class);
 
 	String storageBasePath = null;
 
@@ -183,63 +188,79 @@ public class FileDownloadService {
 
 	public Response getImage(HttpServletRequest req, String directory, String fileName, Integer width, Integer height,
 			String format) throws Exception {
+		try {
 
-		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
-		String fileLocation = dirPath + fileName;
-		File file = AppUtil.findFile(fileLocation);
+			String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
+			String fileLocation = dirPath + fileName;
+			File file = AppUtil.findFile(fileLocation);
 
-		if (file == null) {
-			return Response.status(Status.NOT_FOUND).entity("File not found").build();
-		}
-
-		String command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, format, null);
-		boolean fileGenerated = AppUtil.generateFile(command);
-		File resizedFile = AppUtil.getResizedImage(fileGenerated ? command : fileLocation);
-		String contentType = URLConnection.guessContentTypeFromName(resizedFile.getName());
-		InputStream in = new FileInputStream(resizedFile);
-		StreamingOutput sout;
-		sout = new StreamingOutput() {
-			@Override
-			public void write(OutputStream out) throws IOException, WebApplicationException {
-				byte[] buf = new byte[8192];
-				int c;
-				while ((c = in.read(buf, 0, buf.length)) > 0) {
-					out.write(buf, 0, c);
-					out.flush();
-				}
-				in.close();
-				out.close();
+			if (file == null) {
+				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
-		};
-		return Response.ok(sout).type(format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
-				.cacheControl(AppUtil.getCacheControl()).build();
+
+			String command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, format, null);
+			boolean fileGenerated = AppUtil.generateFile(command);
+			File resizedFile = AppUtil.getResizedImage(fileGenerated ? command : fileLocation);
+			String contentType = URLConnection.guessContentTypeFromName(resizedFile.getName());
+			InputStream in = new FileInputStream(resizedFile);
+			StreamingOutput sout;
+			sout = new StreamingOutput() {
+				@Override
+				public void write(OutputStream out) throws IOException, WebApplicationException {
+					byte[] buf = new byte[8192];
+					int c;
+					while ((c = in.read(buf, 0, buf.length)) > 0) {
+						out.write(buf, 0, c);
+						out.flush();
+					}
+					in.close();
+					out.close();
+				}
+			};
+			return Response.ok(sout).type(format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
+					.cacheControl(AppUtil.getCacheControl()).build();
+		} catch (FileNotFoundException fe) {
+			logger.error(fe.getMessage());
+			return Response.status(Status.NOT_FOUND).build();
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
 	}
 
 	public Response getRawResource(String directory, String fileName) throws Exception {
-		String inputFile = storageBasePath + File.separatorChar + directory + File.separatorChar + fileName;
+		try {
+			String inputFile = storageBasePath + File.separatorChar + directory + File.separatorChar + fileName;
 //		File file = new File(inputFile);
-		File file = AppUtil.findFile(inputFile);
-		if (!file.exists()) {
-			return Response.status(Status.NOT_FOUND).entity("File not found").build();
-		}
-		InputStream in = new FileInputStream(inputFile);
-		String contentType = URLConnection.guessContentTypeFromName(inputFile);
-		StreamingOutput sout;
-		sout = new StreamingOutput() {
-
-			@Override
-			public void write(OutputStream output) throws IOException, WebApplicationException {
-				byte[] buf = new byte[8192];
-				int c;
-				while ((c = in.read(buf, 0, buf.length)) > 0) {
-					output.write(buf, 0, c);
-					output.flush();
-				}
-				in.close();
-				output.close();
+			File file = AppUtil.findFile(inputFile);
+			if (!file.exists()) {
+				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
-		};
-		return Response.ok(sout).type(contentType).cacheControl(AppUtil.getCacheControl()).build();
+			InputStream in = new FileInputStream(inputFile);
+			String contentType = URLConnection.guessContentTypeFromName(inputFile);
+			StreamingOutput sout;
+			sout = new StreamingOutput() {
+
+				@Override
+				public void write(OutputStream output) throws IOException, WebApplicationException {
+					byte[] buf = new byte[8192];
+					int c;
+					while ((c = in.read(buf, 0, buf.length)) > 0) {
+						output.write(buf, 0, c);
+						output.flush();
+					}
+					in.close();
+					output.close();
+				}
+			};
+			return Response.ok(sout).type(contentType).cacheControl(AppUtil.getCacheControl()).build();
+		} catch (FileNotFoundException fe) {
+			logger.error(fe.getMessage());
+			return Response.status(Status.NOT_FOUND).build();
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
 	}
 
 }

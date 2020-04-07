@@ -92,6 +92,7 @@ public class FileDownloadApi {
 	
 	@Path("raw/{directory:.+}/{fileName}")
 	@GET
+	@ApiOperation(value = "Get the raw resource", response = StreamingOutput.class)
 	public Response getRawResource(@PathParam("directory") String directory,
 			@PathParam("fileName") String fileName) throws Exception {
 		
