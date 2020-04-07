@@ -233,7 +233,7 @@ public class FileDownloadService {
 			String inputFile = storageBasePath + File.separatorChar + directory + File.separatorChar + fileName;
 //		File file = new File(inputFile);
 			File file = AppUtil.findFile(inputFile);
-			if (!file.exists()) {
+			if (file == null) {
 				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
 			InputStream in = new FileInputStream(inputFile);
