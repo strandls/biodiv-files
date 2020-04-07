@@ -55,6 +55,9 @@ public class FileDownloadApi {
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 		}
+		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
+			return Response.status(Status.BAD_REQUEST).build();			
+		}
 		String hAccept = request.getHeader(HttpHeaders.ACCEPT);
 		String userRequestedFormat = 
 				hAccept.contains("webp") && 
@@ -76,6 +79,9 @@ public class FileDownloadApi {
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 		}
+		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
+			return Response.status(Status.BAD_REQUEST).build();			
+		}
 		String hAccept = request.getHeader(HttpHeaders.ACCEPT);
 		String userRequestedFormat = 
 				hAccept.contains("webp") && 
@@ -91,6 +97,9 @@ public class FileDownloadApi {
 		
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
+		}
+		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
+			return Response.status(Status.BAD_REQUEST).build();			
 		}
 		return fileDownloadService.getRawResource(directory, fileName);
 	}
