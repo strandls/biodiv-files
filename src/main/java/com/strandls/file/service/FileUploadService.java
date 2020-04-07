@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -15,8 +16,6 @@ import java.util.UUID;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
-
-import org.apache.tika.Tika;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -83,8 +82,7 @@ public class FileUploadService {
         String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
         String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName; 
         
-        Tika tika = new Tika();
-        String probeContentType = tika.detect(fileName);
+        String probeContentType = URLConnection.guessContentTypeFromName(fileName);
         
         if(probeContentType == null || !probeContentType.startsWith("image") && !probeContentType.startsWith("audio") && !probeContentType.startsWith("video")) {
         	fileUploadModel.setError("Invalid file type. Allowed types are image, audio and video");
@@ -181,6 +179,33 @@ public class FileUploadService {
 		generateGalleryThumbnailImage(cropedImage, dirPath, fileId, extension);
 		generateThumbnail1Image(cropedImage, dirPath, fileId, extension);
 		generateThumbnail2Image(cropedImage, dirPath, fileId, extension);
+	}
+	
+	public void generateMultipleFiles(String filePath, long fileId, String extension) throws IOException {
+		File file = new File(filePath);
+		
+		BufferedImage image = ImageIO.read(file);
+		
+		// If unable to parse the image file
+		if(image == null) {
+			return;
+		}
+
+		// crop the image to square size
+		int h = image.getHeight();
+		int w = image.getWidth();
+		int x = 0;
+		int y = 0;
+		if( w > h ) {
+			x = (w-h) / 2;
+			w = h;
+		} else if( h > w ) {
+			y = (h-w) / 2;
+			h = w;
+ 		}
+		BufferedImage cropedImage = image.getSubimage(x, y, w, h);
+		
+		generateThumbnail1Image(cropedImage, filePath, fileId, extension);
 	}
 	
 	private void generateGallaryImage(BufferedImage image, String dirPath, long fileId, String extension) throws IOException {
