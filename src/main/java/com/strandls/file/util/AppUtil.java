@@ -26,16 +26,12 @@ public class AppUtil {
 		return prefix.append(sdf.format(new Date())).append("_").append(new GregorianCalendar().get(Calendar.YEAR))
 				.append("_").toString();
 	}
-	
+
 	public static boolean generateFile(String command) {
 		Process p = null;
 		boolean isFileGenerated = false;
 		try {
-			String[] commands = {
-					"/bin/sh",
-					"-c",
-					command
-			};
+			String[] commands = { "/bin/sh", "-c", command };
 			p = Runtime.getRuntime().exec(commands);
 			isFileGenerated = p.waitFor(5, TimeUnit.SECONDS);
 		} catch (Exception ex) {
@@ -43,20 +39,22 @@ public class AppUtil {
 		}
 		return isFileGenerated;
 	}
-	
+
 	public static File findFile(String filePath) throws IOException {
 		File expectedFile = null;
 		String dir = filePath.substring(0, filePath.lastIndexOf(File.separatorChar));
 		String fileName = filePath.substring(filePath.lastIndexOf(File.separatorChar) + 1, filePath.lastIndexOf("."));
 		String fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);
 		File file = new File(dir);
-		for (File f: file.listFiles()) {
-			String name = f.getCanonicalFile().getName();
-			String ext = name.substring(name.indexOf(".") + 1);
-			if (!f.isDirectory() && name.substring(0, name.indexOf(".")).equals(fileName) && 
-					ext.toLowerCase().equalsIgnoreCase(fileExtension.toLowerCase())) {
-				expectedFile = f;
-				break;
+		if (file.exists()) {
+			for (File f : file.listFiles()) {
+				String name = f.getCanonicalFile().getName();
+				String ext = name.substring(name.indexOf(".") + 1);
+				if (!f.isDirectory() && name.substring(0, name.indexOf(".")).equals(fileName)
+						&& ext.toLowerCase().equalsIgnoreCase(fileExtension.toLowerCase())) {
+					expectedFile = f;
+					break;
+				}
 			}
 		}
 		return expectedFile;
@@ -67,7 +65,7 @@ public class AppUtil {
 		StringBuilder command = new StringBuilder();
 		String fileName = filePath.substring(0, filePath.lastIndexOf("."));
 		command.append("convert").append(" ").append(filePath).append(" ").append("-auto-orient").append(" ")
-			.append("-resize").append(" ");
+				.append("-resize").append(" ");
 		if (h != null && w != null) {
 			command.append(w).append("x").append(h).append("!");
 		} else if (h != null) {
@@ -77,16 +75,16 @@ public class AppUtil {
 		}
 		command.append(" ");
 		if (format.equalsIgnoreCase("webp")) {
-			command.append("-quality").append(" ").append(quality == null ? 90: quality);
+			command.append("-quality").append(" ").append(quality == null ? 90 : quality);
 		}
 		command.append(" ");
 		command.append(fileName).append("_").append(w).append("x").append(h).append(".").append(format);
 		commands.add(command.toString());
 		return String.join(" ", commands);
 	}
-	
+
 	public static File getResizedImage(String command) {
-		File resizedImage = null; 
+		File resizedImage = null;
 		try {
 			String[] commands = command.split(" ");
 			resizedImage = new File(commands[commands.length - 1]);
