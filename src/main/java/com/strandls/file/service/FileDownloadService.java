@@ -236,8 +236,8 @@ public class FileDownloadService {
 			if (file == null) {
 				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
-			InputStream in = new FileInputStream(inputFile);
-			String contentType = URLConnection.guessContentTypeFromName(inputFile);
+			InputStream in = new FileInputStream(file.getAbsolutePath());
+			String contentType = URLConnection.guessContentTypeFromName(file.getName());
 			StreamingOutput sout;
 			sout = new StreamingOutput() {
 
