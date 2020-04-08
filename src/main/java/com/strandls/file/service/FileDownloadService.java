@@ -229,35 +229,30 @@ public class FileDownloadService {
 	}
 
 	public Response getRawResource(String directory, String fileName) throws Exception {
-		try {
-			String inputFile = storageBasePath + File.separatorChar + directory + File.separatorChar + fileName;
+		String inputFile = storageBasePath + File.separatorChar + directory + File.separatorChar + fileName;
 //		File file = new File(inputFile);
-			File file = AppUtil.findFile(inputFile);
-			if (file == null) {
-				return Response.status(Status.NOT_FOUND).entity("File not found").build();
-			}
-			InputStream in = new FileInputStream(inputFile);
-			String contentType = URLConnection.guessContentTypeFromName(inputFile);
-			StreamingOutput sout;
-			sout = new StreamingOutput() {
-
-				@Override
-				public void write(OutputStream output) throws IOException, WebApplicationException {
-					byte[] buf = new byte[8192];
-					int c;
-					while ((c = in.read(buf, 0, buf.length)) > 0) {
-						output.write(buf, 0, c);
-						output.flush();
-					}
-					in.close();
-					output.close();
-				}
-			};
-			return Response.ok(sout).type(contentType).cacheControl(AppUtil.getCacheControl()).build();
-		} catch (Exception ex) {
-			logger.error(ex.getMessage());
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		File file = AppUtil.findFile(inputFile);
+		if (file == null) {
+			return Response.status(Status.NOT_FOUND).entity("File not found").build();
 		}
+		InputStream in = new FileInputStream(inputFile);
+		String contentType = URLConnection.guessContentTypeFromName(inputFile);
+		StreamingOutput sout;
+		sout = new StreamingOutput() {
+
+			@Override
+			public void write(OutputStream output) throws IOException, WebApplicationException {
+				byte[] buf = new byte[8192];
+				int c;
+				while ((c = in.read(buf, 0, buf.length)) > 0) {
+					output.write(buf, 0, c);
+					output.flush();
+				}
+				in.close();
+				output.close();
+			}
+		};
+		return Response.ok(sout).type(contentType).cacheControl(AppUtil.getCacheControl()).build();
 	}
 
 }
