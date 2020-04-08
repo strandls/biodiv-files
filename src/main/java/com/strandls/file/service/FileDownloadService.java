@@ -254,9 +254,6 @@ public class FileDownloadService {
 				}
 			};
 			return Response.ok(sout).type(contentType).cacheControl(AppUtil.getCacheControl()).build();
-		} catch (FileNotFoundException fe) {
-			logger.error(fe.getMessage());
-			return Response.status(Status.NOT_FOUND).build();
 		} catch (Exception ex) {
 			logger.error(ex.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
