@@ -82,6 +82,30 @@ public class AppUtil {
 		commands.add(command.toString());
 		return String.join(" ", commands);
 	}
+	
+	public static String generateCommand(String filePath, String outputFilePath, Integer w, Integer h, String format, Integer quality) {
+		List<String> commands = new ArrayList<>();
+		StringBuilder command = new StringBuilder();
+		String fileName = filePath.substring(0, filePath.lastIndexOf("."));
+		String fileNameWithoutPrefix = fileName.substring(fileName.lastIndexOf(File.separatorChar));
+		command.append("convert").append(" ").append(filePath).append(" ").append("-auto-orient").append(" ")
+				.append("-resize").append(" ");
+		if (h != null && w != null) {
+			command.append(w).append("x").append(h).append("!");
+		} else if (h != null) {
+			command.append("x").append(h);
+		} else if (w != null) {
+			command.append(w);
+		}
+		command.append(" ");
+		if (format.equalsIgnoreCase("webp")) {
+			command.append("-quality").append(" ").append(quality == null ? 90 : quality);
+		}
+		command.append(" ");
+		command.append(outputFilePath + fileNameWithoutPrefix).append("_").append(w).append("x").append(h).append(".").append(format);
+		commands.add(command.toString());
+		return String.join(" ", commands);
+	}
 
 	public static File getResizedImage(String command) {
 		File resizedImage = null;

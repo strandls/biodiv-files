@@ -175,6 +175,13 @@
 			<artifactId>swagger-jersey-jaxrs</artifactId>
 			<version>${swagger.version}</version>
 		</dependency>
+		
+		
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>authentication-utility</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<finalName>files-api</finalName>

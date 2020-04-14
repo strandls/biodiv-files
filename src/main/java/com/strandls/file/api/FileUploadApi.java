@@ -22,7 +22,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.pac4j.core.profile.CommonProfile;
+
 import com.google.inject.Inject;
+import com.strandls.authentication_utility.filter.ValidateUser;
+import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.file.ApiContants;
 import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.service.FileUploadService;
@@ -34,6 +38,7 @@ import com.sun.jersey.multipart.FormDataParam;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -88,6 +93,39 @@ public class FileUploadApi {
 		return Response.ok(uploadedFile).build();
 	}
 	
+	@POST
+	@Path(ApiContants.MY_UPLOADS)
+	@ValidateUser
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response myuploads(
+			@Context HttpServletRequest request,
+			@FormDataParam("upload") InputStream inputStream,
+			@FormDataParam("upload") FormDataContentDisposition fileDetails) throws Exception {	
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			FileUploadModel uploadModel = fileUploadService.saveFile(inputStream, fileDetails, userId);
+			return Response.ok().entity(uploadModel).build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
+	
+	@GET
+	@Path(ApiContants.MY_UPLOADS + "/{id}")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getFilesFromUploads(@PathParam("id") String id) throws Exception {	
+		try {
+			Long userId = Long.parseLong(id);
+			List<FileUploadModel> files = fileUploadService.getFilesFromUploads(userId);
+			return Response.ok().entity(files).build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
+	
 	@GET
 	@Path(ApiContants.DWCFILE)
 	@Produces(MediaType.TEXT_PLAIN)
@@ -111,6 +149,17 @@ public class FileUploadApi {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build(); 
 		}
 		return Response.status(Status.BAD_REQUEST).entity("File Creation Failed").build(); 
+	}
+	
+	@POST
+	@Path(ApiContants.MOVE_FILES)
+	public Response moveFiles(@ApiParam("fileList") List<String> fileList) {
+		try {
+			List<FileUploadModel> files = fileUploadService.moveFilesFromUploads(fileList);
+			return Response.ok().entity(files).build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
 	}
 	
 }

@@ -19,6 +19,7 @@ import org.hibernate.cfg.Configuration;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.file.api.APIModule;
 import com.strandls.file.dao.DaoModule;
 import com.strandls.file.service.ServiceModule;
@@ -55,7 +56,7 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				serve("/api/*").with(GuiceContainer.class,props);
 			}
-		}, new APIModule(), new DaoModule(), new ServiceModule());
+		}, new APIModule(), new FilterModule(), new DaoModule(), new ServiceModule());
 
 		return injector;
 

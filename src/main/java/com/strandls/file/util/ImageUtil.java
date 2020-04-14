@@ -15,7 +15,9 @@ public class ImageUtil {
 		species, 
 		userGroups, 
 		users, 
-		traits
+		traits,
+		myUploads,
+		thumbnails
 	};
 	
 	public static boolean checkFolderExistence(String directory) {

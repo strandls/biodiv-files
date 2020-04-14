@@ -24,6 +24,7 @@ import com.google.common.io.Files;
 import com.strandls.file.ApiContants;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil;
+import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
 
 public class FileDownloadService {
 
@@ -198,9 +199,16 @@ public class FileDownloadService {
 				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
 
-			String command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, format, null);
+			String command = null;
+			if (directory.startsWith(BASE_FOLDERS.myUploads.toString())) {
+				command = AppUtil.generateCommand(file.getAbsolutePath(),
+						storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.toString(), width, height,
+						format, null);
+			} else {
+				command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, format, null);
+			}
 			boolean fileGenerated = AppUtil.generateFile(command);
-			File resizedFile = AppUtil.getResizedImage(fileGenerated ? command : fileLocation);
+			File resizedFile = AppUtil.getResizedImage(fileGenerated ? command : file.getAbsolutePath());
 			String contentType = URLConnection.guessContentTypeFromName(resizedFile.getName());
 			InputStream in = new FileInputStream(resizedFile);
 			StreamingOutput sout;

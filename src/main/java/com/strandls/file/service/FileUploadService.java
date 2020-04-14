@@ -4,6 +4,8 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
@@ -21,6 +24,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.strandls.file.model.FileMetaData;
 import com.strandls.file.model.FileUploadModel;
+import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
 import com.sun.jersey.core.header.ContentDisposition;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.BodyPart;
@@ -123,9 +127,117 @@ public class FileUploadService {
             fileUploadModel.setUri(resultPath);
             return fileUploadModel;
         } else {
-        	fileUploadModel.setError("enable to upload image");
+        	fileUploadModel.setError("Unable to upload image");
         	return fileUploadModel;
         }
+    }
+    
+    private FileUploadModel uploadFile(String directory, InputStream inputStream, String hashKey, String fileName) throws IOException {
+    	
+    	FileUploadModel fileUploadModel = new FileUploadModel();
+        
+        String fileExtension = Files.getFileExtension(fileName);
+        
+        String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
+        String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName; 
+        
+        String probeContentType = URLConnection.guessContentTypeFromName(fileName);
+        
+        if(probeContentType == null || !probeContentType.startsWith("image") && !probeContentType.startsWith("audio") && !probeContentType.startsWith("video")) {
+        	fileUploadModel.setError("Invalid file type. Allowed types are image, audio and video");
+        	return fileUploadModel;
+        } else {
+        	fileUploadModel.setType(probeContentType);
+        }
+        
+        if("".equals(hashKey)) {
+        	File dir = new File(dirPath);
+        	boolean created = dir.mkdir();
+        	if(!created) {
+        		fileUploadModel.setError("Directory creation failed");
+        		return fileUploadModel;
+        	}
+        }
+        
+        FileMetaData fileMetaData = new FileMetaData();
+        fileMetaData.setFileName(fileName);
+        fileMetaData.setPath(folderName);
+        fileMetaDataService.save(fileMetaData);
+        
+        String generatedFileName = fileMetaData.getId() + "." + fileExtension;
+
+        String filePath = dirPath + File.separatorChar + generatedFileName;
+
+        boolean uploaded = writeToFile(inputStream, filePath);
+
+        fileUploadModel.setUploaded(uploaded);
+
+        if(probeContentType.startsWith("image"))
+        	generateMultipleFiles(filePath, dirPath, fileMetaData.getId(),  fileExtension);
+        
+        if (uploaded) {
+        	String resultPath = File.separatorChar + folderName + File.separatorChar + generatedFileName;
+            fileUploadModel.setHashKey(folderName);
+            fileUploadModel.setFileName(generatedFileName);
+            fileUploadModel.setUri(resultPath);
+            return fileUploadModel;
+        } else {
+        	fileUploadModel.setError("Unable to upload image");
+        	return fileUploadModel;
+        }
+    }
+    
+    public FileUploadModel saveFile(InputStream is, FormDataContentDisposition fileDetails, Long userId) {
+    	String dir = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.toString() + File.separatorChar + userId;
+    	File dirFile = new File(dir);
+    	if (!dirFile.exists()) {
+    		dirFile.mkdir();
+    	}
+    	String fileName = dir + File.separatorChar + fileDetails.getFileName();
+    	File file = new File(fileName);
+    	boolean isFileCreated = writeToFile(is, file.getName());
+    	FileUploadModel uploadModel = new FileUploadModel();
+    	if (isFileCreated) {
+            String probeContentType = URLConnection.guessContentTypeFromName(fileName);
+    		uploadModel.setFileName(file.getName());
+    		uploadModel.setUri(file.getName());
+    		uploadModel.setType(probeContentType);
+    		uploadModel.setUploaded(true);
+    	} else {
+    		uploadModel.setUploaded(false);
+    		uploadModel.setError("Unable to upload image");
+    	}
+    	return uploadModel;
+    }
+    
+    public List<FileUploadModel> getFilesFromUploads(Long userId) {
+    	List<FileUploadModel> files = new ArrayList<>();
+    	String userDir = BASE_FOLDERS.myUploads.toString() + File.separatorChar + userId;
+    	try {
+    		List<FileUploadModel> filesList = java.nio.file.Files.list(java.nio.file.Paths.get(storageBasePath + File.separatorChar + userDir)).map(f -> {
+    			File tmpFile = f.toFile();
+    			FileUploadModel uploadModel = new FileUploadModel();
+    			uploadModel.setFileName(tmpFile.getName());
+    			uploadModel.setUri(userDir + File.separatorChar + tmpFile.getName());
+    			return uploadModel;
+    		}).collect(Collectors.toList());
+    		
+    		files.addAll(filesList);
+    	} catch (Exception ex) {
+    		ex.printStackTrace();
+    	}
+    	return files;
+    }
+    
+    public List<FileUploadModel> moveFilesFromUploads(List<String> fileList) throws Exception {
+    	List<FileUploadModel> files = new ArrayList<>();
+    	for (String file: fileList) {
+    		InputStream is = new FileInputStream(new File(storageBasePath + File.separatorChar + file));
+    		String fileName = file.substring(file.lastIndexOf(File.separatorChar) + 1);
+        	FileUploadModel model = uploadFile("observation", is, "", fileName);
+        	files.add(model);
+    	}
+    	return files;
     }
 
 	private boolean writeToFile(InputStream inputStream, String fileLocation) {
