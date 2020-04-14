@@ -195,7 +195,7 @@ public class FileUploadService {
     	}
     	String fileName = dir + File.separatorChar + fileDetails.getFileName();
     	File file = new File(fileName);
-    	boolean isFileCreated = writeToFile(is, file.getName());
+    	boolean isFileCreated = writeToFile(is, file.getAbsolutePath());
     	FileUploadModel uploadModel = new FileUploadModel();
     	if (isFileCreated) {
             String probeContentType = URLConnection.guessContentTypeFromName(fileName);
