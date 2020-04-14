@@ -1,8 +1,6 @@
 package com.strandls.file.api;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -54,19 +52,17 @@ public class FileUploadApi {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "upload the files to server", response = Map.class)
-	public Response uploadMultiple(
-			@Context HttpServletRequest request, 
-			@FormDataParam("upload") FormDataBodyPart body,
-			@PathParam("directory") String directory,
-			@DefaultValue("") @QueryParam("hashKey") String hashKey) throws IOException {
-		
+	public Response uploadMultiple(@Context HttpServletRequest request, @FormDataParam("upload") FormDataBodyPart body,
+			@PathParam("directory") String directory, @DefaultValue("") @QueryParam("hashKey") String hashKey)
+			throws IOException {
+
 		if (directory.contains("..") || hashKey.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 		}
 		if (!ImageUtil.checkFolderExistence(directory)) {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
-		
+
 		List<FileUploadModel> mutipleFiles = fileUploadService.uploadMultipleFiles(directory, body, request, hashKey);
 		return Response.ok(mutipleFiles).build();
 	}
@@ -76,32 +72,29 @@ public class FileUploadApi {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "upload the file to server", response = Map.class)
-	public Response uploadFile(
-			@Context HttpServletRequest request, 
-			@FormDataParam("upload") InputStream inputStream,
-			@PathParam("directory") String directory,
-			@FormDataParam("upload") FormDataContentDisposition fileDetails,
+	public Response uploadFile(@Context HttpServletRequest request, @FormDataParam("upload") InputStream inputStream,
+			@PathParam("directory") String directory, @FormDataParam("upload") FormDataContentDisposition fileDetails,
 			@DefaultValue("") @QueryParam("hashKey") String hashKey) throws IOException {
-		
+
 		if (directory.contains("..") || hashKey.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 		}
 		if (!ImageUtil.checkFolderExistence(directory)) {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
-		FileUploadModel uploadedFile = fileUploadService.uploadFile(directory, inputStream, fileDetails, request, hashKey);
+		FileUploadModel uploadedFile = fileUploadService.uploadFile(directory, inputStream, fileDetails, request,
+				hashKey);
 		return Response.ok(uploadedFile).build();
 	}
-	
+
 	@POST
 	@Path(ApiContants.MY_UPLOADS)
 	@ValidateUser
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response myuploads(
-			@Context HttpServletRequest request,
-			@FormDataParam("upload") InputStream inputStream,
-			@FormDataParam("upload") FormDataContentDisposition fileDetails) throws Exception {	
+	@ApiOperation(value = "Upload files to myUploads", notes = "Returns uploaded file data", response = FileUploadModel.class)
+	public Response myuploads(@Context HttpServletRequest request, @FormDataParam("upload") InputStream inputStream,
+			@FormDataParam("upload") FormDataContentDisposition fileDetails) throws Exception {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
@@ -111,12 +104,13 @@ public class FileUploadApi {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
-	
+
 	@GET
 	@Path(ApiContants.MY_UPLOADS + "/{id}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getFilesFromUploads(@PathParam("id") String id) throws Exception {	
+	@ApiOperation(value = "Upload files to myUploads", notes = "Returns uploaded file data", response = FileUploadModel.class, responseContainer = "List")
+	public Response getFilesFromUploads(@PathParam("id") String id) throws Exception {
 		try {
 			Long userId = Long.parseLong(id);
 			List<FileUploadModel> files = fileUploadService.getFilesFromUploads(userId);
@@ -125,7 +119,7 @@ public class FileUploadApi {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
-	
+
 	@GET
 	@Path(ApiContants.DWCFILE)
 	@Produces(MediaType.TEXT_PLAIN)
@@ -135,24 +129,26 @@ public class FileUploadApi {
 
 	public Response createDwcFILE() throws Exception {
 		// folder where script is placed
-		String filePath= "/app/configurations/scripts/";
+		String filePath = "/app/configurations/scripts/";
 		// folder where the new file will be placed
 		String csvFilePath = "/app/data/biodiv/data-archive/gbif/" + AppUtil.getDatePrefix() + "dWC.csv";
 		String script = "gbif_dwc.sh";
 		try {
-			Process process = Runtime.getRuntime().exec("sh " + script+" "+csvFilePath, null, new File(filePath));
+			Process process = Runtime.getRuntime().exec("sh " + script + " " + csvFilePath, null, new File(filePath));
 			int exitCode = process.waitFor();
-			if(exitCode == 0)
+			if (exitCode == 0)
 				return Response.status(Status.OK).entity("File Creation Successful!").build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
-		catch (Exception e) {
-			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build(); 
-		}
-		return Response.status(Status.BAD_REQUEST).entity("File Creation Failed").build(); 
+		return Response.status(Status.BAD_REQUEST).entity("File Creation Failed").build();
 	}
-	
+
 	@POST
 	@Path(ApiContants.MOVE_FILES)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Moves files from MyUploads to the appropriate folder", notes = "Returns uploaded file data", response = FileUploadModel.class, responseContainer = "List")
 	public Response moveFiles(@ApiParam("fileList") List<String> fileList) {
 		try {
 			List<FileUploadModel> files = fileUploadService.moveFilesFromUploads(fileList);
@@ -161,5 +157,5 @@ public class FileUploadApi {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
-	
+
 }
