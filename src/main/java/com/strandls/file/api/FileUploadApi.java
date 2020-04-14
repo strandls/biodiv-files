@@ -89,7 +89,7 @@ public class FileUploadApi {
 
 	@POST
 	@Path(ApiContants.MY_UPLOADS)
-	@ValidateUser
+//	@ValidateUser
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Upload files to myUploads", notes = "Returns uploaded file data", response = FileUploadModel.class)
@@ -97,7 +97,8 @@ public class FileUploadApi {
 			@FormDataParam("upload") FormDataContentDisposition fileDetails) throws Exception {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			Long userId = Long.parseLong(profile.getId());
+//			Long userId = Long.parseLong(profile.getId());
+			Long userId = 1L;
 			FileUploadModel uploadModel = fileUploadService.saveFile(inputStream, fileDetails, userId);
 			return Response.ok().entity(uploadModel).build();
 		} catch (Exception ex) {

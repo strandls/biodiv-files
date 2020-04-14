@@ -216,9 +216,11 @@ public class FileUploadService {
     	try {
     		List<FileUploadModel> filesList = java.nio.file.Files.list(java.nio.file.Paths.get(storageBasePath + File.separatorChar + userDir)).map(f -> {
     			File tmpFile = f.toFile();
+                String probeContentType = URLConnection.guessContentTypeFromName(tmpFile.getName());
     			FileUploadModel uploadModel = new FileUploadModel();
     			uploadModel.setFileName(tmpFile.getName());
     			uploadModel.setUri(userDir + File.separatorChar + tmpFile.getName());
+    			uploadModel.setType(probeContentType);
     			return uploadModel;
     		}).collect(Collectors.toList());
     		
