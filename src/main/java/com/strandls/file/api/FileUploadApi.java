@@ -89,17 +89,19 @@ public class FileUploadApi {
 
 	@POST
 	@Path(ApiContants.MY_UPLOADS)
-//	@ValidateUser
+	@ValidateUser
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Upload files to myUploads", notes = "Returns uploaded file data", response = FileUploadModel.class)
 	public Response myuploads(@Context HttpServletRequest request, @FormDataParam("upload") InputStream inputStream,
-			@FormDataParam("upload") FormDataContentDisposition fileDetails) throws Exception {
+			@FormDataParam("upload") FormDataContentDisposition fileDetails, 
+			@FormDataParam("hash") String hash) throws Exception {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-//			Long userId = Long.parseLong(profile.getId());
-			Long userId = 1L;
-			FileUploadModel uploadModel = fileUploadService.saveFile(inputStream, fileDetails, userId);
+			System.out.println("\n\nId: " + profile.getId() + "\n\n");
+			Long userId = Long.parseLong(profile.getId());
+//			Long userId = 1L;
+			FileUploadModel uploadModel = fileUploadService.saveFile(inputStream, fileDetails, hash, userId);
 			return Response.ok().entity(uploadModel).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
