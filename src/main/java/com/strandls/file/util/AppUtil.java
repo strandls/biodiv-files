@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.CacheControl;
@@ -116,6 +118,32 @@ public class AppUtil {
 			ex.printStackTrace();
 		}
 		return resizedImage;
+	}
+	
+	public static Map<String, Object> getLatLong(String fileLocation) {
+		Map<String, Object> data = new HashMap<>();
+		try {
+			data.put("latitude", 0);
+			data.put("longitude", 0);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return data;
+	}
+	
+	public static double evaluateLatLong(String latLong) {
+		String[] coordinates = latLong.split("*");
+		return 0.0;
+	}
+	
+	public static double evaluateExpression(String expression) {
+		if (expression.contains("/")) {
+			String[] values = expression.split("/");
+			double v1 = Double.parseDouble(values[0]);
+			double v2 = Double.parseDouble(values[1]);
+			return v1 / v2;
+		}
+		return 0.0;
 	}
 
 }

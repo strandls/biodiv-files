@@ -98,13 +98,10 @@ public class FileUploadApi {
 			@FormDataParam("hash") String hash) throws Exception {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			System.out.println("\n\nId: " + profile.getId() + "\n\n");
 			Long userId = Long.parseLong(profile.getId());
-//			Long userId = 1L;
 			FileUploadModel uploadModel = fileUploadService.saveFile(inputStream, fileDetails, hash, userId);
 			return Response.ok().entity(uploadModel).build();
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}

@@ -23,6 +23,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.strandls.file.model.FileMetaData;
 import com.strandls.file.model.FileUploadModel;
+import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
 import com.sun.jersey.core.header.ContentDisposition;
 import com.sun.jersey.core.header.FormDataContentDisposition;
@@ -205,8 +206,10 @@ public class FileUploadService {
 		if (isFileCreated) {
 			String probeContentType = URLConnection.guessContentTypeFromName(fileName);
 			uploadModel.setFileName(file.getName());
+			uploadModel.setHashKey(hash);
 			uploadModel.setUri(File.separatorChar + file.getParentFile().getName() + File.separatorChar + file.getName());
 			uploadModel.setType(probeContentType);
+			uploadModel.setO(AppUtil.getLatLong(fileName));
 			uploadModel.setUploaded(true);
 		} else {
 			uploadModel.setUploaded(false);
@@ -226,7 +229,9 @@ public class FileUploadService {
 						File tmpFile = f.toFile();
 						String probeContentType = URLConnection.guessContentTypeFromName(tmpFile.getName());
 						FileUploadModel uploadModel = new FileUploadModel();
+						uploadModel.setHashKey(tmpFile.getParentFile().getName());
 						uploadModel.setFileName(tmpFile.getName());
+						uploadModel.setO(AppUtil.getLatLong(tmpFile.getAbsolutePath()));
 						uploadModel.setUri(File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar + tmpFile.getName());
 						uploadModel.setType(probeContentType);
 						return uploadModel;

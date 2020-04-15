@@ -1,5 +1,7 @@
 package com.strandls.file.model;
 
+import java.util.Map;
+
 public class FileUploadModel {
 
 	private String hashKey;
@@ -8,6 +10,7 @@ public class FileUploadModel {
 	private String type;
 	private String uri;
 	private String error;
+	private Map<String, Object> o;
 
 	public String getHashKey() {
 		return hashKey;
@@ -55,6 +58,14 @@ public class FileUploadModel {
 
 	public void setError(String error) {
 		this.error = error;
+	}
+
+	public Map<String, Object> getO() {
+		return o;
+	}
+
+	public void setO(Map<String, Object> o) {
+		this.o = o;
 	}
 
 }
