@@ -104,6 +104,7 @@ public class FileUploadApi {
 			FileUploadModel uploadModel = fileUploadService.saveFile(inputStream, fileDetails, hash, userId);
 			return Response.ok().entity(uploadModel).build();
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
@@ -112,7 +113,7 @@ public class FileUploadApi {
 	@Path(ApiContants.MY_UPLOADS + "/{id}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Upload files to myUploads", notes = "Returns uploaded file data", response = FileUploadModel.class, responseContainer = "List")
+	@ApiOperation(value = "Get files list from myUploads", notes = "Returns uploaded file data", response = FileUploadModel.class, responseContainer = "List")
 	public Response getFilesFromUploads(@PathParam("id") String id) throws Exception {
 		try {
 			Long userId = Long.parseLong(id);
