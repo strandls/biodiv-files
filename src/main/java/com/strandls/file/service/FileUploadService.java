@@ -196,7 +196,7 @@ public class FileUploadService {
 				+ userId + File.separatorChar + hash;
 		File dirFile = new File(dir);
 		if (!dirFile.exists()) {
-			dirFile.mkdir();
+			dirFile.mkdirs();
 		}
 		String fileName = dir + File.separatorChar + fileDetails.getFileName();
 		File file = new File(fileName);
