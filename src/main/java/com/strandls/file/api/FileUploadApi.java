@@ -27,6 +27,7 @@ import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.file.ApiContants;
 import com.strandls.file.model.FileUploadModel;
+import com.strandls.file.model.MyUpload;
 import com.strandls.file.service.FileUploadService;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil;
@@ -92,14 +93,14 @@ public class FileUploadApi {
 	@ValidateUser
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Upload files to myUploads", notes = "Returns uploaded file data", response = FileUploadModel.class)
-	public Response myuploads(@Context HttpServletRequest request, @FormDataParam("upload") InputStream inputStream,
+	@ApiOperation(value = "Upload files to myUploads", notes = "Returns uploaded file data", response = MyUpload.class)
+	public Response saveToMyUploads(@Context HttpServletRequest request, @FormDataParam("upload") InputStream inputStream,
 			@FormDataParam("upload") FormDataContentDisposition fileDetails, 
 			@FormDataParam("hash") String hash) throws Exception {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			FileUploadModel uploadModel = fileUploadService.saveFile(inputStream, fileDetails, hash, userId);
+			MyUpload uploadModel = fileUploadService.saveFile(inputStream, fileDetails, hash, userId);
 			return Response.ok().entity(uploadModel).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
@@ -110,11 +111,11 @@ public class FileUploadApi {
 	@Path(ApiContants.MY_UPLOADS + "/{id}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Get files list from myUploads", notes = "Returns uploaded file data", response = FileUploadModel.class, responseContainer = "List")
+	@ApiOperation(value = "Get files list from myUploads", notes = "Returns uploaded file data", response = MyUpload.class, responseContainer = "List")
 	public Response getFilesFromUploads(@PathParam("id") String id) throws Exception {
 		try {
 			Long userId = Long.parseLong(id);
-			List<FileUploadModel> files = fileUploadService.getFilesFromUploads(userId);
+			List<MyUpload> files = fileUploadService.getFilesFromUploads(userId);
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();

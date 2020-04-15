@@ -23,6 +23,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.strandls.file.model.FileMetaData;
 import com.strandls.file.model.FileUploadModel;
+import com.strandls.file.model.MyUpload;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
 import com.sun.jersey.core.header.ContentDisposition;
@@ -192,7 +193,7 @@ public class FileUploadService {
 		}
 	}
 
-	public FileUploadModel saveFile(InputStream is, FormDataContentDisposition fileDetails, String hash, Long userId) {
+	public MyUpload saveFile(InputStream is, FormDataContentDisposition fileDetails, String hash, Long userId) throws Exception {
 		String dir = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.toString() + File.separatorChar
 				+ userId + File.separatorChar + hash;
 		File dirFile = new File(dir);
@@ -202,37 +203,35 @@ public class FileUploadService {
 		String fileName = dir + File.separatorChar + fileDetails.getFileName();
 		File file = new File(fileName);
 		boolean isFileCreated = writeToFile(is, file.getAbsolutePath());
-		FileUploadModel uploadModel = new FileUploadModel();
+		MyUpload uploadModel = new MyUpload();
 		if (isFileCreated) {
 			String probeContentType = URLConnection.guessContentTypeFromName(fileName);
 			uploadModel.setFileName(file.getName());
 			uploadModel.setHashKey(hash);
-			uploadModel.setUri(File.separatorChar + file.getParentFile().getName() + File.separatorChar + file.getName());
+			uploadModel.setPath(File.separatorChar + file.getParentFile().getName() + File.separatorChar + file.getName());
 			uploadModel.setType(probeContentType);
 			uploadModel.setO(AppUtil.getLatLong(fileName));
-			uploadModel.setUploaded(true);
 		} else {
-			uploadModel.setUploaded(false);
-			uploadModel.setError("Unable to upload image");
+			throw new Exception("File not created");
 		}
 		return uploadModel;
 	}
 
-	public List<FileUploadModel> getFilesFromUploads(Long userId) {
-		List<FileUploadModel> files = new ArrayList<>();
+	public List<MyUpload> getFilesFromUploads(Long userId) {
+		List<MyUpload> files = new ArrayList<>();
 		String userDir = BASE_FOLDERS.myUploads.toString() + File.separatorChar + userId;
 		try {
-			List<FileUploadModel> filesList = java.nio.file.Files
+			List<MyUpload> filesList = java.nio.file.Files
 					.walk(java.nio.file.Paths.get(storageBasePath + File.separatorChar + userDir))
 					.filter(java.nio.file.Files::isRegularFile)
 					.map(f -> {
 						File tmpFile = f.toFile();
 						String probeContentType = URLConnection.guessContentTypeFromName(tmpFile.getName());
-						FileUploadModel uploadModel = new FileUploadModel();
+						MyUpload uploadModel = new MyUpload();
 						uploadModel.setHashKey(tmpFile.getParentFile().getName());
 						uploadModel.setFileName(tmpFile.getName());
 						uploadModel.setO(AppUtil.getLatLong(tmpFile.getAbsolutePath()));
-						uploadModel.setUri(File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar + tmpFile.getName());
+						uploadModel.setPath(File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar + tmpFile.getName());
 						uploadModel.setType(probeContentType);
 						return uploadModel;
 					}).collect(Collectors.toList());
