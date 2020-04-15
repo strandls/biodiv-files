@@ -1,7 +1,9 @@
 package com.strandls.file.util;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -84,8 +86,9 @@ public class AppUtil {
 		commands.add(command.toString());
 		return String.join(" ", commands);
 	}
-	
-	public static String generateCommand(String filePath, String outputFilePath, Integer w, Integer h, String format, Integer quality) {
+
+	public static String generateCommand(String filePath, String outputFilePath, Integer w, Integer h, String format,
+			Integer quality) {
 		List<String> commands = new ArrayList<>();
 		StringBuilder command = new StringBuilder();
 		String fileName = filePath.substring(0, filePath.lastIndexOf("."));
@@ -104,7 +107,8 @@ public class AppUtil {
 			command.append("-quality").append(" ").append(quality == null ? 90 : quality);
 		}
 		command.append(" ");
-		command.append(outputFilePath + fileNameWithoutPrefix).append("_").append(w).append("x").append(h).append(".").append(format);
+		command.append(outputFilePath + fileNameWithoutPrefix).append("_").append(w).append("x").append(h).append(".")
+				.append(format);
 		commands.add(command.toString());
 		return String.join(" ", commands);
 	}
@@ -119,7 +123,7 @@ public class AppUtil {
 		}
 		return resizedImage;
 	}
-	
+
 	public static Map<String, Object> getLatLong(String fileLocation) {
 		Map<String, Object> data = new HashMap<>();
 		try {
@@ -130,20 +134,55 @@ public class AppUtil {
 		}
 		return data;
 	}
-	
-	public static double evaluateLatLong(String latLong) {
-		String[] coordinates = latLong.split("*");
-		return 0.0;
+
+	public static String executeCommand(String command) {
+		Process p = null;
+		StringBuilder output = new StringBuilder();
+		BufferedReader br = null;
+		try {
+			String[] commands = { "/bin/sh", "-c", command };
+			p = Runtime.getRuntime().exec(commands);
+			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			String line;
+			while ((line = br.readLine()) != null) {
+				output.append(line);
+			}
+			p.waitFor();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return output.toString();
 	}
-	
-	public static double evaluateExpression(String expression) {
+
+	public static Double evaluateExpression(String expression) {
 		if (expression.contains("/")) {
 			String[] values = expression.split("/");
 			double v1 = Double.parseDouble(values[0]);
 			double v2 = Double.parseDouble(values[1]);
 			return v1 / v2;
 		}
-		return 0.0;
+		return null;
+	}
+	
+	public static Double calculateValues(String expression) {
+		Double value = null;
+		try {
+			String[] values = expression.split(",");
+			Double h = evaluateExpression(values[0]);
+			Double m = evaluateExpression(values[1]);
+			Double s = evaluateExpression(values[2]);
+			if (h != null && m != null && s != null) {
+				value = new Double(h + (m / 60) + (s / 3600));
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return value;
+	}
+	
+	public static String getExifGeoData(String fileName) {
+		String command = "identify -format \"%[EXIF:GPSLatitude]*%[EXIF:GPSLongitude]\" " + fileName;
+		return executeCommand(command);
 	}
 
 }

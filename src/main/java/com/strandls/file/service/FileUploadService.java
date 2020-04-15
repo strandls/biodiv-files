@@ -210,8 +210,14 @@ public class FileUploadService {
 			uploadModel.setHashKey(hash);
 			uploadModel.setPath(File.separatorChar + file.getParentFile().getName() + File.separatorChar + file.getName());
 			uploadModel.setType(probeContentType);
-			uploadModel.setLatitude(0.0);
-			uploadModel.setLongitude(0.0);
+			String exifData = AppUtil.getExifGeoData(file.getAbsolutePath());
+			if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
+				String[] coordinates = exifData.split("[*]");
+				if (coordinates.length == 2) {
+					uploadModel.setLatitude(AppUtil.calculateValues(coordinates[0]));
+					uploadModel.setLongitude(AppUtil.calculateValues(coordinates[1]));
+				}
+			}
 		} else {
 			throw new Exception("File not created");
 		}
@@ -231,8 +237,14 @@ public class FileUploadService {
 						MyUpload uploadModel = new MyUpload();
 						uploadModel.setHashKey(tmpFile.getParentFile().getName());
 						uploadModel.setFileName(tmpFile.getName());
-						uploadModel.setLatitude(0.0);
-						uploadModel.setLongitude(0.0);
+						String exifData = AppUtil.getExifGeoData(tmpFile.getAbsolutePath());
+						if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
+							String[] coordinates = exifData.split("[*]");
+							if (coordinates.length == 2) {
+								uploadModel.setLatitude(AppUtil.calculateValues(coordinates[0]));
+								uploadModel.setLongitude(AppUtil.calculateValues(coordinates[1]));
+							}
+						}
 						uploadModel.setPath(File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar + tmpFile.getName());
 						uploadModel.setType(probeContentType);
 						return uploadModel;

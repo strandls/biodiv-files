@@ -111,13 +111,15 @@ public class FileUploadApi {
 	}
 
 	@GET
-	@Path(ApiContants.MY_UPLOADS + "/{id}")
+	@Path(ApiContants.MY_UPLOADS)
+	@ValidateUser
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Get files list from myUploads", notes = "Returns uploaded file data", response = MyUpload.class, responseContainer = "List")
-	public Response getFilesFromUploads(@PathParam("id") String id) throws Exception {
+	public Response getFilesFromUploads(@Context HttpServletRequest request) throws Exception {
 		try {
-			Long userId = Long.parseLong(id);
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
 			List<MyUpload> files = fileUploadService.getFilesFromUploads(userId);
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
