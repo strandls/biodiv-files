@@ -210,7 +210,8 @@ public class FileUploadService {
 			uploadModel.setHashKey(hash);
 			uploadModel.setPath(File.separatorChar + file.getParentFile().getName() + File.separatorChar + file.getName());
 			uploadModel.setType(probeContentType);
-			uploadModel.setO(AppUtil.getLatLong(fileName));
+			uploadModel.setLatitude(0.0);
+			uploadModel.setLongitude(0.0);
 		} else {
 			throw new Exception("File not created");
 		}
@@ -230,7 +231,8 @@ public class FileUploadService {
 						MyUpload uploadModel = new MyUpload();
 						uploadModel.setHashKey(tmpFile.getParentFile().getName());
 						uploadModel.setFileName(tmpFile.getName());
-						uploadModel.setO(AppUtil.getLatLong(tmpFile.getAbsolutePath()));
+						uploadModel.setLatitude(0.0);
+						uploadModel.setLongitude(0.0);
 						uploadModel.setPath(File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar + tmpFile.getName());
 						uploadModel.setType(probeContentType);
 						return uploadModel;

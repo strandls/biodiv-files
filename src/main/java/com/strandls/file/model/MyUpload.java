@@ -1,14 +1,13 @@
 package com.strandls.file.model;
 
-import java.util.Map;
-
 public class MyUpload {
 	
 	private String hashKey;
 	private String fileName;
 	private String type;
 	private String path;
-	private Map<String, Object> o;
+	private Double latitude;
+	private Double longitude;
 	
 	public String getHashKey() {
 		return hashKey;
@@ -34,11 +33,17 @@ public class MyUpload {
 	public void setPath(String path) {
 		this.path = path;
 	}
-	public Map<String, Object> getO() {
-		return o;
+	public Double getLatitude() {
+		return latitude;
 	}
-	public void setO(Map<String, Object> o) {
-		this.o = o;
+	public void setLatitude(Double latitude) {
+		this.latitude = latitude;
+	}
+	public Double getLongitude() {
+		return longitude;
+	}
+	public void setLongitude(Double longitude) {
+		this.longitude = longitude;
 	}
 
 }

@@ -97,6 +97,9 @@ public class FileUploadApi {
 	public Response saveToMyUploads(@Context HttpServletRequest request, @FormDataParam("upload") InputStream inputStream,
 			@FormDataParam("upload") FormDataContentDisposition fileDetails, 
 			@FormDataParam("hash") String hash) throws Exception {
+		if (hash == null || hash.isEmpty()) {
+			return Response.status(Status.BAD_REQUEST).entity("Hash required").build();	
+		}
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
