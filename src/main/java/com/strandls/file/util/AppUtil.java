@@ -48,14 +48,11 @@ public class AppUtil {
 		File expectedFile = null;
 		String dir = filePath.substring(0, filePath.lastIndexOf(File.separatorChar));
 		String fileName = filePath.substring(filePath.lastIndexOf(File.separatorChar) + 1, filePath.lastIndexOf("."));
-		String fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1);
 		File file = new File(dir);
 		if (file.exists()) {
 			for (File f : file.listFiles()) {
 				String name = f.getCanonicalFile().getName();
-				String ext = name.substring(name.indexOf(".") + 1);
-				if (!f.isDirectory() && name.substring(0, name.indexOf(".")).equals(fileName)
-						&& ext.toLowerCase().equalsIgnoreCase(fileExtension.toLowerCase())) {
+				if (!f.isDirectory() && name.substring(0, name.indexOf(".")).equalsIgnoreCase(fileName)) {
 					expectedFile = f;
 					break;
 				}
@@ -123,18 +120,7 @@ public class AppUtil {
 		}
 		return resizedImage;
 	}
-
-	public static Map<String, Object> getLatLong(String fileLocation) {
-		Map<String, Object> data = new HashMap<>();
-		try {
-			data.put("latitude", 0);
-			data.put("longitude", 0);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		return data;
-	}
-
+	
 	public static String executeCommand(String command) {
 		Process p = null;
 		StringBuilder output = new StringBuilder();
