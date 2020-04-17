@@ -153,12 +153,15 @@ public class FileUploadApi {
 
 	@POST
 	@Path(ApiContants.MOVE_FILES)
+	@ValidateUser
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Moves files from MyUploads to the appropriate folder", notes = "Returns uploaded file data", response = FileUploadModel.class, responseContainer = "List")
-	public Response moveFiles(@ApiParam("fileList") List<String> fileList) {
+	@ApiOperation(value = "Moves files from MyUploads to the appropriate folder", notes = "Returns uploaded file data", response = Map.class)
+	public Response moveFiles(@Context HttpServletRequest request, @ApiParam("fileList") List<String> fileList) {
 		try {
-			List<FileUploadModel> files = fileUploadService.moveFilesFromUploads(fileList);
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			Map<String, String> files = fileUploadService.moveFilesFromUploads(userId, fileList);
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();

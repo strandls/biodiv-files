@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLConnection;
 import java.util.Properties;
 
 import javax.imageio.ImageIO;
@@ -17,6 +16,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,7 +136,8 @@ public class FileDownloadService {
 			return Response.status(Status.NOT_FOUND).entity("File not found").build();
 		}
 
-		String contentType = URLConnection.guessContentTypeFromName(fileLocation);
+		Tika tika = new Tika();
+		String contentType = tika.detect(fileLocation);
 		boolean isWebp = format.equalsIgnoreCase("webp");
 		BufferedImage image = ImageIO.read(file);
 		int imgHeight = image.getHeight();
@@ -207,9 +208,11 @@ public class FileDownloadService {
 			} else {
 				command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, format, null);
 			}
+
+			Tika tika = new Tika();
 			boolean fileGenerated = AppUtil.generateFile(command);
 			File resizedFile = AppUtil.getResizedImage(fileGenerated ? command : file.getAbsolutePath());
-			String contentType = URLConnection.guessContentTypeFromName(resizedFile.getName());
+			String contentType = tika.detect(resizedFile.getName());
 			InputStream in = new FileInputStream(resizedFile);
 			StreamingOutput sout;
 			sout = new StreamingOutput() {
@@ -245,7 +248,9 @@ public class FileDownloadService {
 				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
 			InputStream in = new FileInputStream(file.getAbsolutePath());
-			String contentType = URLConnection.guessContentTypeFromName(file.getName());
+
+			Tika tika = new Tika();
+			String contentType = tika.detect(file.getName());
 			StreamingOutput sout;
 			sout = new StreamingOutput() {
 

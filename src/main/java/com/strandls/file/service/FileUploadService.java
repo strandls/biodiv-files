@@ -9,15 +9,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
+
+import org.apache.tika.Tika;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -88,8 +91,8 @@ public class FileUploadService {
 
 		String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName;
-
-		String probeContentType = URLConnection.guessContentTypeFromName(fileName);
+		Tika tika = new Tika();
+		String probeContentType = tika.detect(fileName);
 
 		if (probeContentType == null || !probeContentType.startsWith("image") && !probeContentType.startsWith("audio")
 				&& !probeContentType.startsWith("video")) {
@@ -146,7 +149,8 @@ public class FileUploadService {
 		String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName;
 
-		String probeContentType = URLConnection.guessContentTypeFromName(fileName);
+		Tika tika = new Tika();
+		String probeContentType = tika.detect(fileName);
 
 		if (probeContentType == null || !probeContentType.startsWith("image") && !probeContentType.startsWith("audio")
 				&& !probeContentType.startsWith("video")) {
@@ -200,12 +204,13 @@ public class FileUploadService {
 		if (!dirFile.exists()) {
 			dirFile.mkdirs();
 		}
+		Tika tika = new Tika();
 		String fileName = dir + File.separatorChar + fileDetails.getFileName();
 		File file = new File(fileName);
 		boolean isFileCreated = writeToFile(is, file.getAbsolutePath());
 		MyUpload uploadModel = new MyUpload();
 		if (isFileCreated) {
-			String probeContentType = URLConnection.guessContentTypeFromName(fileName);
+			String probeContentType = tika.detect(fileName);
 			uploadModel.setFileName(file.getName());
 			uploadModel.setHashKey(hash);
 			uploadModel.setPath(File.separatorChar + file.getParentFile().getName() + File.separatorChar + file.getName());
@@ -228,12 +233,13 @@ public class FileUploadService {
 		List<MyUpload> files = new ArrayList<>();
 		String userDir = BASE_FOLDERS.myUploads.toString() + File.separatorChar + userId;
 		try {
+			Tika tika = new Tika();
 			List<MyUpload> filesList = java.nio.file.Files
 					.walk(java.nio.file.Paths.get(storageBasePath + File.separatorChar + userDir))
 					.filter(java.nio.file.Files::isRegularFile)
 					.map(f -> {
 						File tmpFile = f.toFile();
-						String probeContentType = URLConnection.guessContentTypeFromName(tmpFile.getName());
+						String probeContentType = tika.detect(tmpFile.getName());
 						MyUpload uploadModel = new MyUpload();
 						uploadModel.setHashKey(tmpFile.getParentFile().getName());
 						uploadModel.setFileName(tmpFile.getName());
@@ -257,15 +263,17 @@ public class FileUploadService {
 		return files;
 	}
 
-	public List<FileUploadModel> moveFilesFromUploads(List<String> fileList) throws Exception {
-		List<FileUploadModel> files = new ArrayList<>();
+	public Map<String, String> moveFilesFromUploads(Long userId, List<String> fileList) throws Exception {
+		Map<String, String> finalPaths = new HashMap<>();
+		String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.toString() + File.separatorChar + userId;
+		String hash = UUID.randomUUID().toString();
 		for (String file : fileList) {
-			InputStream is = new FileInputStream(new File(storageBasePath + File.separatorChar + file));
+			InputStream is = new FileInputStream(new File(basePath + File.separatorChar + file));
 			String fileName = file.substring(file.lastIndexOf(File.separatorChar) + 1);
-			FileUploadModel model = uploadFile("observation", is, "", fileName);
-			files.add(model);
+			FileUploadModel model = uploadFile("observation", is, hash, fileName);
+			finalPaths.put(file, model.getUri());
 		}
-		return files;
+		return finalPaths;
 	}
 
 	private boolean writeToFile(InputStream inputStream, String fileLocation) {
