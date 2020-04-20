@@ -270,13 +270,24 @@ public class FileUploadService {
 		String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.toString() + File.separatorChar
 				+ userId;
 		String hash = UUID.randomUUID().toString();
+		String existingHash = fileList.stream().filter(path -> !path.startsWith(File.separatorChar + "ibpmu-")).findAny()
+				.orElse(null);
+		existingHash = existingHash.substring(1);
+		existingHash = existingHash.substring(0, existingHash.indexOf(File.separatorChar));
 		for (String file : fileList) {
 			File f = new File(basePath + File.separatorChar + file);
-			InputStream is = new FileInputStream(f);
-			String fileName = file.substring(file.lastIndexOf(File.separatorChar) + 1);
-			FileUploadModel model = uploadFile(BASE_FOLDERS.observations.toString(), is, hash, fileName);
-			finalPaths.put(file, model.getUri());
-			f.delete();
+			if (file.startsWith(File.separatorChar + BASE_FOLDERS.myUploads.toString())) {
+				if (f.exists()) {
+					InputStream is = new FileInputStream(f);
+					String fileName = file.substring(file.lastIndexOf(File.separatorChar) + 1);
+					FileUploadModel model = uploadFile(BASE_FOLDERS.observations.toString(), is,
+							existingHash == null ? hash : existingHash, fileName);
+					finalPaths.put(file, model.getUri());
+					f.delete();
+				}
+			} else {
+				finalPaths.put(file, file);
+			}
 		}
 		return finalPaths;
 	}
