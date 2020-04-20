@@ -197,7 +197,8 @@ public class FileUploadService {
 		}
 	}
 
-	public MyUpload saveFile(InputStream is, FormDataContentDisposition fileDetails, String hash, Long userId) throws Exception {
+	public MyUpload saveFile(InputStream is, FormDataContentDisposition fileDetails, String hash, Long userId)
+			throws Exception {
 		String dir = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.toString() + File.separatorChar
 				+ userId + File.separatorChar + hash;
 		File dirFile = new File(dir);
@@ -213,7 +214,8 @@ public class FileUploadService {
 			String probeContentType = tika.detect(fileName);
 			uploadModel.setFileName(file.getName());
 			uploadModel.setHashKey(hash);
-			uploadModel.setPath(File.separatorChar + file.getParentFile().getName() + File.separatorChar + file.getName());
+			uploadModel
+					.setPath(File.separatorChar + file.getParentFile().getName() + File.separatorChar + file.getName());
 			uploadModel.setType(probeContentType);
 			String exifData = AppUtil.getExifGeoData(file.getAbsolutePath());
 			if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
@@ -236,8 +238,7 @@ public class FileUploadService {
 			Tika tika = new Tika();
 			List<MyUpload> filesList = java.nio.file.Files
 					.walk(java.nio.file.Paths.get(storageBasePath + File.separatorChar + userDir))
-					.filter(java.nio.file.Files::isRegularFile)
-					.map(f -> {
+					.filter(java.nio.file.Files::isRegularFile).map(f -> {
 						File tmpFile = f.toFile();
 						String probeContentType = tika.detect(tmpFile.getName());
 						MyUpload uploadModel = new MyUpload();
@@ -251,7 +252,8 @@ public class FileUploadService {
 								uploadModel.setLongitude(AppUtil.calculateValues(coordinates[1]));
 							}
 						}
-						uploadModel.setPath(File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar + tmpFile.getName());
+						uploadModel.setPath(File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar
+								+ tmpFile.getName());
 						uploadModel.setType(probeContentType);
 						return uploadModel;
 					}).collect(Collectors.toList());
@@ -265,17 +267,16 @@ public class FileUploadService {
 
 	public Map<String, String> moveFilesFromUploads(Long userId, List<String> fileList) throws Exception {
 		Map<String, String> finalPaths = new HashMap<>();
-		String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.toString() + File.separatorChar + userId;
+		String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.toString() + File.separatorChar
+				+ userId;
 		String hash = UUID.randomUUID().toString();
 		for (String file : fileList) {
 			File f = new File(basePath + File.separatorChar + file);
 			InputStream is = new FileInputStream(f);
 			String fileName = file.substring(file.lastIndexOf(File.separatorChar) + 1);
-			FileUploadModel model = uploadFile("observation", is, hash, fileName);
-			if (model.isUploaded()) {
-				finalPaths.put(file, model.getUri());
-				f.delete();
-			}
+			FileUploadModel model = uploadFile(BASE_FOLDERS.observations.toString(), is, hash, fileName);
+			finalPaths.put(file, model.getUri());
+			f.delete();
 		}
 		return finalPaths;
 	}
