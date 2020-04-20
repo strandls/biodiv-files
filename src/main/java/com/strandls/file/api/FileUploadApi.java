@@ -159,6 +159,7 @@ public class FileUploadApi {
 	@ApiOperation(value = "Moves files from MyUploads to the appropriate folder", notes = "Returns uploaded file data", response = Map.class)
 	public Response moveFiles(@Context HttpServletRequest request, @ApiParam("fileList") List<String> fileList) {
 		try {
+			System.out.println("***** FileList: " + fileList + "*****");
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Map<String, String> files = fileUploadService.moveFilesFromUploads(userId, fileList);
