@@ -268,10 +268,14 @@ public class FileUploadService {
 		String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.toString() + File.separatorChar + userId;
 		String hash = UUID.randomUUID().toString();
 		for (String file : fileList) {
-			InputStream is = new FileInputStream(new File(basePath + File.separatorChar + file));
+			File f = new File(basePath + File.separatorChar + file);
+			InputStream is = new FileInputStream(f);
 			String fileName = file.substring(file.lastIndexOf(File.separatorChar) + 1);
 			FileUploadModel model = uploadFile("observation", is, hash, fileName);
-			finalPaths.put(file, model.getUri());
+			if (model.isUploaded()) {
+				finalPaths.put(file, model.getUri());
+				f.delete();
+			}
 		}
 		return finalPaths;
 	}
