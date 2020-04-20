@@ -1,20 +1,16 @@
 package com.strandls.file.api;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -26,13 +22,10 @@ import com.google.inject.Inject;
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.file.ApiContants;
-import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.model.MyUpload;
 import com.strandls.file.service.FileUploadService;
 import com.strandls.file.util.AppUtil;
-import com.strandls.file.util.ImageUtil;
 import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataParam;
 
 import io.swagger.annotations.Api;
@@ -159,10 +152,11 @@ public class FileUploadApi {
 	@ApiOperation(value = "Moves files from MyUploads to the appropriate folder", notes = "Returns uploaded file data", response = Map.class)
 	public Response moveFiles(@Context HttpServletRequest request, @ApiParam("fileList") List<String> fileList) {
 		try {
-			System.out.println("***** FileList: " + fileList + "*****");
+			System.out.println("\n\n***** FileList: " + fileList + "*****\n\n");
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Map<String, String> files = fileUploadService.moveFilesFromUploads(userId, fileList);
+			System.out.println("\n\n***** Done *****\n\n");
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
