@@ -15,4 +15,5 @@ public class ApiContants {
 	public static final String DWCFILE = "/dwcfile";
 	public static final String MY_UPLOADS = "/my-uploads";
 	public static final String MOVE_FILES = "/move-files";
+	public static final String DELETE_FILE = "/delete-file";
 }

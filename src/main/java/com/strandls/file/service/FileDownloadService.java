@@ -212,6 +212,7 @@ public class FileDownloadService {
 			Tika tika = new Tika();
 			boolean fileGenerated = AppUtil.generateFile(command);
 			File resizedFile = AppUtil.getResizedImage(fileGenerated ? command : file.getAbsolutePath());
+			long contentLength = resizedFile.length();
 			String contentType = tika.detect(resizedFile.getName());
 			InputStream in = new FileInputStream(resizedFile);
 			StreamingOutput sout;
@@ -229,7 +230,9 @@ public class FileDownloadService {
 				}
 			};
 			return Response.ok(sout).type(format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
-					.cacheControl(AppUtil.getCacheControl()).build();
+					.cacheControl(AppUtil.getCacheControl())
+					.header("Content-Length", Long.toString(contentLength))
+					.build();
 		} catch (FileNotFoundException fe) {
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();
@@ -248,7 +251,7 @@ public class FileDownloadService {
 				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
 			InputStream in = new FileInputStream(file.getAbsolutePath());
-
+			long contentLength = file.length();
 			Tika tika = new Tika();
 			String contentType = tika.detect(file.getName());
 			StreamingOutput sout;
@@ -266,7 +269,9 @@ public class FileDownloadService {
 					output.close();
 				}
 			};
-			return Response.ok(sout).type(contentType).cacheControl(AppUtil.getCacheControl()).build();
+			return Response.ok(sout).type(contentType).cacheControl(AppUtil.getCacheControl())
+					.header("Content-Length", Long.toString(contentLength))
+					.build();
 		} catch (FileNotFoundException fe) {
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();

@@ -264,6 +264,17 @@ public class FileUploadService {
 		}
 		return files;
 	}
+	
+	public boolean deleteFilesFromMyUploads(Long userId, String fileName) {
+		boolean isDeleted = false;
+		String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.toString() + File.separatorChar +
+				userId;
+		File f = new File(basePath + File.separatorChar + fileName);
+		if (f.exists()) {
+			isDeleted = f.delete() && f.getParentFile().delete();
+		}
+		return isDeleted;
+	}
 
 	public Map<String, String> moveFilesFromUploads(Long userId, List<String> fileList) throws Exception {
 		Map<String, String> finalPaths = new HashMap<>();
