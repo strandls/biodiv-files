@@ -275,8 +275,10 @@ public class FileUploadService {
 			System.out.println("\n\n***** Hash: " + hash + "*****\n\n");
 			String existingHash = fileList.stream().filter(path -> !path.startsWith(File.separatorChar + "ibpmu-")).findAny()
 					.orElse(null);
-			existingHash = existingHash.substring(1);
-			existingHash = existingHash.substring(0, existingHash.indexOf(File.separatorChar));
+			if (existingHash != null && !existingHash.isEmpty()) {
+				existingHash = existingHash.substring(1);
+				existingHash = existingHash.substring(0, existingHash.indexOf(File.separatorChar));				
+			}
 
 			System.out.println("\n\n***** Existing Hash: " + existingHash + "*****\n\n");
 			for (String file : fileList) {
