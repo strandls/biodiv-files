@@ -283,10 +283,10 @@ public class FileUploadService {
 			System.out.println("\n\n***** Existing Hash: " + existingHash + "*****\n\n");
 			for (String file : fileList) {
 				File f = new File(basePath + File.separatorChar + file);
-				if (file.startsWith(File.separatorChar + BASE_FOLDERS.myUploads.toString())) {
+				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					if (f.exists()) {
 						InputStream is = new FileInputStream(f);
-						String fileName = file.substring(file.lastIndexOf(File.separatorChar) + 1);
+						String fileName = f.getName();
 						FileUploadModel model = uploadFile(BASE_FOLDERS.observations.toString(), is,
 								existingHash == null ? hash : existingHash, fileName);
 						finalPaths.put(file, model.getUri());
