@@ -267,35 +267,39 @@ public class FileUploadService {
 
 	public Map<String, String> moveFilesFromUploads(Long userId, List<String> fileList) throws Exception {
 		Map<String, String> finalPaths = new HashMap<>();
-		String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.toString() + File.separatorChar
-				+ userId;
-		String hash = UUID.randomUUID().toString();
+		try {
+			String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.toString() + File.separatorChar
+					+ userId;
+			String hash = UUID.randomUUID().toString();
 
-		System.out.println("\n\n***** Hash: " + hash + "*****\n\n");
-		String existingHash = fileList.stream().filter(path -> !path.startsWith(File.separatorChar + "ibpmu-")).findAny()
-				.orElse(null);
-		existingHash = existingHash.substring(1);
-		existingHash = existingHash.substring(0, existingHash.indexOf(File.separatorChar));
+			System.out.println("\n\n***** Hash: " + hash + "*****\n\n");
+			String existingHash = fileList.stream().filter(path -> !path.startsWith(File.separatorChar + "ibpmu-")).findAny()
+					.orElse(null);
+			existingHash = existingHash.substring(1);
+			existingHash = existingHash.substring(0, existingHash.indexOf(File.separatorChar));
 
-		System.out.println("\n\n***** Existing Hash: " + existingHash + "*****\n\n");
-		for (String file : fileList) {
-			File f = new File(basePath + File.separatorChar + file);
-			if (file.startsWith(File.separatorChar + BASE_FOLDERS.myUploads.toString())) {
-				if (f.exists()) {
-					InputStream is = new FileInputStream(f);
-					String fileName = file.substring(file.lastIndexOf(File.separatorChar) + 1);
-					FileUploadModel model = uploadFile(BASE_FOLDERS.observations.toString(), is,
-							existingHash == null ? hash : existingHash, fileName);
-					finalPaths.put(file, model.getUri());
+			System.out.println("\n\n***** Existing Hash: " + existingHash + "*****\n\n");
+			for (String file : fileList) {
+				File f = new File(basePath + File.separatorChar + file);
+				if (file.startsWith(File.separatorChar + BASE_FOLDERS.myUploads.toString())) {
+					if (f.exists()) {
+						InputStream is = new FileInputStream(f);
+						String fileName = file.substring(file.lastIndexOf(File.separatorChar) + 1);
+						FileUploadModel model = uploadFile(BASE_FOLDERS.observations.toString(), is,
+								existingHash == null ? hash : existingHash, fileName);
+						finalPaths.put(file, model.getUri());
 
 
-					System.out.println("\n\n***** New Path: " + model.getUri() + "*****\n\n");
-					f.delete();
+						System.out.println("\n\n***** New Path: " + model.getUri() + "*****\n\n");
+						f.delete();
+					}
+				} else {
+					System.out.println("\n\n***** Existing Path: " + file + "*****\n\n");
+					finalPaths.put(file, file);
 				}
-			} else {
-				System.out.println("\n\n***** Existing Path: " + file + "*****\n\n");
-				finalPaths.put(file, file);
-			}
+			}			
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 		return finalPaths;
 	}
