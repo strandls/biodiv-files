@@ -309,8 +309,8 @@ public class FileUploadService {
 	private boolean writeToFile(InputStream inputStream, String fileLocation) {
 		try {
 			File f = new File(fileLocation);
-			if (!f.exists()) {
-				f.createNewFile();
+			if (!f.getParentFile().exists()) {
+				f.getParentFile().mkdirs();
 			}
 			OutputStream out = new FileOutputStream(f);
 			int read = 0;
