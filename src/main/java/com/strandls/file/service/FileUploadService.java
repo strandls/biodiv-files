@@ -308,7 +308,11 @@ public class FileUploadService {
 
 	private boolean writeToFile(InputStream inputStream, String fileLocation) {
 		try {
-			OutputStream out = new FileOutputStream(new File(fileLocation));
+			File f = new File(fileLocation);
+			if (!f.exists()) {
+				f.createNewFile();
+			}
+			OutputStream out = new FileOutputStream(f);
 			int read = 0;
 			byte[] bytes = new byte[1024];
 
