@@ -282,7 +282,7 @@ public class FileUploadService {
 
 			System.out.println("\n\n***** Existing Hash: " + existingHash + "*****\n\n");
 			for (String file : fileList) {
-				File f = new File(basePath + File.separatorChar + file);
+				File f = new File(basePath + file);
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					if (f.exists()) {
 						InputStream is = new FileInputStream(f);
