@@ -149,6 +149,19 @@ public class AppUtil {
 		}
 		return output;
 	}
+	
+	public static Integer executeCommandExitValue(String command) {
+		Process p = null;
+		Integer output = null;
+		try {
+			String[] commands = { "/bin/sh", "-c", command };
+			p = Runtime.getRuntime().exec(commands);
+			output = p.waitFor();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return output;
+	}
 
 	public static Double evaluateExpression(String expression) {
 		if (expression.contains("/")) {

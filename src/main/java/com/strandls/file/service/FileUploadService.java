@@ -187,7 +187,8 @@ public class FileUploadService {
 //		boolean uploaded = writeToFile(inputStream, filePath);
 		StringBuilder command = new StringBuilder();
 		command.append("mv").append(" ").append(source).append(" ").append(filePath);
-		boolean uploaded = AppUtil.executeCommandWithExitValue(command.toString());
+		Integer exitVal = AppUtil.executeCommandExitValue(command.toString());
+		boolean uploaded = (exitVal != null && exitVal == 0) ? true: false;
 
 		fileUploadModel.setUploaded(uploaded);
 
