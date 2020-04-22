@@ -162,22 +162,5 @@ public class FileUploadApi {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
-	
-	@POST
-	@Path(ApiContants.DELETE_FILE)
-	@ValidateUser
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Delete files from MyUploads", notes = "Returns 200 ok if deleted", response = String.class)
-	public Response deleteFile(@Context HttpServletRequest request, @FormDataParam("file") String fileName) {
-		try {
-			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			Long userId = Long.parseLong(profile.getId());
-			boolean deleted = fileUploadService.deleteFilesFromMyUploads(userId, fileName);
-			return Response.ok().entity(deleted).build();
-		} catch (Exception ex) {
-			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
-		}
-	}
 
 }
