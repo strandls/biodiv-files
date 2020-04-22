@@ -170,7 +170,7 @@ public class FileUploadApi {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Delete files from MyUploads", notes = "Returns 200 ok if deleted", response = String.class)
-	public Response deleteFile(@Context HttpServletRequest request, @FormParam("file") String fileName) {
+	public Response deleteFile(@Context HttpServletRequest request, @FormDataParam("file") String fileName) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
