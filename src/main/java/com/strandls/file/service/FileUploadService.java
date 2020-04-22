@@ -179,7 +179,10 @@ public class FileUploadService {
 		String generatedFileName = fileMetaData.getId() + "." + fileExtension;
 
 		String filePath = dirPath + File.separatorChar + generatedFileName;
-
+		File destFile = new File(filePath);
+		if (!destFile.getParentFile().exists()) {
+			destFile.getParentFile().mkdirs();
+		}
 		Path path = java.nio.file.Files.move(Paths.get(source), Paths.get(filePath), StandardCopyOption.ATOMIC_MOVE);
 //		boolean uploaded = writeToFile(inputStream, filePath);
 		boolean uploaded = path != null;
