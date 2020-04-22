@@ -25,6 +25,7 @@ import com.strandls.file.ApiContants;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil;
 import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
+import com.strandls.file.util.ThumbnailUtil;
 
 public class FileDownloadService {
 
@@ -98,7 +99,7 @@ public class FileDownloadService {
 		}
 
 		image = image.getSubimage(x, y, subImageWidth, subImageHeight);
-		BufferedImage outputImage = FileUploadService.getScaledImage(image, outputWidth, outputHeight);
+		BufferedImage outputImage = ThumbnailUtil.getScaledImage(image, outputWidth, outputHeight);
 
 		String extension = Files.getFileExtension(fileName);
 		String fileNameWithoutExtension = Files.getNameWithoutExtension(fileName);
@@ -158,7 +159,7 @@ public class FileDownloadService {
 		}
 		image = image.getSubimage(0, 0, imgWidth, imgHeight);
 		String extension = Files.getFileExtension(fileName);
-		BufferedImage outputImage = FileUploadService.getScaledImage(image, width == null ? newWidth : width,
+		BufferedImage outputImage = ThumbnailUtil.getScaledImage(image, width == null ? newWidth : width,
 				height == null ? newHeight : height,
 				extension.equalsIgnoreCase("png") ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
 		String fileNameWithoutExtension = Files.getNameWithoutExtension(fileName);

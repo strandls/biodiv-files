@@ -1,8 +1,5 @@
 package com.strandls.file.service;
 
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -19,7 +16,6 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.tika.Tika;
@@ -31,22 +27,13 @@ import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.model.MyUpload;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
+import com.strandls.file.util.ThumbnailUtil;
 import com.sun.jersey.core.header.ContentDisposition;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.BodyPart;
 import com.sun.jersey.multipart.FormDataBodyPart;
 
 public class FileUploadService {
-
-	private static final int GALLERY_WIDTH = 500;
-	private static final int GALLERY_HEIGHT = 300;
-	private static final int GALLERY_TH_WIDTH = 50;
-	private static final int GALLERY_TH_HEIGHT = 50;
-
-	private static final int TH1_WIDTH = 200;
-	private static final int TH1_HEIGHT = 200;
-	private static final int TH2_WIDTH = 320;
-	private static final int TH2_HEIGHT = 320;
 
 	@Inject
 	private FileMetaDataService fileMetaDataService;
@@ -126,8 +113,10 @@ public class FileUploadService {
 
 		fileUploadModel.setUploaded(uploaded);
 
-		if (probeContentType.startsWith("image"))
-			generateMultipleFiles(filePath, dirPath, fileMetaData.getId(), fileExtension);
+		if (probeContentType.startsWith("image")) {
+			Thread thread = new Thread(new ThumbnailUtil(filePath, dirPath, fileMetaData.getId(), fileExtension));
+			thread.start();
+		}
 
 		if (uploaded) {
 			String resultPath = File.separatorChar + folderName + File.separatorChar + generatedFileName;
@@ -183,17 +172,15 @@ public class FileUploadService {
 		if (!destFile.getParentFile().exists()) {
 			destFile.getParentFile().mkdirs();
 		}
-//		Path path = java.nio.file.Files.move(Paths.get(source), Paths.get(filePath), StandardCopyOption.ATOMIC_MOVE);		
-//		boolean uploaded = writeToFile(inputStream, filePath);
-		StringBuilder command = new StringBuilder();
-		command.append("mv").append(" ").append(source).append(" ").append(filePath);
-		Integer exitVal = AppUtil.executeCommandExitValue(command.toString());
-		boolean uploaded = (exitVal != null && exitVal == 0) ? true: false;
+		Path path = java.nio.file.Files.move(Paths.get(source), Paths.get(filePath), StandardCopyOption.ATOMIC_MOVE);
+		boolean uploaded = path != null;
 
 		fileUploadModel.setUploaded(uploaded);
 
-		if (probeContentType.startsWith("image"))
-			generateMultipleFiles(filePath, dirPath, fileMetaData.getId(), fileExtension);
+		if (probeContentType.startsWith("image")) {
+			Thread thread = new Thread(new ThumbnailUtil(filePath, dirPath, fileMetaData.getId(), fileExtension));
+			thread.start();
+		}
 
 		if (uploaded) {
 			String resultPath = File.separatorChar + folderName + File.separatorChar + generatedFileName;
@@ -313,7 +300,7 @@ public class FileUploadService {
 
 
 						System.out.println("\n\n***** New Path: " + model.getUri() + "*****\n\n");
-//						f.delete();
+						f.getParentFile().delete();
 					}
 				} else {
 					System.out.println("\n\n***** Existing Path: " + file + "*****\n\n");
@@ -348,124 +335,5 @@ public class FileUploadService {
 			e.printStackTrace();
 		}
 		return false;
-	}
-
-	private void generateMultipleFiles(String filePath, String dirPath, long fileId, String extension)
-			throws IOException {
-		File file = new File(filePath);
-
-		BufferedImage image = ImageIO.read(file);
-
-		// If unable to parse the image file
-		if (image == null) {
-			return;
-		}
-
-		// Generate the gallery image.
-		generateGallaryImage(image, dirPath, fileId, extension);
-
-		// crop the image to square size
-		int h = image.getHeight();
-		int w = image.getWidth();
-		int x = 0;
-		int y = 0;
-		if (w > h) {
-			x = (w - h) / 2;
-			w = h;
-		} else if (h > w) {
-			y = (h - w) / 2;
-			h = w;
-		}
-		BufferedImage cropedImage = image.getSubimage(x, y, w, h);
-
-		// Generate Thumb nail images
-		generateGalleryThumbnailImage(cropedImage, dirPath, fileId, extension);
-		generateThumbnail1Image(cropedImage, dirPath, fileId, extension);
-		generateThumbnail2Image(cropedImage, dirPath, fileId, extension);
-	}
-
-	public void generateMultipleFiles(String filePath, long fileId, String extension) throws IOException {
-		File file = new File(filePath);
-
-		BufferedImage image = ImageIO.read(file);
-
-		// If unable to parse the image file
-		if (image == null) {
-			return;
-		}
-
-		// crop the image to square size
-		int h = image.getHeight();
-		int w = image.getWidth();
-		int x = 0;
-		int y = 0;
-		if (w > h) {
-			x = (w - h) / 2;
-			w = h;
-		} else if (h > w) {
-			y = (h - w) / 2;
-			h = w;
-		}
-		BufferedImage cropedImage = image.getSubimage(x, y, w, h);
-
-		generateThumbnail1Image(cropedImage, filePath, fileId, extension);
-	}
-
-	private void generateGallaryImage(BufferedImage image, String dirPath, long fileId, String extension)
-			throws IOException {
-		int h = image.getHeight();
-		int w = image.getWidth();
-		double hRatio = ((double) h) / GALLERY_HEIGHT;
-		double wRatio = ((double) w) / GALLERY_WIDTH;
-		int gall_w = 0, gall_h = 0;
-		if (hRatio > wRatio) {
-			gall_w = (int) (w / hRatio);
-			gall_h = GALLERY_HEIGHT;
-		} else {
-			gall_w = GALLERY_WIDTH;
-			gall_h = (int) (h / wRatio);
-		}
-		BufferedImage galleryImage = getScaledImage(image, gall_w, gall_h);
-		File output = new File(dirPath + File.separatorChar + fileId + "_gall." + extension);
-		ImageIO.write(galleryImage, extension, output);
-	}
-
-	private void generateGalleryThumbnailImage(BufferedImage cropedImage, String dirPath, long fileId, String extension)
-			throws IOException {
-		BufferedImage image = getScaledImage(cropedImage, GALLERY_TH_WIDTH, GALLERY_TH_HEIGHT);
-		File output = new File(dirPath + File.separatorChar + fileId + "_gall_th." + extension);
-		ImageIO.write(image, extension, output);
-	}
-
-	private void generateThumbnail1Image(BufferedImage cropedImage, String dirPath, long fileId, String extension)
-			throws IOException {
-		BufferedImage image = getScaledImage(cropedImage, TH1_WIDTH, TH1_HEIGHT);
-		File output = new File(dirPath + File.separatorChar + fileId + "_th1." + extension);
-		ImageIO.write(image, extension, output);
-	}
-
-	private void generateThumbnail2Image(BufferedImage cropedImage, String dirPath, long fileId, String extension)
-			throws IOException {
-		BufferedImage image = getScaledImage(cropedImage, TH2_WIDTH, TH2_HEIGHT);
-		File output = new File(dirPath + File.separatorChar + fileId + "_th2." + extension);
-		ImageIO.write(image, extension, output);
-	}
-
-	public static BufferedImage getScaledImage(BufferedImage image, int w, int h) {
-		Image scaledImage = image.getScaledInstance(w, h, Image.SCALE_SMOOTH);
-		BufferedImage resizedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-		Graphics2D g2 = resizedImage.createGraphics();
-		g2.drawImage(scaledImage, 0, 0, null);
-		g2.dispose();
-		return resizedImage;
-	}
-
-	public static BufferedImage getScaledImage(BufferedImage image, int w, int h, int rgbType) {
-		Image scaledImage = image.getScaledInstance(w, h, Image.SCALE_SMOOTH);
-		BufferedImage resizedImage = new BufferedImage(w, h, rgbType);
-		Graphics2D g2 = resizedImage.createGraphics();
-		g2.drawImage(scaledImage, 0, 0, null);
-		g2.dispose();
-		return resizedImage;
 	}
 }
