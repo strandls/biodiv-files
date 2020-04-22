@@ -4,12 +4,10 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.CopyOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -95,64 +93,6 @@ public class FileUploadService {
 
 		String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName;
-		Tika tika = new Tika();
-		String probeContentType = tika.detect(fileName);
-
-		if (probeContentType == null || !probeContentType.startsWith("image") && !probeContentType.startsWith("audio")
-				&& !probeContentType.startsWith("video")) {
-			fileUploadModel.setError("Invalid file type. Allowed types are image, audio and video");
-			return fileUploadModel;
-		} else {
-			fileUploadModel.setType(probeContentType);
-		}
-
-		if ("".equals(hashKey)) {
-			File dir = new File(dirPath);
-			boolean created = dir.mkdir();
-			if (!created) {
-				fileUploadModel.setError("Directory creation failed");
-				return fileUploadModel;
-			}
-		}
-
-		FileMetaData fileMetaData = new FileMetaData();
-		fileMetaData.setFileName(fileName);
-		fileMetaData.setPath(folderName);
-		fileMetaDataService.save(fileMetaData);
-
-		String generatedFileName = fileMetaData.getId() + "." + fileExtension;
-
-		String filePath = dirPath + File.separatorChar + generatedFileName;
-
-		boolean uploaded = writeToFile(inputStream, filePath);
-
-		fileUploadModel.setUploaded(uploaded);
-
-		if (probeContentType.startsWith("image"))
-			generateMultipleFiles(filePath, dirPath, fileMetaData.getId(), fileExtension);
-
-		if (uploaded) {
-			String resultPath = File.separatorChar + folderName + File.separatorChar + generatedFileName;
-			fileUploadModel.setHashKey(folderName);
-			fileUploadModel.setFileName(generatedFileName);
-			fileUploadModel.setUri(resultPath);
-			return fileUploadModel;
-		} else {
-			fileUploadModel.setError("Unable to upload image");
-			return fileUploadModel;
-		}
-	}
-
-	private FileUploadModel uploadFile(String directory, InputStream inputStream, String hashKey, String fileName)
-			throws IOException {
-
-		FileUploadModel fileUploadModel = new FileUploadModel();
-
-		String fileExtension = Files.getFileExtension(fileName);
-
-		String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
-		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName;
-
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(fileName);
 
@@ -360,7 +300,6 @@ public class FileUploadService {
 				File f = new File(basePath + file);
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					if (f.exists()) {
-						InputStream is = new FileInputStream(f);
 						String fileName = f.getName();
 						FileUploadModel model = uploadFile(f.getAbsolutePath(), BASE_FOLDERS.observations.toString(),
 								existingHash == null ? hash : existingHash, fileName);
