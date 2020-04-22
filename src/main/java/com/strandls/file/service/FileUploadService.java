@@ -180,7 +180,7 @@ public class FileUploadService {
 
 		String filePath = dirPath + File.separatorChar + generatedFileName;
 
-		Path path = java.nio.file.Files.move(Paths.get(source), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+		Path path = java.nio.file.Files.move(Paths.get(source), Paths.get(filePath), StandardCopyOption.ATOMIC_MOVE);
 //		boolean uploaded = writeToFile(inputStream, filePath);
 		boolean uploaded = path != null;
 
