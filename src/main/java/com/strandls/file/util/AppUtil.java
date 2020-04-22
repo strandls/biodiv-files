@@ -32,12 +32,9 @@ public class AppUtil {
 	}
 
 	public static boolean generateFile(String command) {
-		Process p = null;
 		boolean isFileGenerated = false;
 		try {
-			String[] commands = { "/bin/sh", "-c", command };
-			p = Runtime.getRuntime().exec(commands);
-			isFileGenerated = p.waitFor(5, TimeUnit.SECONDS);
+			isFileGenerated = executeCommandWithExitValue(command);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -138,6 +135,19 @@ public class AppUtil {
 			ex.printStackTrace();
 		}
 		return output.toString();
+	}
+	
+	public static boolean executeCommandWithExitValue(String command) {
+		Process p = null;
+		boolean output = false;
+		try {
+			String[] commands = { "/bin/sh", "-c", command };
+			p = Runtime.getRuntime().exec(commands);
+			output = p.waitFor(5, TimeUnit.SECONDS);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return output;
 	}
 
 	public static Double evaluateExpression(String expression) {

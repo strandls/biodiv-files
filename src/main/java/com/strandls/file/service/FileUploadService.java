@@ -82,7 +82,7 @@ public class FileUploadService {
 		return mutipleFiles;
 	}
 
-	public FileUploadModel uploadFile(String directory, InputStream inputStream, FormDataContentDisposition fileDetails,
+	private FileUploadModel uploadFile(String directory, InputStream inputStream, FormDataContentDisposition fileDetails,
 			HttpServletRequest request, String hashKey) throws IOException {
 
 		FileUploadModel fileUploadModel = new FileUploadModel();
@@ -183,9 +183,11 @@ public class FileUploadService {
 		if (!destFile.getParentFile().exists()) {
 			destFile.getParentFile().mkdirs();
 		}
-		Path path = java.nio.file.Files.move(Paths.get(source), Paths.get(filePath), StandardCopyOption.ATOMIC_MOVE);
+//		Path path = java.nio.file.Files.move(Paths.get(source), Paths.get(filePath), StandardCopyOption.ATOMIC_MOVE);		
 //		boolean uploaded = writeToFile(inputStream, filePath);
-		boolean uploaded = path != null;
+		StringBuilder command = new StringBuilder();
+		command.append("mv").append(" ").append(source).append(" ").append(filePath);
+		boolean uploaded = AppUtil.executeCommandWithExitValue(command.toString());
 
 		fileUploadModel.setUploaded(uploaded);
 
