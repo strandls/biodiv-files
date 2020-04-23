@@ -215,6 +215,7 @@ public class FileDownloadService {
 			File resizedFile = AppUtil.getResizedImage(fileGenerated ? command : file.getAbsolutePath());
 			String contentType = tika.detect(resizedFile.getName());
 			InputStream in = new FileInputStream(resizedFile);
+			long contentLength = resizedFile.length();
 			StreamingOutput sout;
 			sout = new StreamingOutput() {
 				@Override
@@ -230,6 +231,7 @@ public class FileDownloadService {
 				}
 			};
 			return Response.ok(sout).type(format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
+					.header("Content-Length", contentLength)
 					.cacheControl(AppUtil.getCacheControl())
 					.build();
 		} catch (FileNotFoundException fe) {
@@ -252,6 +254,7 @@ public class FileDownloadService {
 			InputStream in = new FileInputStream(file.getAbsolutePath());
 			Tika tika = new Tika();
 			String contentType = tika.detect(file.getName());
+			long contentLength = file.length();
 			StreamingOutput sout;
 			sout = new StreamingOutput() {
 
@@ -267,7 +270,9 @@ public class FileDownloadService {
 					output.close();
 				}
 			};
-			return Response.ok(sout).type(contentType).cacheControl(AppUtil.getCacheControl())
+			return Response.ok(sout).type(contentType)
+					.header("Content-Length", contentLength)
+					.cacheControl(AppUtil.getCacheControl())
 					.build();
 		} catch (FileNotFoundException fe) {
 			logger.error(fe.getMessage());
