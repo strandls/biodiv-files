@@ -41,46 +41,6 @@ public class FileUploadApi {
 	@Inject
 	private FileUploadService fileUploadService;
 
-//	@POST
-//	@Path("multiple/{directory}")
-//	@Consumes(MediaType.MULTIPART_FORM_DATA)
-//	@Produces(MediaType.APPLICATION_JSON)
-//	@ApiOperation(value = "upload the files to server", response = Map.class)
-//	public Response uploadMultiple(@Context HttpServletRequest request, @FormDataParam("upload") FormDataBodyPart body,
-//			@PathParam("directory") String directory, @DefaultValue("") @QueryParam("hashKey") String hashKey)
-//			throws IOException {
-//
-//		if (directory.contains("..") || hashKey.contains("..")) {
-//			return Response.status(Status.NOT_ACCEPTABLE).build();
-//		}
-//		if (!ImageUtil.checkFolderExistence(directory)) {
-//			return Response.status(Status.BAD_REQUEST).build();
-//		}
-//
-//		List<FileUploadModel> mutipleFiles = fileUploadService.uploadMultipleFiles(directory, body, request, hashKey);
-//		return Response.ok(mutipleFiles).build();
-//	}
-//
-//	@POST
-//	@Path("/{directory}")
-//	@Consumes(MediaType.MULTIPART_FORM_DATA)
-//	@Produces(MediaType.APPLICATION_JSON)
-//	@ApiOperation(value = "upload the file to server", response = Map.class)
-//	public Response uploadFile(@Context HttpServletRequest request, @FormDataParam("upload") InputStream inputStream,
-//			@PathParam("directory") String directory, @FormDataParam("upload") FormDataContentDisposition fileDetails,
-//			@DefaultValue("") @QueryParam("hashKey") String hashKey) throws IOException {
-//
-//		if (directory.contains("..") || hashKey.contains("..")) {
-//			return Response.status(Status.NOT_ACCEPTABLE).build();
-//		}
-//		if (!ImageUtil.checkFolderExistence(directory)) {
-//			return Response.status(Status.BAD_REQUEST).build();
-//		}
-//		FileUploadModel uploadedFile = fileUploadService.uploadFile(directory, inputStream, fileDetails, request,
-//				hashKey);
-//		return Response.ok(uploadedFile).build();
-//	}
-
 	@POST
 	@Path(ApiContants.MY_UPLOADS)
 	@ValidateUser
@@ -152,11 +112,9 @@ public class FileUploadApi {
 	@ApiOperation(value = "Moves files from MyUploads to the appropriate folder", notes = "Returns uploaded file data", response = Map.class)
 	public Response moveFiles(@Context HttpServletRequest request, @ApiParam("fileList") List<String> fileList) {
 		try {
-			System.out.println("\n\n***** FileList: " + fileList + "*****\n\n");
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Map<String, String> files = fileUploadService.moveFilesFromUploads(userId, fileList);
-			System.out.println("\n\n***** Done *****\n\n");
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();

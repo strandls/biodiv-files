@@ -6,15 +6,20 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.core.CacheControl;
 
 public class AppUtil {
+
+	private static final List<String> PREVENTIVE_TOKENS = Arrays.asList("&", "|", "`", "$", ";");
 
 	public static CacheControl getCacheControl() {
 		CacheControl cache = new CacheControl();
@@ -115,46 +120,37 @@ public class AppUtil {
 		}
 		return resizedImage;
 	}
-	
+
 	public static String executeCommand(String command) {
 		Process p = null;
 		StringBuilder output = new StringBuilder();
 		BufferedReader br = null;
 		try {
-			String[] commands = { "/bin/sh", "-c", command };
-			p = Runtime.getRuntime().exec(commands);
-			br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			String line;
-			while ((line = br.readLine()) != null) {
-				output.append(line);
+			if (PREVENTIVE_TOKENS.stream().filter(symbol -> command.contains(symbol)).findAny().isEmpty()) {
+				String[] commands = { "/bin/sh", "-c", command };
+				p = Runtime.getRuntime().exec(commands);
+				br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				String line;
+				while ((line = br.readLine()) != null) {
+					output.append(line);
+				}
+				p.waitFor();
 			}
-			p.waitFor();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		return output.toString();
 	}
-	
+
 	public static boolean executeCommandWithExitValue(String command) {
 		Process p = null;
 		boolean output = false;
 		try {
-			String[] commands = { "/bin/sh", "-c", command };
-			p = Runtime.getRuntime().exec(commands);
-			output = p.waitFor(5, TimeUnit.SECONDS);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		return output;
-	}
-	
-	public static Integer executeCommandExitValue(String command) {
-		Process p = null;
-		Integer output = null;
-		try {
-			String[] commands = { "/bin/sh", "-c", command };
-			p = Runtime.getRuntime().exec(commands);
-			output = p.waitFor();
+			if (PREVENTIVE_TOKENS.stream().filter(symbol -> command.contains(symbol)).findAny().isEmpty()) {
+				String[] commands = { "/bin/sh", "-c", command };
+				p = Runtime.getRuntime().exec(commands);
+				output = p.waitFor(5, TimeUnit.SECONDS);
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -170,7 +166,7 @@ public class AppUtil {
 		}
 		return null;
 	}
-	
+
 	public static Double calculateValues(String expression) {
 		Double value = null;
 		try {
@@ -186,7 +182,7 @@ public class AppUtil {
 		}
 		return value;
 	}
-	
+
 	public static String getExifGeoData(String fileName) {
 		String command = "identify -format \"%[EXIF:GPSLatitude]*%[EXIF:GPSLongitude]\" " + fileName;
 		return executeCommand(command);
