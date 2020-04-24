@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -116,6 +117,22 @@ public class FileUploadApi {
 			Long userId = Long.parseLong(profile.getId());
 			Map<String, String> files = fileUploadService.moveFilesFromUploads(userId, fileList);
 			return Response.ok().entity(files).build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
+	
+	@POST
+	@Path(ApiContants.REMOVE_FILE)
+	@ValidateUser
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response removeFile(@Context HttpServletRequest request, @FormParam("fileName") String fileName) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			boolean deleted = fileUploadService.deleteFilesFromMyUploads(userId, fileName);
+			return Response.ok().entity(deleted).build();	
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
