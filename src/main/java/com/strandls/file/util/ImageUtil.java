@@ -1,11 +1,8 @@
 package com.strandls.file.util;
 
 import java.io.File;
-import java.nio.file.Paths;
-	
-import javax.servlet.http.HttpServletRequest;
 
-import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
+import javax.servlet.http.HttpServletRequest;
 
 public class ImageUtil {
 	
@@ -15,7 +12,9 @@ public class ImageUtil {
 		species, 
 		userGroups, 
 		users, 
-		traits
+		traits,
+		myUploads,
+		thumbnails
 	};
 	
 	public static boolean checkFolderExistence(String directory) {

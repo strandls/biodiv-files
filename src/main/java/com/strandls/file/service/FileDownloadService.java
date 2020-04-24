@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLConnection;
 import java.util.Properties;
 
 import javax.imageio.ImageIO;
@@ -17,6 +16,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +24,8 @@ import com.google.common.io.Files;
 import com.strandls.file.ApiContants;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil;
+import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
+import com.strandls.file.util.ThumbnailUtil;
 
 public class FileDownloadService {
 
@@ -97,7 +99,7 @@ public class FileDownloadService {
 		}
 
 		image = image.getSubimage(x, y, subImageWidth, subImageHeight);
-		BufferedImage outputImage = FileUploadService.getScaledImage(image, outputWidth, outputHeight);
+		BufferedImage outputImage = ThumbnailUtil.getScaledImage(image, outputWidth, outputHeight);
 
 		String extension = Files.getFileExtension(fileName);
 		String fileNameWithoutExtension = Files.getNameWithoutExtension(fileName);
@@ -135,7 +137,8 @@ public class FileDownloadService {
 			return Response.status(Status.NOT_FOUND).entity("File not found").build();
 		}
 
-		String contentType = URLConnection.guessContentTypeFromName(fileLocation);
+		Tika tika = new Tika();
+		String contentType = tika.detect(fileLocation);
 		boolean isWebp = format.equalsIgnoreCase("webp");
 		BufferedImage image = ImageIO.read(file);
 		int imgHeight = image.getHeight();
@@ -156,7 +159,7 @@ public class FileDownloadService {
 		}
 		image = image.getSubimage(0, 0, imgWidth, imgHeight);
 		String extension = Files.getFileExtension(fileName);
-		BufferedImage outputImage = FileUploadService.getScaledImage(image, width == null ? newWidth : width,
+		BufferedImage outputImage = ThumbnailUtil.getScaledImage(image, width == null ? newWidth : width,
 				height == null ? newHeight : height,
 				extension.equalsIgnoreCase("png") ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
 		String fileNameWithoutExtension = Files.getNameWithoutExtension(fileName);
@@ -198,11 +201,21 @@ public class FileDownloadService {
 				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
 
-			String command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, format, null);
+			String command = null;
+			if (directory.startsWith(BASE_FOLDERS.myUploads.toString())) {
+				command = AppUtil.generateCommand(file.getAbsolutePath(),
+						storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.toString(), width, height,
+						format, null);
+			} else {
+				command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, format, null);
+			}
+
+			Tika tika = new Tika();
 			boolean fileGenerated = AppUtil.generateFile(command);
-			File resizedFile = AppUtil.getResizedImage(fileGenerated ? command : fileLocation);
-			String contentType = URLConnection.guessContentTypeFromName(resizedFile.getName());
+			File resizedFile = AppUtil.getResizedImage(fileGenerated ? command : file.getAbsolutePath());
+			String contentType = tika.detect(resizedFile.getName());
 			InputStream in = new FileInputStream(resizedFile);
+			long contentLength = resizedFile.length();
 			StreamingOutput sout;
 			sout = new StreamingOutput() {
 				@Override
@@ -218,7 +231,9 @@ public class FileDownloadService {
 				}
 			};
 			return Response.ok(sout).type(format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
-					.cacheControl(AppUtil.getCacheControl()).build();
+					.header("Content-Length", contentLength)
+					.cacheControl(AppUtil.getCacheControl())
+					.build();
 		} catch (FileNotFoundException fe) {
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();
@@ -237,7 +252,9 @@ public class FileDownloadService {
 				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
 			InputStream in = new FileInputStream(file.getAbsolutePath());
-			String contentType = URLConnection.guessContentTypeFromName(file.getName());
+			Tika tika = new Tika();
+			String contentType = tika.detect(file.getName());
+			long contentLength = file.length();
 			StreamingOutput sout;
 			sout = new StreamingOutput() {
 
@@ -253,7 +270,10 @@ public class FileDownloadService {
 					output.close();
 				}
 			};
-			return Response.ok(sout).type(contentType).cacheControl(AppUtil.getCacheControl()).build();
+			return Response.ok(sout).type(contentType)
+					.header("Content-Length", contentLength)
+					.cacheControl(AppUtil.getCacheControl())
+					.build();
 		} catch (FileNotFoundException fe) {
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();
