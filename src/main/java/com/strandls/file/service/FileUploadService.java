@@ -262,12 +262,12 @@ public class FileUploadService {
 		return files;
 	}
 	
-	public boolean deleteFilesFromMyUploads(Long userId, String fileName) {
+	public boolean deleteFilesFromMyUploads(Long userId, String fileName) throws IOException {
 		boolean isDeleted = false;
 		String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.toString() + File.separatorChar +
 				userId;
 		File f = new File(basePath + File.separatorChar + fileName);
-		if (f.exists()) {
+		if (f.exists() && f.getCanonicalPath().startsWith(basePath)) {
 			isDeleted = f.delete() && f.getParentFile().delete();
 		}
 		return isDeleted;
