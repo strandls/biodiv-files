@@ -126,7 +126,7 @@ public class AppUtil {
 		StringBuilder output = new StringBuilder();
 		BufferedReader br = null;
 		try {
-			if (PREVENTIVE_TOKENS.stream().filter(symbol -> command.contains(symbol)).findAny().isEmpty()) {
+			if (!PREVENTIVE_TOKENS.stream().filter(symbol -> command.contains(symbol)).findAny().isPresent()) {
 				String[] commands = { "/bin/sh", "-c", command };
 				p = Runtime.getRuntime().exec(commands);
 				br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -146,7 +146,7 @@ public class AppUtil {
 		Process p = null;
 		boolean output = false;
 		try {
-			if (PREVENTIVE_TOKENS.stream().filter(symbol -> command.contains(symbol)).findAny().isEmpty()) {
+			if (!PREVENTIVE_TOKENS.stream().filter(symbol -> command.contains(symbol)).findAny().isPresent()) {
 				String[] commands = { "/bin/sh", "-c", command };
 				p = Runtime.getRuntime().exec(commands);
 				output = p.waitFor(5, TimeUnit.SECONDS);
