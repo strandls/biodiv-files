@@ -125,14 +125,14 @@ public class FileUploadApi {
 	@POST
 	@Path(ApiContants.REMOVE_FILE)
 	@ValidateUser
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Delete file from my-uploads folder", notes = "Returns if the file was deleted", response = String.class)
-	public Response removeFile(@Context HttpServletRequest request, @FormParam("fileName") String fileName) {
+	public Response removeFile(@Context HttpServletRequest request, MyUpload file) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			boolean deleted = fileUploadService.deleteFilesFromMyUploads(userId, fileName);
+			boolean deleted = fileUploadService.deleteFilesFromMyUploads(userId, file.getPath());
 			return Response.ok().entity(deleted).build();	
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
