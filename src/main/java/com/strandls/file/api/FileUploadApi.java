@@ -127,6 +127,7 @@ public class FileUploadApi {
 	@ValidateUser
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Delete file from my-uploads folder", notes = "Returns if the file was deleted", response = String.class)
 	public Response removeFile(@Context HttpServletRequest request, @FormParam("fileName") String fileName) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
