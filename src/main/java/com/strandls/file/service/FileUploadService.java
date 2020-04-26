@@ -205,6 +205,9 @@ public class FileUploadService {
 		Tika tika = new Tika();
 		String fileName = dir + File.separatorChar + fileDetails.getFileName();
 		File file = new File(fileName);
+		if (file.getCanonicalPath().startsWith(dir) && file.getCanonicalFile().exists()) {
+			return getExistingFileData(file);
+		}
 		boolean isFileCreated = writeToFile(is, file.getAbsolutePath());
 		MyUpload uploadModel = new MyUpload();
 		if (isFileCreated) {
@@ -260,6 +263,26 @@ public class FileUploadService {
 			ex.printStackTrace();
 		}
 		return files;
+	}
+	
+	private MyUpload getExistingFileData(File tmpFile) {
+		Tika tika = new Tika();
+		String probeContentType = tika.detect(tmpFile.getName());
+		MyUpload uploadModel = new MyUpload();
+		uploadModel.setHashKey(tmpFile.getParentFile().getName());
+		uploadModel.setFileName(tmpFile.getName());
+		String exifData = AppUtil.getExifGeoData(tmpFile.getAbsolutePath());
+		if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
+			String[] coordinates = exifData.split("[*]");
+			if (coordinates.length == 2) {
+				uploadModel.setLatitude(AppUtil.calculateValues(coordinates[0]));
+				uploadModel.setLongitude(AppUtil.calculateValues(coordinates[1]));
+			}
+		}
+		uploadModel.setPath(File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar
+				+ tmpFile.getName());
+		uploadModel.setType(probeContentType);
+		return uploadModel;
 	}
 	
 	public boolean deleteFilesFromMyUploads(Long userId, String fileName) throws IOException {
