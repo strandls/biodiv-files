@@ -76,7 +76,7 @@ public class FileDownloadApi {
 	public Response getImage(@Context HttpServletRequest request, @PathParam("directory") String directory,
 			@PathParam("fileName") String fileName, @QueryParam("w") Integer width, @QueryParam("h") Integer height,
 			@DefaultValue("webp") @QueryParam("fm") String format) throws Exception {
-		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
+		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
 		if (height == null && width == null) {
 			return Response.status(Status.BAD_REQUEST).entity("Height or Width required").build();			
 		}
