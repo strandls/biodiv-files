@@ -99,7 +99,7 @@ public class FileDownloadApi {
 	@ApiOperation(value = "Get the raw resource", response = StreamingOutput.class)
 	public Response getRawResource(@PathParam("directory") String directory,
 			@PathParam("fileName") String fileName) throws Exception {
-		
+		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());		
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 		}
