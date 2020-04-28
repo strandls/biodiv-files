@@ -183,8 +183,8 @@ public class AppUtil {
 		return value;
 	}
 
-	public static String getExifGeoData(String fileName) {
-		String command = "identify -format \"%[EXIF:GPSLatitude]*%[EXIF:GPSLongitude]\" " + fileName;
+	public static String getExifData(String fileName) {
+		String command = "identify -format \"%[EXIF:GPSLatitude]*%[EXIF:GPSLongitude]*%[EXIF:DateTime]\" " + fileName;
 		return executeCommand(command);
 	}
 
