@@ -8,10 +8,9 @@ public class UploadDateSort implements Comparator<MyUpload> {
 
 	@Override
 	public int compare(MyUpload obj1, MyUpload obj2) {
-		if (obj1 == null || obj2 == null) {
+		if (obj1.getDateUploaded() == null || obj2.getDateUploaded() == null) {
 			return 1;
 		}
-		System.out.println(obj1.getDateUploaded() + " " + obj2.getDateUploaded());
 		return obj1.getDateUploaded().compareTo(obj2.getDateUploaded());
 	}
 	
