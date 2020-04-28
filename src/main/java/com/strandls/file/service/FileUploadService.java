@@ -9,9 +9,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +29,7 @@ import com.google.inject.Inject;
 import com.strandls.file.model.FileMetaData;
 import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.model.MyUpload;
+import com.strandls.file.model.comparator.UploadDateSort;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
 import com.strandls.file.util.ThumbnailUtil;
@@ -332,8 +333,8 @@ public class FileUploadService {
 						uploadModel.setType(probeContentType);
 						return uploadModel;
 					}).collect(Collectors.toList());
-
 			files.addAll(filesList);
+			Collections.sort(files, new UploadDateSort());
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
