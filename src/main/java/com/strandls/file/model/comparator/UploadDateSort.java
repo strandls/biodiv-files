@@ -11,6 +11,7 @@ public class UploadDateSort implements Comparator<MyUpload> {
 		if (obj1 == null || obj2 == null) {
 			return 1;
 		}
+		System.out.println(obj1 + " " + obj2);
 		return obj1.getDateUploaded().compareTo(obj2.getDateUploaded());
 	}
 	
