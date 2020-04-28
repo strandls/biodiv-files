@@ -292,7 +292,7 @@ public class FileUploadService {
 							System.out.println("\n\n***** Exif: " + exifData + " *****\n\n");
 							String[] data = exifData.split("\\*");
 							int dataLength = data.length;
-							BasicFileAttributes attributes;
+							BasicFileAttributes attributes = null;
 							if (dataLength == 1) {
 								String dateStr = data[0];
 								Date capturedDate = null;
@@ -317,15 +317,21 @@ public class FileUploadService {
 								Date capturedDate = null;
 								try {
 									if (!dateStr.isEmpty()) {
-										attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
-												BasicFileAttributes.class);
-										Date uploadedDate = new Date(attributes.creationTime().toMillis());
-										uploadModel.setDateUploaded(uploadedDate);
 										capturedDate = sdf.parse(dateStr);
 									}
 									uploadModel.setDateCreated(capturedDate);
 								} catch (Exception ex) {
 								}
+							}
+							Date uploadedDate = null;
+							try {
+								attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
+										BasicFileAttributes.class);
+								uploadedDate = new Date(attributes.creationTime().toMillis());
+								uploadModel.setDateUploaded(uploadedDate);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
 							}
 						}
 						uploadModel.setPath(File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar
@@ -359,10 +365,6 @@ public class FileUploadService {
 				try {
 					if (!dateStr.isEmpty()) {
 						capturedDate = sdf.parse(dateStr);
-						attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
-								BasicFileAttributes.class);
-						Date uploadedDate = new Date(attributes.creationTime().toMillis());
-						uploadModel.setDateUploaded(uploadedDate);
 					}
 					uploadModel.setDateCreated(capturedDate);
 				} catch (Exception ex) {
@@ -377,16 +379,16 @@ public class FileUploadService {
 				Date capturedDate = null;
 				try {
 					if (!dateStr.isEmpty()) {
-						attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
-								BasicFileAttributes.class);
-						Date uploadedDate = new Date(attributes.creationTime().toMillis());
-						uploadModel.setDateUploaded(uploadedDate);
 						capturedDate = sdf.parse(dateStr);
 					}
 					uploadModel.setDateCreated(capturedDate);
 				} catch (Exception ex) {
 				}
 			}
+			attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
+					BasicFileAttributes.class);
+			Date uploadedDate = new Date(attributes.creationTime().toMillis());
+			uploadModel.setDateUploaded(uploadedDate);
 		}
 		uploadModel.setPath(
 				File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar + tmpFile.getName());
