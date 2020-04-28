@@ -230,7 +230,8 @@ public class FileUploadService {
 			BasicFileAttributes attributes;
 			String exifData = AppUtil.getExifData(file.getAbsolutePath());
 			if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
-				String[] data = exifData.split("[*]");
+				System.out.println("\n\n***** Exif: " + exifData + " *****\n\n");
+				String[] data = exifData.split("\\*");
 				uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
 				uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
 				String dateStr = data[2];
@@ -267,7 +268,8 @@ public class FileUploadService {
 						uploadModel.setFileName(tmpFile.getName());
 						String exifData = AppUtil.getExifData(tmpFile.getAbsolutePath());
 						if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
-							String[] data = exifData.split("[*]");
+							System.out.println("\n\n***** Exif: " + exifData + " *****\n\n");
+							String[] data = exifData.split("\\*");
 							uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
 							uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
 							String dateStr = data[2];
@@ -305,7 +307,8 @@ public class FileUploadService {
 		uploadModel.setFileName(tmpFile.getName());
 		String exifData = AppUtil.getExifData(tmpFile.getAbsolutePath());
 		if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
-			String[] data = exifData.split("[*]");
+			System.out.println("\n\n***** Exif: " + exifData + " *****\n\n");
+			String[] data = exifData.split("\\*");
 			uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
 			uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
 			String dateStr = data[2];
