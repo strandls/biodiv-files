@@ -168,6 +168,9 @@ public class AppUtil {
 	}
 
 	public static Double calculateValues(String expression) {
+		if (expression.isEmpty() || !expression.contains(",")) {
+			return null;
+		}
 		Double value = null;
 		try {
 			String[] values = expression.split(",");
