@@ -298,11 +298,11 @@ public class FileUploadService {
 								Date capturedDate = null;
 								try {
 									if (!dateStr.isEmpty()) {
-										capturedDate = sdf.parse(dateStr);
 										attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
 												BasicFileAttributes.class);
 										Date uploadedDate = new Date(attributes.creationTime().toMillis());
 										uploadModel.setDateUploaded(uploadedDate);
+										capturedDate = sdf.parse(dateStr);
 									}
 									uploadModel.setDateCreated(capturedDate);
 								} catch (Exception ex) {
