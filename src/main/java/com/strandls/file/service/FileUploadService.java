@@ -233,12 +233,26 @@ public class FileUploadService {
 			if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
 				System.out.println("\n\n***** Exif: " + exifData + " *****\n\n");
 				int dataLength = data.length;
-				if (dataLength == 2) {
+				if (dataLength == 1) {
+					String dateStr = data[0];
+					Date capturedDate = null;
+					try {
+						if (!dateStr.isEmpty()) {
+							capturedDate = sdf.parse(dateStr);
+							attributes = java.nio.file.Files.readAttributes(Paths.get(file.toURI()),
+									BasicFileAttributes.class);
+							Date uploadedDate = new Date(attributes.creationTime().toMillis());
+							uploadModel.setDateUploaded(uploadedDate);
+						}
+						uploadModel.setDateCreated(capturedDate);
+					} catch (Exception ex) {
+					}
+				} else if (dataLength == 2) {
 					uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-					uploadModel.setLongitude(AppUtil.calculateValues(data[1]));					
+					uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
 				} else if (dataLength == 3) {
 					uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-					uploadModel.setLongitude(AppUtil.calculateValues(data[1]));		
+					uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
 					String dateStr = data[2];
 					Date capturedDate = null;
 					try {
@@ -247,7 +261,7 @@ public class FileUploadService {
 						}
 						uploadModel.setDateCreated(capturedDate);
 					} catch (Exception ex) {
-					}					
+					}
 				}
 				attributes = java.nio.file.Files.readAttributes(Paths.get(file.toURI()), BasicFileAttributes.class);
 				Date uploadedDate = new Date(attributes.creationTime().toMillis());
@@ -278,24 +292,39 @@ public class FileUploadService {
 							String[] data = exifData.split("\\*");
 							int dataLength = data.length;
 							BasicFileAttributes attributes;
-							if (dataLength == 2) {
-								uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-								uploadModel.setLongitude(AppUtil.calculateValues(data[1]));					
-							} else if (dataLength == 3) {
-								uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-								uploadModel.setLongitude(AppUtil.calculateValues(data[1]));		
-								String dateStr = data[2];
+							if (dataLength == 1) {
+								String dateStr = data[0];
 								Date capturedDate = null;
 								try {
 									if (!dateStr.isEmpty()) {
 										capturedDate = sdf.parse(dateStr);
-										attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()), BasicFileAttributes.class);
+										attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
+												BasicFileAttributes.class);
 										Date uploadedDate = new Date(attributes.creationTime().toMillis());
 										uploadModel.setDateUploaded(uploadedDate);
 									}
 									uploadModel.setDateCreated(capturedDate);
 								} catch (Exception ex) {
-								}					
+								}
+							} else if (dataLength == 2) {
+								uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
+								uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
+							} else if (dataLength == 3) {
+								uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
+								uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
+								String dateStr = data[2];
+								Date capturedDate = null;
+								try {
+									if (!dateStr.isEmpty()) {
+										capturedDate = sdf.parse(dateStr);
+										attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
+												BasicFileAttributes.class);
+										Date uploadedDate = new Date(attributes.creationTime().toMillis());
+										uploadModel.setDateUploaded(uploadedDate);
+									}
+									uploadModel.setDateCreated(capturedDate);
+								} catch (Exception ex) {
+								}
 							}
 						}
 						uploadModel.setPath(File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar
@@ -323,24 +352,39 @@ public class FileUploadService {
 			String[] data = exifData.split("\\*");
 			int dataLength = data.length;
 			BasicFileAttributes attributes;
-			if (dataLength == 2) {
-				uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-				uploadModel.setLongitude(AppUtil.calculateValues(data[1]));					
-			} else if (dataLength == 3) {
-				uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-				uploadModel.setLongitude(AppUtil.calculateValues(data[1]));		
-				String dateStr = data[2];
+			if (dataLength == 1) {
+				String dateStr = data[0];
 				Date capturedDate = null;
 				try {
 					if (!dateStr.isEmpty()) {
 						capturedDate = sdf.parse(dateStr);
-						attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()), BasicFileAttributes.class);
+						attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
+								BasicFileAttributes.class);
 						Date uploadedDate = new Date(attributes.creationTime().toMillis());
 						uploadModel.setDateUploaded(uploadedDate);
 					}
 					uploadModel.setDateCreated(capturedDate);
 				} catch (Exception ex) {
-				}					
+				}
+			} else if (dataLength == 2) {
+				uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
+				uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
+			} else if (dataLength == 3) {
+				uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
+				uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
+				String dateStr = data[2];
+				Date capturedDate = null;
+				try {
+					if (!dateStr.isEmpty()) {
+						capturedDate = sdf.parse(dateStr);
+						attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
+								BasicFileAttributes.class);
+						Date uploadedDate = new Date(attributes.creationTime().toMillis());
+						uploadModel.setDateUploaded(uploadedDate);
+					}
+					uploadModel.setDateCreated(capturedDate);
+				} catch (Exception ex) {
+				}
 			}
 		}
 		uploadModel.setPath(
