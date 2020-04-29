@@ -1,5 +1,8 @@
 package com.strandls.file.api;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -73,6 +76,7 @@ public class FileDownloadApi {
 	public Response getImage(@Context HttpServletRequest request, @PathParam("directory") String directory,
 			@PathParam("fileName") String fileName, @QueryParam("w") Integer width, @QueryParam("h") Integer height,
 			@DefaultValue("webp") @QueryParam("fm") String format) throws Exception {
+		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
 		if (height == null && width == null) {
 			return Response.status(Status.BAD_REQUEST).entity("Height or Width required").build();			
 		}
@@ -95,7 +99,7 @@ public class FileDownloadApi {
 	@ApiOperation(value = "Get the raw resource", response = StreamingOutput.class)
 	public Response getRawResource(@PathParam("directory") String directory,
 			@PathParam("fileName") String fileName) throws Exception {
-		
+		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 		}
