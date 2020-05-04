@@ -232,7 +232,7 @@ public class FileDownloadService {
 					out.close();
 				}
 			};
-			return Response.ok(sout).type(format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
+			return Response.ok(sout).type(preserve ? contentType : format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
 					.header("Content-Length", contentLength)
 					.cacheControl(AppUtil.getCacheControl())
 					.build();
