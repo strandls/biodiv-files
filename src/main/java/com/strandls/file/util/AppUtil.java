@@ -61,13 +61,19 @@ public class AppUtil {
 		return expectedFile;
 	}
 
-	public static String generateCommand(String filePath, Integer w, Integer h, String format, Integer quality) {
+	public static String generateCommand(String filePath, Integer w, Integer h, String format, Integer quality,
+			String fit) {
 		List<String> commands = new ArrayList<>();
 		StringBuilder command = new StringBuilder();
 		String fileName = filePath.substring(0, filePath.lastIndexOf("."));
 		command.append("convert").append(" ").append(filePath).append(" ").append("-auto-orient").append(" ")
 				.append("-resize").append(" ");
-		if (h != null && w != null) {
+		if (h != null && w != null && fit.equalsIgnoreCase("center")) {
+			command.append(w).append("x").append(h).append("^");
+			command.append(" ").append("-gravity").append(" ").append("center").append(" ").append("-extent")
+					.append(" ");
+			command.append(w).append("x").append(h).append(" ");
+		} else if (h != null && w != null) {
 			command.append(w).append("x").append(h).append("!");
 		} else if (h != null) {
 			command.append("x").append(h);
@@ -75,7 +81,7 @@ public class AppUtil {
 			command.append(w);
 		}
 		command.append(" ");
-		if (format.equalsIgnoreCase("webp")) {
+		if (format.equalsIgnoreCase("webp") || fit.equalsIgnoreCase("center")) {
 			command.append("-quality").append(" ").append(quality == null ? 90 : quality);
 		}
 		command.append(" ");
@@ -85,14 +91,19 @@ public class AppUtil {
 	}
 
 	public static String generateCommand(String filePath, String outputFilePath, Integer w, Integer h, String format,
-			Integer quality) {
+			Integer quality, String fit) {
 		List<String> commands = new ArrayList<>();
 		StringBuilder command = new StringBuilder();
 		String fileName = filePath.substring(0, filePath.lastIndexOf("."));
 		String fileNameWithoutPrefix = fileName.substring(fileName.lastIndexOf(File.separatorChar));
 		command.append("convert").append(" ").append(filePath).append(" ").append("-auto-orient").append(" ")
 				.append("-resize").append(" ");
-		if (h != null && w != null) {
+		if (h != null && w != null && fit.equalsIgnoreCase("center")) {
+			command.append(w).append("x").append(h).append("^");
+			command.append(" ").append("-gravity").append(" ").append("center").append(" ").append("-extent")
+					.append(" ");
+			command.append(w).append("x").append(h).append(" ");
+		} else if (h != null && w != null) {
 			command.append(w).append("x").append(h).append("!");
 		} else if (h != null) {
 			command.append("x").append(h);
@@ -100,7 +111,7 @@ public class AppUtil {
 			command.append(w);
 		}
 		command.append(" ");
-		if (format.equalsIgnoreCase("webp")) {
+		if (format.equalsIgnoreCase("webp") || fit.equalsIgnoreCase("center")) {
 			command.append("-quality").append(" ").append(quality == null ? 90 : quality);
 		}
 		command.append(" ");

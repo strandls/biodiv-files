@@ -232,7 +232,6 @@ public class FileUploadService {
 			String exifData = AppUtil.getExifData(file.getAbsolutePath());
 			String[] data = exifData.split("\\*");
 			if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
-				System.out.println("\n\n***** Exif: " + exifData + " *****\n\n");
 				int dataLength = data.length;
 				if (dataLength == 1) {
 					String dateStr = data[0];
@@ -289,7 +288,6 @@ public class FileUploadService {
 						uploadModel.setFileName(tmpFile.getName());
 						String exifData = AppUtil.getExifData(tmpFile.getAbsolutePath());
 						if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
-							System.out.println("\n\n***** Exif: " + exifData + " *****\n\n");
 							String[] data = exifData.split("\\*");
 							int dataLength = data.length;
 							BasicFileAttributes attributes = null;
@@ -330,7 +328,6 @@ public class FileUploadService {
 								uploadedDate = new Date(attributes.creationTime().toMillis());
 								uploadModel.setDateUploaded(uploadedDate);
 							} catch (IOException e) {
-								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
 						}
