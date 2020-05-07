@@ -89,7 +89,7 @@ public class AppUtil {
 		if (fileName.contains(" ")) {
 			command.append("'").append(fileName).append("_").append(w).append("x").append(h).append(".").append(format).append("'");
 		} else {
-			command.append(fileName);
+			command.append(fileName).append(".").append(format);
 		}
 		commands.add(command.toString());
 		return String.join(" ", commands).trim();
@@ -101,7 +101,7 @@ public class AppUtil {
 		StringBuilder command = new StringBuilder();
 		String fileName = filePath.substring(0, filePath.lastIndexOf("."));
 		String fileNameWithoutPrefix = fileName.substring(fileName.lastIndexOf(File.separatorChar));
-		String finalFilePath = outputFilePath + fileNameWithoutPrefix;
+		String finalFilePath = outputFilePath + fileNameWithoutPrefix + "." + format;
 		command.append("convert").append(" ");
 		if (filePath.contains(" ")) {
 			command.append("'").append(filePath).append("'");			
