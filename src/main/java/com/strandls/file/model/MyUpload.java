@@ -1,11 +1,15 @@
 package com.strandls.file.model;
 
+import java.util.Date;
+
 public class MyUpload {
 	
 	private String hashKey;
 	private String fileName;
 	private String type;
 	private String path;
+	private Date dateCreated;
+	private Date dateUploaded;
 	private Double latitude;
 	private Double longitude;
 	
@@ -32,6 +36,18 @@ public class MyUpload {
 	}
 	public void setPath(String path) {
 		this.path = path;
+	}
+	public Date getDateCreated() {
+		return dateCreated;
+	}
+	public void setDateCreated(Date dateCreated) {
+		this.dateCreated = dateCreated;
+	}
+	public Date getDateUploaded() {
+		return dateUploaded;
+	}
+	public void setDateUploaded(Date dateUploaded) {
+		this.dateUploaded = dateUploaded;
 	}
 	public Double getLatitude() {
 		return latitude;

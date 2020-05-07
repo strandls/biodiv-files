@@ -190,7 +190,7 @@ public class FileDownloadService {
 	}
 
 	public Response getImage(HttpServletRequest req, String directory, String fileName, Integer width, Integer height,
-			String format) throws Exception {
+			String format, String fit, boolean preserve) throws Exception {
 		try {
 
 			String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
@@ -202,13 +202,15 @@ public class FileDownloadService {
 			}
 			System.out.println("\n\n***** FileLocation: " + fileLocation + " ***** " + file.getCanonicalPath() + "\n\n");
 
+			String name = file.getName();
+			String extension = name.substring(name.indexOf(".") + 1);
 			String command = null;
 			if (directory.startsWith(BASE_FOLDERS.myUploads.toString())) {
 				command = AppUtil.generateCommand(file.getAbsolutePath(),
 						storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.toString(), width, height,
-						format, null);
+						preserve ? extension : format, null, fit);
 			} else {
-				command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, format, null);
+				command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, preserve ? extension : format, null, fit);
 			}
 			System.out.println("\n\n***** Command: " + command + " *****\n\n");
 			Tika tika = new Tika();
@@ -233,7 +235,7 @@ public class FileDownloadService {
 					out.close();
 				}
 			};
-			return Response.ok(sout).type(format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
+			return Response.ok(sout).type(preserve ? contentType : format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
 					.header("Content-Length", contentLength)
 					.cacheControl(AppUtil.getCacheControl())
 					.build();
