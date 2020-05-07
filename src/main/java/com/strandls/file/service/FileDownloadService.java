@@ -200,6 +200,7 @@ public class FileDownloadService {
 			if (file == null) {
 				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
+			System.out.println("\n\n***** FileLocation: " + fileLocation + " ***** " + file.getCanonicalPath() + "\n\n");
 
 			String name = file.getName();
 			String extension = name.substring(name.indexOf(".") + 1);
@@ -211,10 +212,12 @@ public class FileDownloadService {
 			} else {
 				command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, preserve ? extension : format, null, fit);
 			}
-
+			System.out.println("\n\n***** Command: " + command + " *****\n\n");
 			Tika tika = new Tika();
 			boolean fileGenerated = AppUtil.generateFile(command);
-			File resizedFile = AppUtil.getResizedImage(fileGenerated ? command : file.getAbsolutePath());
+			System.out.println("\n\n**** Generated? " + fileGenerated + " *****\n\n");
+			File resizedFile = fileGenerated ? AppUtil.getResizedImage(command) : new File(file.toURI());
+			System.out.println("\n\n**** Resized? " + resizedFile + " *****\n\n");
 			String contentType = tika.detect(resizedFile.getName());
 			InputStream in = new FileInputStream(resizedFile);
 			long contentLength = resizedFile.length();
@@ -237,9 +240,11 @@ public class FileDownloadService {
 					.cacheControl(AppUtil.getCacheControl())
 					.build();
 		} catch (FileNotFoundException fe) {
+			fe.printStackTrace();
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			logger.error(ex.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
