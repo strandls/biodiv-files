@@ -53,7 +53,8 @@ public class AppUtil {
 		if (file.exists()) {
 			for (File f : file.listFiles()) {
 				String name = f.getCanonicalFile().getName();
-				if (!f.isDirectory() && name.contains(".") && name.substring(0, name.indexOf(".")).equalsIgnoreCase(fileName)) {
+				if (!f.isDirectory() && name.contains(".")
+						&& name.substring(0, name.indexOf(".")).equalsIgnoreCase(fileName)) {
 					expectedFile = f;
 					break;
 				}
@@ -87,9 +88,10 @@ public class AppUtil {
 		}
 		command.append(" ");
 		if (fileName.contains(" ")) {
-			command.append("'").append(fileName).append("_").append(w).append("x").append(h).append(".").append(format).append("'");
+			command.append("'").append(fileName + "-mod").append("_")
+					.append(w).append("x").append(h).append(".").append(format).append("'");
 		} else {
-			command.append(fileName).append(".").append(format);
+			command.append(fileName + "-mod").append(".").append(format);
 		}
 		commands.add(command.toString());
 		return String.join(" ", commands).trim();
@@ -101,15 +103,14 @@ public class AppUtil {
 		StringBuilder command = new StringBuilder();
 		String fileName = filePath.substring(0, filePath.lastIndexOf("."));
 		String fileNameWithoutPrefix = fileName.substring(fileName.lastIndexOf(File.separatorChar));
-		String finalFilePath = outputFilePath + fileNameWithoutPrefix + "." + format;
+		String finalFilePath = outputFilePath + fileNameWithoutPrefix + "-mod" + "." + format;
 		command.append("convert").append(" ");
 		if (filePath.contains(" ")) {
-			command.append("'").append(filePath).append("'");			
+			command.append("'").append(filePath).append("'");
 		} else {
-			command.append(filePath);			
-		} 
-		command.append(" ").append("-auto-orient").append(" ")
-				.append("-resize").append(" ");
+			command.append(filePath);
+		}
+		command.append(" ").append("-auto-orient").append(" ").append("-resize").append(" ");
 		if (h != null && w != null && fit.equalsIgnoreCase("center")) {
 			command.append(w).append("x").append(h).append("^");
 			command.append(" ").append("-gravity").append(" ").append("center").append(" ").append("-extent")
@@ -128,7 +129,8 @@ public class AppUtil {
 		}
 		command.append(" ");
 		if (finalFilePath.contains(" ")) {
-			command.append("'").append(finalFilePath).append("_").append(w).append("x").append(h).append(".").append(format).append("'");
+			command.append("'").append(finalFilePath).append("_").append(w).append("x").append(h).append(".")
+					.append(format).append("'");
 		} else {
 			command.append(finalFilePath);
 		}
@@ -141,8 +143,7 @@ public class AppUtil {
 		try {
 			command = command.replaceAll("'", "");
 			String delimiter = "-quality " + String.valueOf(QUALITY);
-			resizedImage = new File(command.substring(command.indexOf(delimiter) + delimiter.length())					
-					.trim());
+			resizedImage = new File(command.substring(command.indexOf(delimiter) + delimiter.length()).trim());
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
