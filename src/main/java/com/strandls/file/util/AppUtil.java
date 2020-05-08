@@ -91,7 +91,8 @@ public class AppUtil {
 			command.append("'").append(fileName + "-mod").append("_")
 					.append(w).append("x").append(h).append(".").append(format).append("'");
 		} else {
-			command.append(fileName + "-mod").append(".").append(format);
+			command.append(fileName + "-mod").append("_")
+			.append(w).append("x").append(h).append(".").append(format);
 		}
 		commands.add(command.toString());
 		return String.join(" ", commands).trim();
@@ -103,7 +104,7 @@ public class AppUtil {
 		StringBuilder command = new StringBuilder();
 		String fileName = filePath.substring(0, filePath.lastIndexOf("."));
 		String fileNameWithoutPrefix = fileName.substring(fileName.lastIndexOf(File.separatorChar));
-		String finalFilePath = outputFilePath + fileNameWithoutPrefix + "-mod" + "." + format;
+		String finalFilePath = outputFilePath + fileNameWithoutPrefix + "-mod";
 		command.append("convert").append(" ");
 		if (filePath.contains(" ")) {
 			command.append("'").append(filePath).append("'");
@@ -132,7 +133,7 @@ public class AppUtil {
 			command.append("'").append(finalFilePath).append("_").append(w).append("x").append(h).append(".")
 					.append(format).append("'");
 		} else {
-			command.append(finalFilePath);
+			command.append(finalFilePath).append(".").append(format);
 		}
 		commands.add(command.toString());
 		return String.join(" ", commands).trim();
