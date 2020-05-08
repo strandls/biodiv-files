@@ -83,16 +83,13 @@ public class AppUtil {
 			command.append(w);
 		}
 		command.append(" ");
-		if (format.equalsIgnoreCase("webp") || fit.equalsIgnoreCase("center")) {
-			command.append("-quality").append(" ").append(quality == null ? QUALITY : quality);
-		}
+		command.append("-quality").append(" ").append(quality == null ? QUALITY : quality);
 		command.append(" ");
 		if (fileName.contains(" ")) {
-			command.append("'").append(fileName + "-mod").append("_")
-					.append(w).append("x").append(h).append(".").append(format).append("'");
+			command.append("'").append(fileName + "-mod").append("_").append(w).append("x").append(h).append(".")
+					.append(format).append("'");
 		} else {
-			command.append(fileName + "-mod").append("_")
-			.append(w).append("x").append(h).append(".").append(format);
+			command.append(fileName + "-mod").append("_").append(w).append("x").append(h).append(".").append(format);
 		}
 		commands.add(command.toString());
 		return String.join(" ", commands).trim();
@@ -125,9 +122,7 @@ public class AppUtil {
 			command.append(w);
 		}
 		command.append(" ");
-		if (format.equalsIgnoreCase("webp") || fit.equalsIgnoreCase("center")) {
-			command.append("-quality").append(" ").append(quality == null ? QUALITY : quality);
-		}
+		command.append("-quality").append(" ").append(quality == null ? QUALITY : quality);
 		command.append(" ");
 		if (finalFilePath.contains(" ")) {
 			command.append("'").append(finalFilePath).append("_").append(w).append("x").append(h).append(".")
