@@ -206,10 +206,10 @@ public class FileDownloadService {
 			String name = file.getName();
 
 			String extension = name.substring(name.indexOf(".") + 1);
+			String thumbnailFolder = storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.toString()
+			+ file.getParentFile().getAbsolutePath().substring(storageBasePath.length());
 			String command = null;
-			command = AppUtil.generateCommand(file.getAbsolutePath(),
-					storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.toString()
-							+ file.getParentFile().getAbsolutePath().substring(storageBasePath.length()),
+			command = AppUtil.generateCommand(file.getAbsolutePath(), thumbnailFolder,
 					width, height, preserve ? extension : format, null, fit);
 			System.out.println("\n\n***** Command: " + command + " *****\n\n");
 			File thumbnailFile = AppUtil.getResizedImage(command);

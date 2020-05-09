@@ -39,9 +39,7 @@ public class AppUtil {
 		boolean isFileGenerated = false;
 		try {
 			File f = new File(command);
-			if (!f.getParentFile().exists()) {
-				f.getParentFile().mkdirs();
-			}
+			f.getParentFile().mkdirs();
 			isFileGenerated = executeCommandWithExitValue(command);
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -129,10 +127,11 @@ public class AppUtil {
 		command.append("-quality").append(" ").append(quality == null ? QUALITY : quality);
 		command.append(" ");
 		if (finalFilePath.contains(" ")) {
-			command.append("'").append(finalFilePath).append("_").append(w).append("x").append(h).append("_").append(fit).append(".")
-					.append(format).append("'");
+			command.append("'").append(finalFilePath).append("_").append(w).append("x").append(h).append("_")
+					.append(fit).append(".").append(format).append("'");
 		} else {
-			command.append(finalFilePath).append("_").append(w).append("x").append(h).append("_").append(fit).append(".").append(format);
+			command.append(finalFilePath).append("_").append(w).append("x").append(h).append("_").append(fit)
+					.append(".").append(format);
 		}
 		commands.add(command.toString());
 		return String.join(" ", commands).trim();
