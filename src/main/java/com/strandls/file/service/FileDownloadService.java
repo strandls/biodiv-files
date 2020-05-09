@@ -204,17 +204,25 @@ public class FileDownloadService {
 					.println("\n\n***** FileLocation: " + fileLocation + " ***** " + file.getCanonicalPath() + "\n\n");
 
 			String name = file.getName();
+
 			String extension = name.substring(name.indexOf(".") + 1);
 			String command = null;
 			command = AppUtil.generateCommand(file.getAbsolutePath(),
 					storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.toString(), width, height,
 					preserve ? extension : format, null, fit);
 			System.out.println("\n\n***** Command: " + command + " *****\n\n");
+			File thumbnailFile = AppUtil.getResizedImage(command);
+			File resizedFile;
 			Tika tika = new Tika();
-			boolean fileGenerated = AppUtil.generateFile(command);
-			System.out.println("\n\n**** Generated? " + fileGenerated + " *****\n\n");
-			File resizedFile = fileGenerated ? AppUtil.getResizedImage(command) : new File(file.toURI());
-			System.out.println("\n\n**** Resized? " + resizedFile + " *****\n\n");
+			if (!thumbnailFile.exists()) {
+				boolean fileGenerated = AppUtil.generateFile(command);
+				System.out.println("\n\n**** Generated? " + fileGenerated + " *****\n\n");
+				resizedFile = fileGenerated ? AppUtil.getResizedImage(command) : new File(file.toURI());
+				System.out.println("\n\n**** Resized? " + resizedFile + " *****\n\n");
+			} else {
+				System.out.println("\n\n**** File Exists: " + thumbnailFile.getName() + " *****\n\n");
+				resizedFile = thumbnailFile;
+			}
 			String contentType = tika.detect(resizedFile.getName());
 			InputStream in = new FileInputStream(resizedFile);
 			long contentLength = resizedFile.length();
