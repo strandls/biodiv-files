@@ -216,6 +216,8 @@ public class FileDownloadService {
 			File resizedFile;
 			Tika tika = new Tika();
 			if (!thumbnailFile.exists()) {
+				File folders = new File(thumbnailFolder);
+				folders.mkdirs();
 				boolean fileGenerated = AppUtil.generateFile(command);
 				System.out.println("\n\n**** Generated? " + fileGenerated + " *****\n\n");
 				resizedFile = fileGenerated ? AppUtil.getResizedImage(command) : new File(file.toURI());
