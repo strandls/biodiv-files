@@ -39,7 +39,7 @@ public class AppUtil {
 		boolean isFileGenerated = false;
 		try {
 			File f = new File(command);
-			f.getParentFile().mkdirs();
+			f.mkdirs();
 			isFileGenerated = executeCommandWithExitValue(command);
 		} catch (Exception ex) {
 			ex.printStackTrace();
