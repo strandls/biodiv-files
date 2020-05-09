@@ -209,7 +209,7 @@ public class FileDownloadService {
 			String command = null;
 			command = AppUtil.generateCommand(file.getAbsolutePath(),
 					storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.toString()
-							+ file.getAbsolutePath().substring(storageBasePath.length()),
+							+ file.getParentFile().getAbsolutePath().substring(storageBasePath.length()),
 					width, height, preserve ? extension : format, null, fit);
 			System.out.println("\n\n***** Command: " + command + " *****\n\n");
 			File thumbnailFile = AppUtil.getResizedImage(command);
