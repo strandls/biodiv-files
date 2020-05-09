@@ -38,6 +38,10 @@ public class AppUtil {
 	public static boolean generateFile(String command) {
 		boolean isFileGenerated = false;
 		try {
+			File f = new File(command);
+			if (!f.getParentFile().exists()) {
+				f.getParentFile().mkdirs();
+			}
 			isFileGenerated = executeCommandWithExitValue(command);
 		} catch (Exception ex) {
 			ex.printStackTrace();
