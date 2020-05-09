@@ -200,18 +200,15 @@ public class FileDownloadService {
 			if (file == null) {
 				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
-			System.out.println("\n\n***** FileLocation: " + fileLocation + " ***** " + file.getCanonicalPath() + "\n\n");
+			System.out
+					.println("\n\n***** FileLocation: " + fileLocation + " ***** " + file.getCanonicalPath() + "\n\n");
 
 			String name = file.getName();
 			String extension = name.substring(name.indexOf(".") + 1);
 			String command = null;
-			if (directory.startsWith(BASE_FOLDERS.myUploads.toString())) {
-				command = AppUtil.generateCommand(file.getAbsolutePath(),
-						storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.toString(), width, height,
-						preserve ? extension : format, null, fit);
-			} else {
-				command = AppUtil.generateCommand(file.getAbsolutePath(), width, height, preserve ? extension : format, null, fit);
-			}
+			command = AppUtil.generateCommand(file.getAbsolutePath(),
+					storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.toString(), width, height,
+					preserve ? extension : format, null, fit);
 			System.out.println("\n\n***** Command: " + command + " *****\n\n");
 			Tika tika = new Tika();
 			boolean fileGenerated = AppUtil.generateFile(command);
@@ -235,10 +232,9 @@ public class FileDownloadService {
 					out.close();
 				}
 			};
-			return Response.ok(sout).type(preserve ? contentType : format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
-					.header("Content-Length", contentLength)
-					.cacheControl(AppUtil.getCacheControl())
-					.build();
+			return Response.ok(sout)
+					.type(preserve ? contentType : format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
+					.header("Content-Length", contentLength).cacheControl(AppUtil.getCacheControl()).build();
 		} catch (FileNotFoundException fe) {
 			fe.printStackTrace();
 			logger.error(fe.getMessage());
@@ -277,10 +273,8 @@ public class FileDownloadService {
 					output.close();
 				}
 			};
-			return Response.ok(sout).type(contentType)
-					.header("Content-Length", contentLength)
-					.cacheControl(AppUtil.getCacheControl())
-					.build();
+			return Response.ok(sout).type(contentType).header("Content-Length", contentLength)
+					.cacheControl(AppUtil.getCacheControl()).build();
 		} catch (FileNotFoundException fe) {
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();
