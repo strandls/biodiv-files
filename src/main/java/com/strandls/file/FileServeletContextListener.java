@@ -18,7 +18,6 @@ import javax.servlet.ServletContextEvent;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.quartz.Scheduler;
-import org.quartz.impl.StdScheduler;
 import org.quartz.impl.StdSchedulerFactory;
 
 import com.google.inject.Guice;
@@ -27,7 +26,6 @@ import com.google.inject.servlet.GuiceServletContextListener;
 import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.file.api.APIModule;
 import com.strandls.file.dao.DaoModule;
-import com.strandls.file.scheduler.QuartzJob;
 import com.strandls.file.scheduler.QuartzScheduler;
 import com.strandls.file.service.ServiceModule;
 import com.sun.jersey.guice.JerseyServletModule;

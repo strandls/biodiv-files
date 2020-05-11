@@ -14,6 +14,7 @@ public class QuartzScheduler {
 		JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class).build();
 		Trigger jobTrigger = TriggerBuilder.newTrigger().withSchedule(CronScheduleBuilder.cronSchedule("0 0/1 * * * ?"))
 				.build();
+		schedule.start();
 		schedule.scheduleJob(jobDetail, jobTrigger);
 	}
 	
