@@ -129,7 +129,7 @@
 			<artifactId>hibernate-core</artifactId>
 			<version>${hibernate-core.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.pac4j</groupId>
 			<artifactId>pac4j-core</artifactId>
@@ -159,7 +159,7 @@
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
 			<version>${com.fasterxml.jackson}</version>
-		</dependency>		
+		</dependency>
 		<dependency>
 			<groupId>io.swagger</groupId>
 			<artifactId>swagger-annotations</artifactId>
@@ -175,13 +175,20 @@
 			<artifactId>swagger-jersey-jaxrs</artifactId>
 			<version>${swagger.version}</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.quartz-scheduler/quartz -->
+		<dependency>
+			<groupId>org.quartz-scheduler</groupId>
+			<artifactId>quartz</artifactId>
+			<version>2.3.2</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/org.apache.tika/tika-core -->
 		<dependency>
-		    <groupId>org.apache.tika</groupId>
-		    <artifactId>tika-core</artifactId>
-		    <version>1.24</version>
-		</dependency>		
-		
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-core</artifactId>
+			<version>1.24</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com.strandls.biodiv</groupId>
 			<artifactId>authentication-utility</artifactId>
@@ -204,7 +211,7 @@
 			<plugin>
 				<!-- Download Swagger UI webjar. -->
 				<artifactId>maven-dependency-plugin</artifactId>
-				<version>${maven-dependency-plugin.version}</version><!--$NO-MVN-MAN-VER$-->
+				<version>${maven-dependency-plugin.version}</version><!--$NO-MVN-MAN-VER$ -->
 				<executions>
 					<execution>
 						<phase>prepare-package</phase>
@@ -317,7 +324,8 @@
 					<executable>java</executable>
 					<mainClass>org.openapitools.codegen.OpenAPIGenerator</mainClass>
 					<commandlineArgs>
-						generate -i ${project.basedir}/target/swagger.json -g java -o target/sdk --skip-validate-spec -c swagger-config.json
+						generate -i ${project.basedir}/target/swagger.json
+						-g java -o target/sdk --skip-validate-spec -c swagger-config.json
 					</commandlineArgs>
 					<includeProjectDependencies>true</includeProjectDependencies>
 					<includePluginDependencies>true</includePluginDependencies>
