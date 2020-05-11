@@ -69,6 +69,7 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
+				bind(Scheduler.class).toInstance(scheduler);
 				serve("/api/*").with(GuiceContainer.class,props);
 			}
 		}, new APIModule(), new FilterModule(), new DaoModule(), new ServiceModule());
