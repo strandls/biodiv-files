@@ -22,10 +22,12 @@ import org.quartz.impl.StdSchedulerFactory;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.file.api.APIModule;
 import com.strandls.file.dao.DaoModule;
+import com.strandls.file.scheduler.QuartzJob;
 import com.strandls.file.scheduler.QuartzScheduler;
 import com.strandls.file.service.ServiceModule;
 import com.sun.jersey.guice.JerseyServletModule;
@@ -59,6 +61,7 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 				props.put("jersey.config.server.wadl.disableWadl", "true");
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
+				bind(QuartzJob.class).in(Scopes.SINGLETON);
 				Scheduler scheduler = null;
 				try {
 					scheduler = new StdSchedulerFactory().getScheduler();
