@@ -48,8 +48,7 @@ public class QuartzJob implements Job {
 		Session session = null;
 		try {
 			session = sessionFactory.openSession();
-			User user = session.get(User.class, 1);
-			System.out.println("\n\n***** User: " + user.toString() + " *****\n\n");
+			System.out.println("\n\n***** Session: " + session != null + " *****\n\n");
 //			RabbitMqConnection connection = new RabbitMqConnection();
 //			Channel channel = connection.setRabbitMQConnetion();
 //			RabbitMQProducer producer = new RabbitMQProducer(channel);
