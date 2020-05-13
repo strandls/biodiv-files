@@ -17,6 +17,8 @@ import javax.servlet.ServletContextEvent;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -28,6 +30,7 @@ import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.file.api.APIModule;
 import com.strandls.file.dao.DaoModule;
 import com.strandls.file.scheduler.QuartzJob;
+import com.strandls.file.scheduler.QuartzJobFactory;
 import com.strandls.file.scheduler.QuartzScheduler;
 import com.strandls.file.service.ServiceModule;
 import com.sun.jersey.guice.JerseyServletModule;
@@ -35,6 +38,7 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
 public class FileServeletContextListener extends GuiceServletContextListener {
 
+	Scheduler scheduler;
 
 	@Override
 	protected Injector getInjector() {
@@ -62,18 +66,20 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				bind(QuartzJob.class).in(Scopes.SINGLETON);
-				Scheduler scheduler = null;
-				try {
-					scheduler = new StdSchedulerFactory().getScheduler();
-					QuartzScheduler quScheduler = new QuartzScheduler();
-					quScheduler.scheduleJob(scheduler);
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
 				bind(Scheduler.class).toInstance(scheduler);
 				serve("/api/*").with(GuiceContainer.class,props);
 			}
 		}, new APIModule(), new FilterModule(), new DaoModule(), new ServiceModule());
+		try {
+			scheduler = new StdSchedulerFactory().getScheduler();
+			scheduler.setJobFactory(injector.getInstance(QuartzJobFactory.class));
+			scheduler.start();
+			QuartzScheduler quScheduler = new QuartzScheduler();
+			quScheduler.scheduleJob(scheduler);
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 
 		return injector;
 
@@ -130,9 +136,8 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 	@Override
 	public void contextDestroyed(ServletContextEvent servletContextEvent) {
 		Injector injector = (Injector) servletContextEvent.getServletContext().getAttribute(Injector.class.getName());
-		Scheduler scheduler = injector.getInstance(Scheduler.class);
 		try {
-			if (scheduler != null) {
+			if (scheduler != null && !scheduler.isShutdown()) {
 				scheduler.shutdown(true);
 				
 				System.out.println("Shutdown? " + scheduler.isShutdown());
