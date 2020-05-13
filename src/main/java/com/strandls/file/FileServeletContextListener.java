@@ -61,7 +61,6 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 				props.put("jersey.config.server.wadl.disableWadl", "true");
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
-				bind(QuartzJob.class).in(Scopes.SINGLETON);
 				Scheduler scheduler = null;
 				try {
 					scheduler = new StdSchedulerFactory().getScheduler();
