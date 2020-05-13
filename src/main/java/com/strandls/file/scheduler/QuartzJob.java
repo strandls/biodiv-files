@@ -49,7 +49,7 @@ public class QuartzJob implements Job {
 		System.out.println("***** Inside: Job *****");
 		try {
 //			session = sessionFactory.openSession();
-			System.out.println("\n\n***** SessionFactory: " + sessionFactory != null + " *****\n\n");
+			System.out.println("\n\n***** SessionFactory: " + sessionFactory + " *****\n\n");
 //			RabbitMqConnection connection = new RabbitMqConnection();
 //			Channel channel = connection.setRabbitMQConnetion();
 //			RabbitMQProducer producer = new RabbitMQProducer(channel);
