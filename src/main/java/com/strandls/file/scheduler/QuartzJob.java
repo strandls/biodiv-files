@@ -46,6 +46,7 @@ public class QuartzJob implements Job {
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		Session session = null;
+		System.out.println("***** Inside: Job *****");
 		try {
 //			session = sessionFactory.openSession();
 			System.out.println("\n\n***** SessionFactory: " + sessionFactory != null + " *****\n\n");
