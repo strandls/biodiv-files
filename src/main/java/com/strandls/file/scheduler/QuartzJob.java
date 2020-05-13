@@ -1,14 +1,19 @@
 package com.strandls.file.scheduler;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.hibernate.Session;
@@ -19,13 +24,7 @@ import org.quartz.JobExecutionException;
 
 import com.google.inject.Inject;
 import com.rabbitmq.client.Channel;
-import com.strandls.file.RabbitMqConnection;
-import com.strandls.file.model.User;
-import com.strandls.mail_utility.model.EnumModel.FIELDS;
-import com.strandls.mail_utility.model.EnumModel.MAIL_TYPE;
-import com.strandls.mail_utility.model.EnumModel.MY_UPLOADS_DELETE_MAIL;
 import com.strandls.mail_utility.producer.RabbitMQProducer;
-import com.strandls.mail_utility.util.JsonUtil;
 
 public class QuartzJob implements Job {
 
@@ -39,26 +38,26 @@ public class QuartzJob implements Job {
 	private static final long MAIL_THRESHOLD = 20;
 	private static final long DELETE_THRESHOLD = 30;
 	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FOMRAT);
-	
+
 	@Inject
 	SessionFactory sessionFactory;
-	
+
+	@Inject
+	Channel channel;
+
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		Session session = null;
-		System.out.println("***** Inside: Job *****");
 		try {
-//			session = sessionFactory.openSession();
-			System.out.println("\n\n***** SessionFactory: " + sessionFactory + " *****\n\n");
-//			RabbitMqConnection connection = new RabbitMqConnection();
-//			Channel channel = connection.setRabbitMQConnetion();
-//			RabbitMQProducer producer = new RabbitMQProducer(channel);
-//			List<Path> paths = Files.list(Paths.get(BASE_PATH)).filter(Files::isDirectory).collect(Collectors.toList());
-//			String[] userData;
-//			System.out.println("Paths: " + paths);
-//			for (Path p : paths) {
-//				String folder = p.getFileName().toString();
-//				String user = getUserInfo(Long.parseLong(folder));
+			session = sessionFactory.openSession();
+			RabbitMQProducer producer = new RabbitMQProducer(channel);
+			List<Path> paths = Files.list(Paths.get(BASE_PATH)).filter(Files::isDirectory).collect(Collectors.toList());
+			String[] userData;
+			System.out.println("Paths: " + paths);
+			for (Path p : paths) {
+				String folder = p.getFileName().toString();
+				String user = getUserInfo(session, Long.parseLong(folder));
+				System.out.println(user);
 //				if (user == null || user.contains("@ibp.org")) {
 //					continue;
 //				}
@@ -78,7 +77,7 @@ public class QuartzJob implements Job {
 //				boolean sendMail = files.stream().filter(f -> Long.parseLong(f.split(DELIMITER)[0]) >= MAIL_THRESHOLD)
 //						.findAny().isPresent();
 //				System.out.println("Mail? " + sendMail);
-//
+
 //				if (sendMail) {
 //					userData = user.split(DELIMITER);
 //					Map<String, Object> data = new HashMap<>();
@@ -97,7 +96,7 @@ public class QuartzJob implements Job {
 //							JsonUtil.mapToJSON(data));
 //					System.out.println("Mail Sent");
 //				}
-//
+
 //				files.forEach(file -> {
 //					String[] uri = file.split(DELIMITER);
 //					if (Integer.parseInt(uri[0]) >= DELETE_THRESHOLD) {
@@ -106,8 +105,8 @@ public class QuartzJob implements Job {
 //						f.getParentFile().delete();
 //					}
 //				});
-//			}
-//
+			}
+
 //			channel.getConnection().close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -116,6 +115,36 @@ public class QuartzJob implements Job {
 				session.close();
 			}
 		}
+	}
+
+	public static String getUserInfo(Session session, Long id) {
+		String sql = "select email, username from suser where id = ?";
+		Object[] userData = (Object[]) session.createNativeQuery(sql).setParameter(1, id).getSingleResult();
+		return userData != null && userData.length == 2 ? String.join(DELIMITER, userData[0].toString(), userData[1].toString()) : null;
+	}
+
+	public static LocalDateTime getFileCreationDate(Path f) {
+		File tmp = f.toFile();
+		BasicFileAttributes attributes = null;
+		try {
+			attributes = Files.readAttributes(Paths.get(tmp.toURI()), BasicFileAttributes.class);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		LocalDateTime creation = Instant.ofEpochMilli(attributes.creationTime().toMillis())
+				.atZone(ZoneId.systemDefault()).toLocalDateTime();
+		return creation;
+	}
+
+	public static long getDifference(LocalDateTime date) {
+		return ChronoUnit.MINUTES.between(date, LocalDateTime.now());
+	}
+
+	public static String getFormattedDate(Date d, int offset) {
+		Calendar c = Calendar.getInstance();
+		c.setTime(d);
+		c.add(Calendar.DATE, offset);
+		return dateFormatter.format(c.getTime());
 	}
 
 }

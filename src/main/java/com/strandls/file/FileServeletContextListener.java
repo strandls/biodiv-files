@@ -26,6 +26,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.rabbitmq.client.Channel;
 import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.file.api.APIModule;
 import com.strandls.file.dao.DaoModule;
@@ -66,6 +67,15 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				bind(QuartzJob.class).in(Scopes.SINGLETON);
+				
+				RabbitMqConnection connection = new RabbitMqConnection();
+				Channel channel = null;
+				try {
+					channel = connection.setRabbitMQConnetion();
+					bind(Channel.class).toInstance(channel);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 				serve("/api/*").with(GuiceContainer.class,props);
 			}
 		}, new APIModule(), new FilterModule(), new DaoModule(), new ServiceModule());
@@ -139,7 +149,7 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 			if (scheduler != null && !scheduler.isShutdown()) {
 				scheduler.shutdown(true);
 				
-				System.out.println("Shutdown? " + scheduler.isShutdown());
+				System.out.println("\n\n***** Shutdown? " + scheduler.isShutdown() + " *****\n\n");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
