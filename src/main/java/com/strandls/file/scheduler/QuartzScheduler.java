@@ -15,7 +15,7 @@ public class QuartzScheduler {
 		Trigger jobTrigger = TriggerBuilder.newTrigger().withSchedule(CronScheduleBuilder.cronSchedule("0/10 * * * * ?"))
 				.build();
 		System.out.println("***** Inside: Scheduler *****");
-		schedule.start();
+		schedule.startDelayed(10);
 		schedule.scheduleJob(jobDetail, jobTrigger);
 	}
 	
