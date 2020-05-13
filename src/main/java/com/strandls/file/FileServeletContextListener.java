@@ -17,8 +17,6 @@ import javax.servlet.ServletContextEvent;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -39,7 +37,7 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
 public class FileServeletContextListener extends GuiceServletContextListener {
 
-	Scheduler scheduler;
+	private Scheduler scheduler;
 
 	@Override
 	protected Injector getInjector() {
@@ -145,12 +143,14 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 	@Override
 	public void contextDestroyed(ServletContextEvent servletContextEvent) {
 		Injector injector = (Injector) servletContextEvent.getServletContext().getAttribute(Injector.class.getName());
+		Channel channel = injector.getInstance(Channel.class);
 		try {
 			if (scheduler != null && !scheduler.isShutdown()) {
 				scheduler.shutdown(true);
 				
 				System.out.println("\n\n***** Shutdown? " + scheduler.isShutdown() + " *****\n\n");
 			}
+			channel.getConnection().close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
