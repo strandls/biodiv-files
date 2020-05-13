@@ -40,15 +40,15 @@ public class QuartzJob implements Job {
 	private static final long DELETE_THRESHOLD = 30;
 	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FOMRAT);
 	
-//	@Inject
-//	SessionFactory sessionFactory;
+	@Inject
+	SessionFactory sessionFactory;
 	
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		Session session = null;
 		try {
 //			session = sessionFactory.openSession();
-			System.out.println("\n\n***** Session: " + session != null + " *****\n\n");
+			System.out.println("\n\n***** SessionFactory: " + sessionFactory != null + " *****\n\n");
 //			RabbitMqConnection connection = new RabbitMqConnection();
 //			Channel channel = connection.setRabbitMQConnetion();
 //			RabbitMQProducer producer = new RabbitMQProducer(channel);
