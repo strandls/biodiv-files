@@ -12,9 +12,8 @@ public class QuartzScheduler {
 
 	public void scheduleJob(Scheduler schedule) throws SchedulerException {
 		JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class).build();
-		Trigger jobTrigger = TriggerBuilder.newTrigger().withSchedule(CronScheduleBuilder.cronSchedule("0/10 * * * * ?"))
+		Trigger jobTrigger = TriggerBuilder.newTrigger().withSchedule(CronScheduleBuilder.cronSchedule("0 0 0/1 1/1 * ?"))
 				.build();
-		System.out.println("***** Inside: Scheduler *****");
 		schedule.scheduleJob(jobDetail, jobTrigger);
 	}
 	
