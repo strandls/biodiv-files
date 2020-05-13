@@ -66,7 +66,6 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				bind(QuartzJob.class).in(Scopes.SINGLETON);
-				bind(Scheduler.class).toInstance(scheduler);
 				serve("/api/*").with(GuiceContainer.class,props);
 			}
 		}, new APIModule(), new FilterModule(), new DaoModule(), new ServiceModule());
