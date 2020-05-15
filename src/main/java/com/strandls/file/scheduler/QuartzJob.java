@@ -38,8 +38,8 @@ public class QuartzJob implements Job {
 	private static final String BASE_PATH = "/app/data/biodiv/myUploads";
 	private static final String DELIMITER = "@@@";
 	private static final String DATE_FOMRAT = "dd/MM/yyyy";
-	private static final long MAIL_THRESHOLD = 20;
-	private static final long DELETE_THRESHOLD = 30;
+	private static final long MAIL_THRESHOLD = 60;
+	private static final long DELETE_THRESHOLD = 120;
 	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FOMRAT);
 
 	@Inject
