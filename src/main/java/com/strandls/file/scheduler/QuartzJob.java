@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import org.hibernate.Session;
@@ -27,6 +28,7 @@ import org.quartz.JobExecutionException;
 import com.google.inject.Inject;
 import com.rabbitmq.client.Channel;
 import com.strandls.file.RabbitMqConnection;
+import com.strandls.file.util.PropertyFileUtil;
 import com.strandls.mail_utility.model.EnumModel.FIELDS;
 import com.strandls.mail_utility.model.EnumModel.MAIL_TYPE;
 import com.strandls.mail_utility.model.EnumModel.MY_UPLOADS_DELETE_MAIL;
@@ -38,10 +40,16 @@ public class QuartzJob implements Job {
 	private static final String BASE_PATH = "/app/data/biodiv/myUploads";
 	private static final String DELIMITER = "@@@";
 	private static final String DATE_FOMRAT = "dd/MM/yyyy";
-	private static final long MAIL_THRESHOLD = 60;
-	private static final long DELETE_THRESHOLD = 120;
+	private static final long MAIL_THRESHOLD;
+	private static final long DELETE_THRESHOLD;
 	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FOMRAT);
 
+	static {
+		Properties props = PropertyFileUtil.fetchProperty("config.properties");
+		MAIL_THRESHOLD = Long.parseLong(props.getProperty("scheduler_mail_trigger"));
+		DELETE_THRESHOLD = Long.parseLong(props.getProperty("scheduler_delete_trigger"));
+	}
+	
 	@Inject
 	SessionFactory sessionFactory;
 
@@ -74,7 +82,7 @@ public class QuartzJob implements Job {
 							long noOfDays = getDifference(getFileCreationDate(f));
 							return String.join(DELIMITER, String.valueOf(noOfDays), tmp.getAbsolutePath());
 						}).collect(Collectors.toList());
-				boolean sendMail = files.stream().filter(f -> Long.parseLong(f.split(DELIMITER)[0]) >= MAIL_THRESHOLD)
+				boolean sendMail = files.stream().filter(f -> Long.parseLong(f.split(DELIMITER)[0]) == MAIL_THRESHOLD)
 						.findAny().isPresent();
 
 				if (sendMail) {
@@ -90,7 +98,7 @@ public class QuartzJob implements Job {
 					producer.produceMail(RabbitMqConnection.EXCHANGE, RabbitMqConnection.ROUTING_KEY, null,
 							JsonUtil.mapToJSON(data));
 
-					data.put(FIELDS.TO.getAction(), new String[] { "sethu10121994@gmail.com", "thomas.vee@gmail.com" });
+					data.put(FIELDS.TO.getAction(), PropertyFileUtil.fetchProperty("config.properties", "mail_bcc").split(","));
 					producer.produceMail(RabbitMqConnection.EXCHANGE, RabbitMqConnection.ROUTING_KEY, null,
 							JsonUtil.mapToJSON(data));
 				}
@@ -133,7 +141,7 @@ public class QuartzJob implements Job {
 	}
 
 	public static long getDifference(LocalDateTime date) {
-		return ChronoUnit.MINUTES.between(date, LocalDateTime.now());
+		return ChronoUnit.HOURS.between(date, LocalDateTime.now());
 	}
 
 	public static String getFormattedDate(Date d, int offset) {
