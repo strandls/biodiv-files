@@ -16,17 +16,18 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.pac4j.core.profile.CommonProfile;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.file.ApiContants;
 import com.strandls.file.model.MyUpload;
 import com.strandls.file.service.FileUploadService;
 import com.strandls.file.util.AppUtil;
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

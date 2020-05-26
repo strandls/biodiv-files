@@ -23,9 +23,14 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.tika.Tika;
+import org.glassfish.jersey.media.multipart.BodyPart;
+import org.glassfish.jersey.media.multipart.ContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 
 import com.google.common.io.Files;
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.file.model.FileMetaData;
 import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.model.MyUpload;
@@ -33,10 +38,6 @@ import com.strandls.file.model.comparator.UploadDateSort;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
 import com.strandls.file.util.ThumbnailUtil;
-import com.sun.jersey.core.header.ContentDisposition;
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.BodyPart;
-import com.sun.jersey.multipart.FormDataBodyPart;
 
 public class FileUploadService {
 

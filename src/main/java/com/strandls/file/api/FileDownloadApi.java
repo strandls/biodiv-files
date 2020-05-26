@@ -17,7 +17,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.file.ApiContants;
 import com.strandls.file.model.FileMetaData;
 import com.strandls.file.model.FileUploadModel;
