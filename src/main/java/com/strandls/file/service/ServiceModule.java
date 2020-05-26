@@ -9,5 +9,7 @@ public class ServiceModule extends AbstractModule{
 	protected void configure() {
 		bind(FileMetaDataService.class).in(Scopes.SINGLETON);
 		bind(FileAccessService.class).in(Scopes.SINGLETON);
+		bind(FileUploadService.class).in(Scopes.SINGLETON);
+		bind(FileDownloadService.class).in(Scopes.SINGLETON);
 	}
 }
