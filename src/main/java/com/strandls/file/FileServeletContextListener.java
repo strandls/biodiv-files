@@ -22,13 +22,11 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
-import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.file.api.APIModule;
 import com.strandls.file.dao.DaoModule;
 import com.strandls.file.service.ServiceModule;
 
 public class FileServeletContextListener extends GuiceServletContextListener {
-
 
 	@Override
 	protected Injector getInjector() {
@@ -49,7 +47,7 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 
 				configuration = configuration.configure();
 				SessionFactory sessionFactory = configuration.buildSessionFactory();
-				
+
 				Map<String, String> props = new HashMap<String, String>();
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
 				props.put("jersey.config.server.provider.packages", "com");
@@ -57,9 +55,9 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
-				serve("/api/*").with(ServletContainer.class,props);
+				serve("/api/*").with(ServletContainer.class, props);
 			}
-		}, new APIModule(), new FilterModule(), new DaoModule(), new ServiceModule());
+		}, new APIModule(), new DaoModule(), new ServiceModule());
 
 		return injector;
 
