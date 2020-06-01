@@ -200,8 +200,6 @@ public class FileDownloadService {
 			if (file == null) {
 				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
-			System.out
-					.println("\n\n***** FileLocation: " + fileLocation + " ***** " + file.getCanonicalPath() + "\n\n");
 
 			String name = file.getName();
 
@@ -211,7 +209,6 @@ public class FileDownloadService {
 			String command = null;
 			command = AppUtil.generateCommand(file.getAbsolutePath(), thumbnailFolder,
 					width, height, preserve ? extension : format, null, fit);
-			System.out.println("\n\n***** Command: " + command + " *****\n\n");
 			File thumbnailFile = AppUtil.getResizedImage(command);
 			File resizedFile;
 			Tika tika = new Tika();
@@ -219,11 +216,8 @@ public class FileDownloadService {
 				File folders = new File(thumbnailFolder);
 				folders.mkdirs();
 				boolean fileGenerated = AppUtil.generateFile(command);
-				System.out.println("\n\n**** Generated? " + fileGenerated + " *****\n\n");
 				resizedFile = fileGenerated ? AppUtil.getResizedImage(command) : new File(file.toURI());
-				System.out.println("\n\n**** Resized? " + resizedFile + " *****\n\n");
 			} else {
-				System.out.println("\n\n**** File Exists: " + thumbnailFile.getName() + " *****\n\n");
 				resizedFile = thumbnailFile;
 			}
 			String contentType = tika.detect(resizedFile.getName());
@@ -290,6 +284,73 @@ public class FileDownloadService {
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();
 		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
+	public Response getLogo(HttpServletRequest req, String directory, String fileName, Integer width, Integer height) throws Exception {
+		try {
+
+			String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
+			String fileLocation = dirPath + fileName;
+			File file = AppUtil.findFile(fileLocation);
+
+			if (file == null) {
+				return Response.status(Status.NOT_FOUND).entity("File not found").build();
+			}
+			System.out
+					.println("\n\n***** FileLocation: " + fileLocation + " ***** " + file.getCanonicalPath() + "\n\n");
+
+			String name = file.getName();
+
+			String extension = name.substring(name.indexOf(".") + 1);
+			String thumbnailFolder = storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.toString()
+			+ file.getParentFile().getAbsolutePath().substring(storageBasePath.length());
+			String command = null;
+			command = AppUtil.generateCommandLogo(file.getAbsolutePath(), thumbnailFolder,
+					width, height, extension);
+			System.out.println("\n\n***** Command: " + command + " *****\n\n");
+			File thumbnailFile = AppUtil.getResizedImage(command);
+			File resizedFile;
+			Tika tika = new Tika();
+			if (!thumbnailFile.exists()) {
+				File folders = new File(thumbnailFolder);
+				folders.mkdirs();
+				boolean fileGenerated = AppUtil.generateFile(command);
+				System.out.println("\n\n**** Generated? " + fileGenerated + " *****\n\n");
+				resizedFile = fileGenerated ? AppUtil.getResizedImage(command) : new File(file.toURI());
+				System.out.println("\n\n**** Resized? " + resizedFile + " *****\n\n");
+			} else {
+				System.out.println("\n\n**** File Exists: " + thumbnailFile.getName() + " *****\n\n");
+				resizedFile = thumbnailFile;
+			}
+			String contentType = tika.detect(resizedFile.getName());
+			InputStream in = new FileInputStream(resizedFile);
+			long contentLength = resizedFile.length();
+			StreamingOutput sout;
+			sout = new StreamingOutput() {
+				@Override
+				public void write(OutputStream out) throws IOException, WebApplicationException {
+					byte[] buf = new byte[8192];
+					int c;
+					while ((c = in.read(buf, 0, buf.length)) > 0) {
+						out.write(buf, 0, c);
+						out.flush();
+					}
+					in.close();
+					out.close();
+				}
+			};
+			return Response.ok(sout)
+					.type(contentType)
+					.header("Content-Length", contentLength).cacheControl(AppUtil.getCacheControl()).build();
+		} catch (FileNotFoundException fe) {
+			fe.printStackTrace();
+			logger.error(fe.getMessage());
+			return Response.status(Status.NOT_FOUND).build();
+		} catch (Exception ex) {
+			ex.printStackTrace();
 			logger.error(ex.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
