@@ -155,6 +155,8 @@ public class AppUtil {
 			command.append(w).append("x").append(h).append(" ");
 		}
 		command.append(" ");
+		command.append("-quality").append(" ").append(QUALITY);
+		command.append(" ");
 		if (finalFilePath.contains(" ")) {
 			command.append("'").append(finalFilePath).append("_").append(w).append("x").append(h).append(".").append(format).append("'");
 		} else {
