@@ -135,6 +135,38 @@ public class AppUtil {
 		return String.join(" ", commands).trim();
 	}
 
+	public static String generateCommandLogo(String filePath, String outputFilePath, Integer w, Integer h, String format) {
+		List<String> commands = new ArrayList<>();
+		StringBuilder command = new StringBuilder();
+		String fileName = filePath.substring(0, filePath.lastIndexOf("."));
+		String fileNameWithoutPrefix = fileName.substring(fileName.lastIndexOf(File.separatorChar));
+		String finalFilePath = outputFilePath + fileNameWithoutPrefix + "-mod";
+		command.append("convert").append(" ");
+		if (filePath.contains(" ")) {
+			command.append("'").append(filePath).append("'");
+		} else {
+			command.append(filePath);
+		}
+		command.append(" ").append("-auto-orient").append(" ").append("-resize").append(" ");
+		if (h != null && w != null) {
+			command.append(w).append("x").append(h);
+			command.append(" ").append("-gravity").append(" ").append("center").append(" ").append("-extent")
+					.append(" ");
+			command.append(w).append("x").append(h).append(" ");
+		}
+		command.append(" ");
+		command.append("-quality").append(" ").append(QUALITY);
+		command.append(" ");
+		if (finalFilePath.contains(" ")) {
+			command.append("'").append(finalFilePath).append("_").append(w).append("x").append(h).append(".").append(format).append("'");
+		} else {
+			command.append(finalFilePath).append("_").append(w).append("x").append(h)
+					.append(".").append(format);
+		}
+		commands.add(command.toString());
+		return String.join(" ", commands).trim();
+	}
+
 	public static File getResizedImage(String command) {
 		File resizedImage = null;
 		try {

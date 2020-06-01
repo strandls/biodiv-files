@@ -17,7 +17,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.file.ApiContants;
 import com.strandls.file.model.FileMetaData;
 import com.strandls.file.model.FileUploadModel;
@@ -87,5 +88,25 @@ public class FileDownloadApi {
 			return Response.status(Status.BAD_REQUEST).build();			
 		}
 		return fileDownloadService.getRawResource(directory, fileName);
+	}
+
+	@Path(ApiContants.LOGO + "/{directory:.+}/{fileName}")
+	@GET
+	@Consumes(MediaType.TEXT_PLAIN)
+	@ApiOperation(value = "Get the image resource with custom height & width by url", response = StreamingOutput.class)
+	public Response getUserGroupLogo(@Context HttpServletRequest request, @PathParam("directory") String directory,
+			@PathParam("fileName") String fileName, @QueryParam("w") Integer width, @QueryParam("h") Integer height) throws Exception {
+		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
+		if (height == null && width == null) {
+			return Response.status(Status.BAD_REQUEST).entity("Height or Width required").build();			
+		}
+		if (directory.contains("..") || fileName.contains("..")) {
+			return Response.status(Status.NOT_ACCEPTABLE).build();
+		}
+		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
+			return Response.status(Status.BAD_REQUEST).build();			
+		}
+		String hAccept = request.getHeader(HttpHeaders.ACCEPT);
+		return fileDownloadService.getLogo(request, directory, fileName, width, height);
 	}
 }

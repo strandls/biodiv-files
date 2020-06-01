@@ -13,26 +13,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.glassfish.jersey.servlet.ServletContainer;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
-import com.strandls.authentication_utility.filter.FilterModule;
+import com.google.inject.servlet.ServletModule;
 import com.strandls.file.api.APIModule;
 import com.strandls.file.dao.DaoModule;
 import com.strandls.file.service.ServiceModule;
-import com.sun.jersey.guice.JerseyServletModule;
-import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
 public class FileServeletContextListener extends GuiceServletContextListener {
-
 
 	@Override
 	protected Injector getInjector() {
 
-		Injector injector = Guice.createInjector(new JerseyServletModule() {
+		Injector injector = Guice.createInjector(new ServletModule() {
 			@Override
 			protected void configureServlets() {
 
@@ -48,15 +47,17 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 
 				configuration = configuration.configure();
 				SessionFactory sessionFactory = configuration.buildSessionFactory();
-				
+
 				Map<String, String> props = new HashMap<String, String>();
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
+				props.put("jersey.config.server.provider.packages", "com");
 				props.put("jersey.config.server.wadl.disableWadl", "true");
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
-				serve("/api/*").with(GuiceContainer.class,props);
+				bind(ServletContainer.class).in(Scopes.SINGLETON);
+				serve("/api/*").with(ServletContainer.class, props);
 			}
-		}, new APIModule(), new FilterModule(), new DaoModule(), new ServiceModule());
+		}, new APIModule(), new DaoModule(), new ServiceModule());
 
 		return injector;
 

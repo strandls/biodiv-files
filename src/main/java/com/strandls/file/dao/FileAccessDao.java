@@ -3,7 +3,8 @@ package com.strandls.file.dao;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.file.model.FileDownloads;
 
 public class FileAccessDao extends AbstractDao<FileDownloads, Long> {
