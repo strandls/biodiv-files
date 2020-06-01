@@ -27,7 +27,6 @@ import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
 import com.rabbitmq.client.Channel;
-import com.strandls.authentication_utility.filter.FilterModule;
 import com.strandls.file.api.APIModule;
 import com.strandls.file.dao.DaoModule;
 import com.strandls.file.scheduler.QuartzJob;
@@ -58,7 +57,7 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 
 				configuration = configuration.configure();
 				SessionFactory sessionFactory = configuration.buildSessionFactory();
-				
+
 				Map<String, String> props = new HashMap<String, String>();
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
 				props.put("jersey.config.server.provider.packages", "com");
@@ -66,7 +65,7 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				bind(QuartzJob.class).in(Scopes.SINGLETON);
-				
+
 				RabbitMqConnection connection = new RabbitMqConnection();
 				Channel channel = null;
 				try {
@@ -76,16 +75,16 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 					ex.printStackTrace();
 				}
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
-				serve("/api/*").with(ServletContainer.class,props);
+				serve("/api/*").with(ServletContainer.class, props);
 			}
-		}, new APIModule(), new FilterModule(), new DaoModule(), new ServiceModule());
+		}, new APIModule(), new DaoModule(), new ServiceModule());
 		try {
 			scheduler = new StdSchedulerFactory().getScheduler();
 			scheduler.setJobFactory(injector.getInstance(QuartzJobFactory.class));
 			scheduler.start();
 			QuartzScheduler quScheduler = new QuartzScheduler();
 			quScheduler.scheduleJob(scheduler);
-			
+
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -135,13 +134,13 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 
 		return names;
 	}
-	
+
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		// TODO Auto-generated method stub
 		super.contextInitialized(servletContextEvent);
 	}
-	
+
 	@Override
 	public void contextDestroyed(ServletContextEvent servletContextEvent) {
 		Injector injector = (Injector) servletContextEvent.getServletContext().getAttribute(Injector.class.getName());
@@ -149,13 +148,13 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 		try {
 			if (scheduler != null && !scheduler.isShutdown()) {
 				scheduler.shutdown(true);
-				
+
 				System.out.println("\n\n***** Shutdown? " + scheduler.isShutdown() + " *****\n\n");
 			}
 			channel.getConnection().close();
 		} catch (Exception e) {
 			e.printStackTrace();
-		}		
+		}
 		super.contextDestroyed(servletContextEvent);
 	}
 }
