@@ -13,20 +13,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletContextEvent;
+
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.quartz.Scheduler;
+import org.quartz.impl.StdSchedulerFactory;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
+import com.rabbitmq.client.Channel;
 import com.strandls.file.api.APIModule;
 import com.strandls.file.dao.DaoModule;
+import com.strandls.file.scheduler.QuartzJob;
+import com.strandls.file.scheduler.QuartzJobFactory;
+import com.strandls.file.scheduler.QuartzScheduler;
 import com.strandls.file.service.ServiceModule;
 
 public class FileServeletContextListener extends GuiceServletContextListener {
+
+	private Scheduler scheduler;
 
 	@Override
 	protected Injector getInjector() {
@@ -54,10 +64,30 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 				props.put("jersey.config.server.wadl.disableWadl", "true");
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
+				bind(QuartzJob.class).in(Scopes.SINGLETON);
+
+				RabbitMqConnection connection = new RabbitMqConnection();
+				Channel channel = null;
+				try {
+					channel = connection.setRabbitMQConnetion();
+					bind(Channel.class).toInstance(channel);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(ServletContainer.class, props);
 			}
 		}, new APIModule(), new DaoModule(), new ServiceModule());
+		try {
+			scheduler = new StdSchedulerFactory().getScheduler();
+			scheduler.setJobFactory(injector.getInstance(QuartzJobFactory.class));
+			scheduler.start();
+			QuartzScheduler quScheduler = new QuartzScheduler();
+			quScheduler.scheduleJob(scheduler);
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 
 		return injector;
 
@@ -103,5 +133,28 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 		});
 
 		return names;
+	}
+
+	@Override
+	public void contextInitialized(ServletContextEvent servletContextEvent) {
+		// TODO Auto-generated method stub
+		super.contextInitialized(servletContextEvent);
+	}
+
+	@Override
+	public void contextDestroyed(ServletContextEvent servletContextEvent) {
+		Injector injector = (Injector) servletContextEvent.getServletContext().getAttribute(Injector.class.getName());
+		Channel channel = injector.getInstance(Channel.class);
+		try {
+			if (scheduler != null && !scheduler.isShutdown()) {
+				scheduler.shutdown(true);
+
+				System.out.println("\n\n***** Shutdown? " + scheduler.isShutdown() + " *****\n\n");
+			}
+			channel.getConnection().close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		super.contextDestroyed(servletContextEvent);
 	}
 }
