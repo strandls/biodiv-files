@@ -12,6 +12,7 @@ public class MyUpload {
 	private Date dateUploaded;
 	private Double latitude;
 	private Double longitude;
+	private String fileSize;
 	
 	public String getHashKey() {
 		return hashKey;
@@ -60,6 +61,12 @@ public class MyUpload {
 	}
 	public void setLongitude(Double longitude) {
 		this.longitude = longitude;
+	}
+	public String getFileSize() {
+		return fileSize;
+	}
+	public void setFileSize(String fileSize) {
+		this.fileSize = fileSize;
 	}
 
 }
