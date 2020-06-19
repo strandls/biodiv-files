@@ -160,6 +160,9 @@ public class FileUploadApi {
 			if (!folderExists) {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid directory").build();
 			}
+			if (inputStream == null) {
+				return Response.status(Status.BAD_REQUEST).entity("File required").build();
+			}
 			FileUploadModel model = fileUploadService.uploadFile(directory, inputStream, fileDetails, request, hash, createResourceFolder);
 			return Response.ok().entity(model).build();	
 		} catch (Exception ex) {
