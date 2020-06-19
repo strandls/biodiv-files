@@ -17,4 +17,5 @@ public class ApiContants {
 	public static final String MOVE_FILES = "/move-files";
 	public static final String REMOVE_FILE = "/remove-file";
 	public static final String LOGO = "/logo";
+	public static final String RESOURCE_UPLOAD = "/resource-upload";
 }

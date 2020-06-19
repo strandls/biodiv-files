@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -25,9 +27,11 @@ import javax.inject.Inject;
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.file.ApiContants;
+import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.model.MyUpload;
 import com.strandls.file.service.FileUploadService;
 import com.strandls.file.util.AppUtil;
+import com.strandls.file.util.ImageUtil;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -134,6 +138,30 @@ public class FileUploadApi {
 			Long userId = Long.parseLong(profile.getId());
 			boolean deleted = fileUploadService.deleteFilesFromMyUploads(userId, file.getPath());
 			return Response.ok().entity(deleted).build();	
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
+	
+	@POST
+	@Path(ApiContants.RESOURCE_UPLOAD)
+	@ValidateUser
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Upload resources", notes = "Returns uploaded file data", response = FileUploadModel.class)
+	public Response uploadResource(@Context HttpServletRequest request, @FormDataParam("upload") InputStream inputStream,
+			@FormDataParam("upload") FormDataContentDisposition fileDetails,
+			@DefaultValue("") @FormDataParam("hash") String hash,
+			@FormDataParam("directory") String directory,
+			@DefaultValue("false") @FormDataParam("resource") String resource) {
+		try {
+			Boolean createResourceFolder = Boolean.parseBoolean(resource);
+			boolean folderExists = ImageUtil.checkFolderExistence(directory);
+			if (!folderExists) {
+				return Response.status(Status.BAD_REQUEST).entity("Invalid directory").build();
+			}
+			FileUploadModel model = fileUploadService.uploadFile(directory, inputStream, fileDetails, request, hash, createResourceFolder);
+			return Response.ok().entity(model).build();	
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
