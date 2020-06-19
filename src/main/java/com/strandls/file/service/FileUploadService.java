@@ -122,7 +122,7 @@ public class FileUploadService {
 
 		String filePath = dirPath + File.separatorChar + generatedFileName;
 
-		boolean uploaded = writeToFile(inputStream, filePath);
+		boolean uploaded = writeToFile(inputStream, dirPath);
 
 		fileUploadModel.setUploaded(uploaded);
 
