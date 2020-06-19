@@ -87,6 +87,9 @@ public class FileUploadService {
 		String fileExtension = Files.getFileExtension(fileName);
 
 		String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
+		if (resourceFolder) {
+			folderName += File.separatorChar + "resources";
+		}
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName;
 		if (resourceFolder) {
 			dirPath += File.separatorChar + "resources";
