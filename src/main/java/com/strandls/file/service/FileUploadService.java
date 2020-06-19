@@ -119,7 +119,7 @@ public class FileUploadService {
 
 		String filePath = dirPath + File.separatorChar + generatedFileName;
 
-		boolean uploaded = writeToFile(inputStream, dirPath);
+		boolean uploaded = writeToFile(inputStream, filePath);
 
 		fileUploadModel.setUploaded(uploaded);
 
@@ -443,6 +443,7 @@ public class FileUploadService {
 
 	private boolean writeToFile(InputStream inputStream, String fileLocation) {
 		try {
+			System.out.println("\n\n FileLocation: " + fileLocation + " *****\n\n");
 			File f = new File(fileLocation);
 			if (!f.getParentFile().exists()) {
 				f.getParentFile().mkdirs();
