@@ -91,9 +91,6 @@ public class FileUploadService {
 			folderName += File.separatorChar + "resources";
 		}
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName;
-		if (resourceFolder) {
-			dirPath += File.separatorChar + "resources";
-		}
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(fileName);
 
@@ -102,6 +99,15 @@ public class FileUploadService {
 			return fileUploadModel;
 		} else {
 			fileUploadModel.setType(probeContentType);
+		}
+		
+		if ("".equals(hashKey)) {
+			File dir = new File(dirPath);
+			boolean created = dir.mkdir();
+			if (!created) {
+				fileUploadModel.setError("Directory creation failed");
+				return fileUploadModel;
+			}
 		}
 
 		FileMetaData fileMetaData = new FileMetaData();
@@ -123,9 +129,8 @@ public class FileUploadService {
 		}
 
 		if (uploaded) {
-			String folder = resourceFolder ? folderName + File.separatorChar + "resources" : folderName;
-			String resultPath = File.separatorChar + folder + File.separatorChar + generatedFileName;
-			fileUploadModel.setHashKey(folder);
+			String resultPath = File.separatorChar + folderName + File.separatorChar + generatedFileName;
+			fileUploadModel.setHashKey(folderName);
 			fileUploadModel.setFileName(generatedFileName);
 			fileUploadModel.setUri(resultPath);
 			return fileUploadModel;
