@@ -104,15 +104,6 @@ public class FileUploadService {
 			fileUploadModel.setType(probeContentType);
 		}
 
-		if ("".equals(hashKey)) {
-			File dir = new File(dirPath);
-			boolean created = dir.mkdirs();
-			if (!created) {
-				fileUploadModel.setError("Directory creation failed");
-				return fileUploadModel;
-			}
-		}
-
 		FileMetaData fileMetaData = new FileMetaData();
 		fileMetaData.setFileName(fileName);
 		fileMetaData.setPath(resourceFolder ? folderName + File.separatorChar + "resources": folderName);
