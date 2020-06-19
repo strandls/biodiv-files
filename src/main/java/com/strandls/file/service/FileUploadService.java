@@ -115,7 +115,7 @@ public class FileUploadService {
 
 		FileMetaData fileMetaData = new FileMetaData();
 		fileMetaData.setFileName(fileName);
-		fileMetaData.setPath(folderName);
+		fileMetaData.setPath(resourceFolder ? folderName + File.separatorChar + "resources": folderName);
 		fileMetaDataService.save(fileMetaData);
 
 		String generatedFileName = fileMetaData.getId() + "." + fileExtension;
@@ -132,8 +132,9 @@ public class FileUploadService {
 		}
 
 		if (uploaded) {
-			String resultPath = File.separatorChar + folderName + File.separatorChar + generatedFileName;
-			fileUploadModel.setHashKey(folderName);
+			String folder = resourceFolder ? folderName + File.separatorChar + "resources" : folderName;
+			String resultPath = File.separatorChar + folder + File.separatorChar + generatedFileName;
+			fileUploadModel.setHashKey(folder);
 			fileUploadModel.setFileName(generatedFileName);
 			fileUploadModel.setUri(resultPath);
 			return fileUploadModel;
