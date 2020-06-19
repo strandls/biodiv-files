@@ -19,6 +19,9 @@ public class ImageUtil {
 	
 	public static boolean checkFolderExistence(String directory) {
 		boolean hasFolder = false;
+		if (directory == null) {
+			return hasFolder;
+		}
 		for (BASE_FOLDERS folders: BASE_FOLDERS.values()) {
 			if (folders.name().equals(directory)) {
 				hasFolder = true;
