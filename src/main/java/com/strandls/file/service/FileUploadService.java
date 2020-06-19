@@ -87,10 +87,10 @@ public class FileUploadService {
 		String fileExtension = Files.getFileExtension(fileName);
 
 		String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
-		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName;
 		if (resourceFolder) {
-			dirPath += File.separatorChar + "resources";
+			folderName += File.separatorChar + "resources";
 		}
+		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName;
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(fileName);
 
@@ -112,7 +112,7 @@ public class FileUploadService {
 
 		FileMetaData fileMetaData = new FileMetaData();
 		fileMetaData.setFileName(fileName);
-		fileMetaData.setPath(resourceFolder ? folderName + File.separatorChar + "resources": folderName);
+		fileMetaData.setPath(folderName);
 		fileMetaDataService.save(fileMetaData);
 
 		String generatedFileName = fileMetaData.getId() + "." + fileExtension;
@@ -129,9 +129,8 @@ public class FileUploadService {
 		}
 
 		if (uploaded) {
-			String folder = resourceFolder ? folderName + File.separatorChar + "resources" : folderName;
-			String resultPath = File.separatorChar + folder + File.separatorChar + generatedFileName;
-			fileUploadModel.setHashKey(folder);
+			String resultPath = File.separatorChar + folderName + File.separatorChar + generatedFileName;
+			fileUploadModel.setHashKey(folderName);
 			fileUploadModel.setFileName(generatedFileName);
 			fileUploadModel.setUri(resultPath);
 			return fileUploadModel;
