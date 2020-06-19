@@ -103,7 +103,7 @@ public class FileUploadService {
 		
 		if ("".equals(hashKey)) {
 			File dir = new File(dirPath);
-			boolean created = dir.mkdir();
+			boolean created = dir.mkdirs();
 			if (!created) {
 				fileUploadModel.setError("Directory creation failed");
 				return fileUploadModel;
