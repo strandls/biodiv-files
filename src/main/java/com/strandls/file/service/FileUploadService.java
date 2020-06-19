@@ -118,7 +118,7 @@ public class FileUploadService {
 		String generatedFileName = fileMetaData.getId() + "." + fileExtension;
 
 		String filePath = dirPath + File.separatorChar + generatedFileName;
-
+		System.out.println("\n\n FileLocation: " + filePath + " *****\n\n");
 		boolean uploaded = writeToFile(inputStream, filePath);
 
 		fileUploadModel.setUploaded(uploaded);
