@@ -69,7 +69,7 @@ public class FileUploadService {
 			InputStream is = part.getEntityAs(InputStream.class);
 			ContentDisposition contentDisposition = part.getContentDisposition();
 			FileUploadModel file = uploadFile(directory, is, (FormDataContentDisposition) contentDisposition, request,
-					hashKey);
+					hashKey, false);
 			if (hashKey == null || "".equals(hashKey))
 				hashKey = file.getHashKey();
 			mutipleFiles.add(file);
@@ -77,8 +77,8 @@ public class FileUploadService {
 		return mutipleFiles;
 	}
 
-	private FileUploadModel uploadFile(String directory, InputStream inputStream,
-			FormDataContentDisposition fileDetails, HttpServletRequest request, String hashKey) throws IOException {
+	public FileUploadModel uploadFile(String directory, InputStream inputStream,
+			FormDataContentDisposition fileDetails, HttpServletRequest request, String hashKey, boolean resourceFolder) throws IOException {
 
 		FileUploadModel fileUploadModel = new FileUploadModel();
 
@@ -88,12 +88,14 @@ public class FileUploadService {
 
 		String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName;
+		if (resourceFolder) {
+			dirPath += File.separatorChar + "resources";
+		}
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(fileName);
 
-		if (probeContentType == null || !probeContentType.startsWith("image") && !probeContentType.startsWith("audio")
-				&& !probeContentType.startsWith("video")) {
-			fileUploadModel.setError("Invalid file type. Allowed types are image, audio and video");
+		if (probeContentType == null || !probeContentType.startsWith("image")) {
+			fileUploadModel.setError("Invalid file type. Only image type allowed.");
 			return fileUploadModel;
 		} else {
 			fileUploadModel.setType(probeContentType);
@@ -101,7 +103,7 @@ public class FileUploadService {
 
 		if ("".equals(hashKey)) {
 			File dir = new File(dirPath);
-			boolean created = dir.mkdir();
+			boolean created = dir.mkdirs();
 			if (!created) {
 				fileUploadModel.setError("Directory creation failed");
 				return fileUploadModel;
