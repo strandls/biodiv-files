@@ -51,7 +51,7 @@ public class QuartzJob implements Job {
 
 	static {
 		Properties props = PropertyFileUtil.fetchProperty("config.properties");
-		BASE_PATH = props.getProperty("storage_dir") + ImageUtil.BASE_FOLDERS.myUploads;
+		BASE_PATH = props.getProperty("storage_dir") + File.separatorChar + ImageUtil.BASE_FOLDERS.myUploads;
 		MAIL_THRESHOLD = Long.parseLong(props.getProperty("scheduler_mail_trigger"));
 		DELETE_THRESHOLD = Long.parseLong(props.getProperty("scheduler_delete_trigger"));
 	}
@@ -170,7 +170,7 @@ public class QuartzJob implements Job {
 			return false;
 		}
 		try {
-			Long l = Long.parseLong(folder);
+			Long.parseLong(folder);
 		} catch (Exception ex) {
 			return false;
 		}
