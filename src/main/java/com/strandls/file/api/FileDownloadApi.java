@@ -1,7 +1,12 @@
 package com.strandls.file.api;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Paths;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -22,10 +27,13 @@ import javax.inject.Inject;
 import com.strandls.file.ApiContants;
 import com.strandls.file.model.FileMetaData;
 import com.strandls.file.model.FileUploadModel;
+import com.strandls.file.service.FileAccessService;
 import com.strandls.file.service.FileDownloadService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 @Path(ApiContants.GET)
 @Api("Download")
@@ -33,6 +41,8 @@ public class FileDownloadApi {
 
 	@Inject
 	private FileDownloadService fileDownloadService;
+	@Inject
+	private FileAccessService accessService;
 	
 	@Path("ping")
 	@GET
@@ -108,5 +118,27 @@ public class FileDownloadApi {
 		}
 		String hAccept = request.getHeader(HttpHeaders.ACCEPT);
 		return fileDownloadService.getLogo(request, directory, fileName, width, height);
+	}
+	
+	@GET
+	@Path(value = ApiContants.DOWNLOAD+"/requestfile")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@ApiOperation(value = "", notes = "Returns Document", response = Response.class)
+	@ApiResponses(value = { @ApiResponse(code = 500, message = "ERROR", response = String.class) })	
+	public Response downloadFileGivenPath(@QueryParam("type")String fileType, 
+			@QueryParam("name")String fileName) {
+		String path = null;
+		if(fileType.equalsIgnoreCase("observation")) {
+			path = "/app/data/biodiv/data-archive/listpagecsv";
+		}
+			try {
+				if(Files.exists(Paths.get(path+File.separator+fileName), new LinkOption[]{ LinkOption.NOFOLLOW_LINKS}))
+					return accessService.genericFileDownload(path+File.separator+fileName);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+
+			}
+		return Response.status(Status.BAD_REQUEST).build();
 	}
 }
