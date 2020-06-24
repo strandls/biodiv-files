@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
@@ -24,10 +24,13 @@ import org.hibernate.SessionFactory;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.rabbitmq.client.Channel;
 import com.strandls.file.RabbitMqConnection;
+import com.strandls.file.util.ImageUtil;
 import com.strandls.file.util.PropertyFileUtil;
 import com.strandls.mail_utility.model.EnumModel.FIELDS;
 import com.strandls.mail_utility.model.EnumModel.MAIL_TYPE;
@@ -37,15 +40,18 @@ import com.strandls.mail_utility.util.JsonUtil;
 
 public class QuartzJob implements Job {
 
-	private static final String BASE_PATH = "/app/data/biodiv/myUploads";
+	private static final Logger logger = LoggerFactory.getLogger(QuartzJob.class);
+	
 	private static final String DELIMITER = "@@@";
 	private static final String DATE_FOMRAT = "dd/MM/yyyy";
+	private static final String BASE_PATH;
 	private static final long MAIL_THRESHOLD;
 	private static final long DELETE_THRESHOLD;
 	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FOMRAT);
 
 	static {
 		Properties props = PropertyFileUtil.fetchProperty("config.properties");
+		BASE_PATH = props.getProperty("storage_dir") + File.separatorChar + ImageUtil.BASE_FOLDERS.myUploads;
 		MAIL_THRESHOLD = Long.parseLong(props.getProperty("scheduler_mail_trigger"));
 		DELETE_THRESHOLD = Long.parseLong(props.getProperty("scheduler_delete_trigger"));
 	}
@@ -60,12 +66,16 @@ public class QuartzJob implements Job {
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		Session session = null;
 		try {
+			System.out.println("\n\n***** SCHEDULER STARTS *****\n\n");
 			session = sessionFactory.openSession();
 			RabbitMQProducer producer = new RabbitMQProducer(channel);
 			List<Path> paths = Files.list(Paths.get(BASE_PATH)).filter(Files::isDirectory).collect(Collectors.toList());
 			String[] userData;
 			for (Path p : paths) {
 				String folder = p.getFileName().toString();
+				if (!isNumeric(folder)) {
+					continue;
+				}
 				String user = getUserInfo(session, Long.parseLong(folder));
 				if (user == null || user.contains("@ibp.org")) {
 					continue;
@@ -105,15 +115,19 @@ public class QuartzJob implements Job {
 
 				files.forEach(file -> {
 					String[] uri = file.split(DELIMITER);
-					if (Integer.parseInt(uri[0]) >= DELETE_THRESHOLD) {
-						File f = new File(uri[1]);
+					Long fileCreatedBefore = Long.parseLong(uri[0]);
+					String filePath = uri[1];
+					if (fileCreatedBefore >= DELETE_THRESHOLD) {
+						File f = new File(filePath);
 						f.delete();
 						f.getParentFile().delete();
 					}
 				});
 			}
+			System.out.println("\n\n***** SCHEDULER ENDS *****\n\n");
 		} catch (Exception ex) {
 			ex.printStackTrace();
+			logger.error(ex.getMessage());
 		} finally {
 			if (session.isOpen()) {
 				session.close();
@@ -127,7 +141,7 @@ public class QuartzJob implements Job {
 		return userData != null && userData.length == 2 ? String.join(DELIMITER, userData[0].toString(), userData[1].toString()) : null;
 	}
 
-	public static LocalDateTime getFileCreationDate(Path f) {
+	public static LocalDate getFileCreationDate(Path f) {
 		File tmp = f.toFile();
 		BasicFileAttributes attributes = null;
 		try {
@@ -135,13 +149,13 @@ public class QuartzJob implements Job {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		LocalDateTime creation = Instant.ofEpochMilli(attributes.creationTime().toMillis())
-				.atZone(ZoneId.systemDefault()).toLocalDateTime();
+		LocalDate creation = Instant.ofEpochMilli(attributes.creationTime().toMillis())
+				.atZone(ZoneId.systemDefault()).toLocalDate();
 		return creation;
 	}
 
-	public static long getDifference(LocalDateTime date) {
-		return ChronoUnit.HOURS.between(date, LocalDateTime.now());
+	public static long getDifference(LocalDate date) {
+		return ChronoUnit.DAYS.between(date, LocalDate.now());
 	}
 
 	public static String getFormattedDate(Date d, int offset) {
@@ -149,6 +163,18 @@ public class QuartzJob implements Job {
 		c.setTime(d);
 		c.add(Calendar.DATE, offset);
 		return dateFormatter.format(c.getTime());
+	}
+	
+	public static boolean isNumeric(String folder) {
+		if (folder == null || folder.isEmpty()) {
+			return false;
+		}
+		try {
+			Long.parseLong(folder);
+		} catch (Exception ex) {
+			return false;
+		}
+		return true;
 	}
 
 }
