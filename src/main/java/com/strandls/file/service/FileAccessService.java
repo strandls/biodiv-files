@@ -114,5 +114,28 @@ public class FileAccessService {
 				.header("Content-Disposition", "attachment; filename=\"" + inputFile.getName() + "\"")
 				.cacheControl(AppUtil.getCacheControl()).build();
 	}
+	
+	public Response genericFileDownload(String filePath ) throws IOException {
+		File inputFile = new File(filePath);
+		InputStream in = new FileInputStream(filePath);
+		String contentType = URLConnection.guessContentTypeFromStream(in);
+		StreamingOutput sout;
+		sout = new StreamingOutput() {
 
+			@Override
+			public void write(OutputStream output) throws IOException, WebApplicationException {
+				byte[] buf = new byte[8192];
+				int c;
+				while ((c = in.read(buf, 0, buf.length)) > 0) {
+					output.write(buf, 0, c);
+					output.flush();
+				}
+				in.close();
+				output.close();
+			}
+		};
+		return Response.ok(sout).type(contentType)
+				.header("Content-Disposition", "attachment; filename=\"" + inputFile.getName() + "\"")
+				.cacheControl(AppUtil.getCacheControl()).build();
+	}
 }
