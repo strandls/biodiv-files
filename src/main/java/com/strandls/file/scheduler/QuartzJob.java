@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.rabbitmq.client.Channel;
 import com.strandls.file.RabbitMqConnection;
+import com.strandls.file.util.ImageUtil;
 import com.strandls.file.util.PropertyFileUtil;
 import com.strandls.mail_utility.model.EnumModel.FIELDS;
 import com.strandls.mail_utility.model.EnumModel.MAIL_TYPE;
@@ -50,7 +51,7 @@ public class QuartzJob implements Job {
 
 	static {
 		Properties props = PropertyFileUtil.fetchProperty("config.properties");
-		BASE_PATH = props.getProperty("storage_dir");
+		BASE_PATH = props.getProperty("storage_dir") + ImageUtil.BASE_FOLDERS.myUploads;
 		MAIL_THRESHOLD = Long.parseLong(props.getProperty("scheduler_mail_trigger"));
 		DELETE_THRESHOLD = Long.parseLong(props.getProperty("scheduler_delete_trigger"));
 	}
@@ -72,6 +73,9 @@ public class QuartzJob implements Job {
 			String[] userData;
 			for (Path p : paths) {
 				String folder = p.getFileName().toString();
+				if (!isNumeric(folder)) {
+					continue;
+				}
 				String user = getUserInfo(session, Long.parseLong(folder));
 				if (user == null || user.contains("@ibp.org")) {
 					continue;
@@ -159,6 +163,18 @@ public class QuartzJob implements Job {
 		c.setTime(d);
 		c.add(Calendar.DATE, offset);
 		return dateFormatter.format(c.getTime());
+	}
+	
+	public static boolean isNumeric(String folder) {
+		if (folder == null || folder.isEmpty()) {
+			return false;
+		}
+		try {
+			Long l = Long.parseLong(folder);
+		} catch (Exception ex) {
+			return false;
+		}
+		return true;
 	}
 
 }
