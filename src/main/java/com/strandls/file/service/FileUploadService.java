@@ -69,7 +69,7 @@ public class FileUploadService {
 			InputStream is = part.getEntityAs(InputStream.class);
 			ContentDisposition contentDisposition = part.getContentDisposition();
 			FileUploadModel file = uploadFile(directory, is, (FormDataContentDisposition) contentDisposition, request,
-					hashKey);
+					hashKey, false);
 			if (hashKey == null || "".equals(hashKey))
 				hashKey = file.getHashKey();
 			mutipleFiles.add(file);
@@ -77,8 +77,8 @@ public class FileUploadService {
 		return mutipleFiles;
 	}
 
-	private FileUploadModel uploadFile(String directory, InputStream inputStream,
-			FormDataContentDisposition fileDetails, HttpServletRequest request, String hashKey) throws IOException {
+	public FileUploadModel uploadFile(String directory, InputStream inputStream,
+			FormDataContentDisposition fileDetails, HttpServletRequest request, String hashKey, boolean resourceFolder) throws IOException {
 
 		FileUploadModel fileUploadModel = new FileUploadModel();
 
@@ -87,25 +87,18 @@ public class FileUploadService {
 		String fileExtension = Files.getFileExtension(fileName);
 
 		String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
+		if (resourceFolder) {
+			folderName += File.separatorChar + "resources";
+		}
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar + folderName;
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(fileName);
 
-		if (probeContentType == null || !probeContentType.startsWith("image") && !probeContentType.startsWith("audio")
-				&& !probeContentType.startsWith("video")) {
-			fileUploadModel.setError("Invalid file type. Allowed types are image, audio and video");
+		if (probeContentType == null || !probeContentType.startsWith("image")) {
+			fileUploadModel.setError("Invalid file type. Only image type allowed.");
 			return fileUploadModel;
 		} else {
 			fileUploadModel.setType(probeContentType);
-		}
-
-		if ("".equals(hashKey)) {
-			File dir = new File(dirPath);
-			boolean created = dir.mkdir();
-			if (!created) {
-				fileUploadModel.setError("Directory creation failed");
-				return fileUploadModel;
-			}
 		}
 
 		FileMetaData fileMetaData = new FileMetaData();
@@ -116,7 +109,7 @@ public class FileUploadService {
 		String generatedFileName = fileMetaData.getId() + "." + fileExtension;
 
 		String filePath = dirPath + File.separatorChar + generatedFileName;
-
+		System.out.println("\n\n FileLocation: " + filePath + " *****\n\n");
 		boolean uploaded = writeToFile(inputStream, filePath);
 
 		fileUploadModel.setUploaded(uploaded);
@@ -441,6 +434,7 @@ public class FileUploadService {
 
 	private boolean writeToFile(InputStream inputStream, String fileLocation) {
 		try {
+			System.out.println("\n\n FileLocation: " + fileLocation + " *****\n\n");
 			File f = new File(fileLocation);
 			if (!f.getParentFile().exists()) {
 				f.getParentFile().mkdirs();
