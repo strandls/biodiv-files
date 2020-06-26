@@ -1,12 +1,11 @@
 package com.strandls.file.api;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
-import javax.inject.Inject;
 
 import com.strandls.file.ApiContants;
 import com.strandls.file.model.FileDownloadCredentials;
