@@ -12,8 +12,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.core.CacheControl;
 
@@ -21,6 +19,40 @@ public class AppUtil {
 
 	private static final List<String> PREVENTIVE_TOKENS = Arrays.asList("&", "|", "`", "$", ";");
 	private static final int QUALITY = 90;
+
+	public static enum MODULE {
+		OBSERVATIONS, SPECIES, DOCUMENTS
+	};
+
+	public static MODULE getModule(String moduleName) {
+		for (MODULE module : MODULE.values()) {
+			if (module.name().equalsIgnoreCase(moduleName)) {
+				return module;
+			}
+		}
+		return null;
+	}
+	
+	public static boolean filterFileTypeForModule(String contentType, MODULE module) {
+		boolean addToList = false;
+		if (contentType == null) {
+			return addToList;
+		}
+		switch (module) {
+		case DOCUMENTS:
+			addToList = contentType.endsWith("/pdf");
+			break;
+		case OBSERVATIONS:
+			addToList = contentType.startsWith("image") || contentType.startsWith("video")
+					|| contentType.startsWith("audio");
+			break;
+		case SPECIES:
+			break;
+		default:
+			break;
+		}
+		return addToList;
+	}
 
 	public static CacheControl getCacheControl() {
 		CacheControl cache = new CacheControl();
@@ -135,7 +167,8 @@ public class AppUtil {
 		return String.join(" ", commands).trim();
 	}
 
-	public static String generateCommandLogo(String filePath, String outputFilePath, Integer w, Integer h, String format) {
+	public static String generateCommandLogo(String filePath, String outputFilePath, Integer w, Integer h,
+			String format) {
 		List<String> commands = new ArrayList<>();
 		StringBuilder command = new StringBuilder();
 		String fileName = filePath.substring(0, filePath.lastIndexOf("."));
@@ -158,10 +191,10 @@ public class AppUtil {
 		command.append("-quality").append(" ").append(QUALITY);
 		command.append(" ");
 		if (finalFilePath.contains(" ")) {
-			command.append("'").append(finalFilePath).append("_").append(w).append("x").append(h).append(".").append(format).append("'");
+			command.append("'").append(finalFilePath).append("_").append(w).append("x").append(h).append(".")
+					.append(format).append("'");
 		} else {
-			command.append(finalFilePath).append("_").append(w).append("x").append(h)
-					.append(".").append(format);
+			command.append(finalFilePath).append("_").append(w).append("x").append(h).append(".").append(format);
 		}
 		commands.add(command.toString());
 		return String.join(" ", commands).trim();
@@ -245,7 +278,8 @@ public class AppUtil {
 	}
 
 	public static String getExifData(String fileName) {
-		String command = "identify -format \"%[EXIF:GPSLatitude]*%[EXIF:GPSLongitude]*%[EXIF:DateTime]\" '" + fileName + "'";
+		String command = "identify -format \"%[EXIF:GPSLatitude]*%[EXIF:GPSLongitude]*%[EXIF:DateTime]\" '" + fileName
+				+ "'";
 		return executeCommand(command);
 	}
 
