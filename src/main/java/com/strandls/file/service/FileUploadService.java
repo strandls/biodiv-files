@@ -20,17 +20,13 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.tika.Tika;
-import org.glassfish.jersey.media.multipart.BodyPart;
-import org.glassfish.jersey.media.multipart.ContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 
 import com.google.common.io.Files;
-import javax.inject.Inject;
-
 import com.strandls.file.model.FileMetaData;
 import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.model.MyUpload;
@@ -61,24 +57,9 @@ public class FileUploadService {
 		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
 	}
 
-	public List<FileUploadModel> uploadMultipleFiles(String directory, FormDataBodyPart body,
-			HttpServletRequest request, String hashKey) throws IOException {
-
-		List<FileUploadModel> mutipleFiles = new ArrayList<FileUploadModel>();
-		for (BodyPart part : body.getParent().getBodyParts()) {
-			InputStream is = part.getEntityAs(InputStream.class);
-			ContentDisposition contentDisposition = part.getContentDisposition();
-			FileUploadModel file = uploadFile(directory, is, (FormDataContentDisposition) contentDisposition, request,
-					hashKey, false);
-			if (hashKey == null || "".equals(hashKey))
-				hashKey = file.getHashKey();
-			mutipleFiles.add(file);
-		}
-		return mutipleFiles;
-	}
-
-	public FileUploadModel uploadFile(String directory, InputStream inputStream,
-			FormDataContentDisposition fileDetails, HttpServletRequest request, String hashKey, boolean resourceFolder) throws IOException {
+	public FileUploadModel uploadFile(String directory, InputStream inputStream, FormDataContentDisposition fileDetails,
+			HttpServletRequest request, String nestedFolder, String hashKey, boolean resourceFolder)
+			throws IOException {
 
 		FileUploadModel fileUploadModel = new FileUploadModel();
 
@@ -86,7 +67,13 @@ public class FileUploadService {
 
 		String fileExtension = Files.getFileExtension(fileName);
 
-		String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
+		String folderName = "";
+		if (nestedFolder != null && !nestedFolder.isEmpty()) {
+			folderName += String.join(String.valueOf(File.separatorChar), nestedFolder.split(",")) + File.separatorChar;
+		} else {
+			throw new IOException("Invalid NestedFolder Name");
+		}
+		folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
 		if (resourceFolder) {
 			folderName += File.separatorChar + "resources";
 		}
@@ -110,6 +97,10 @@ public class FileUploadService {
 
 		String filePath = dirPath + File.separatorChar + generatedFileName;
 		System.out.println("\n\n FileLocation: " + filePath + " *****\n\n");
+		File file = new File(filePath);
+		if (!file.getCanonicalPath().startsWith(storageBasePath)) {
+			throw new IOException("Invalid folder");
+		}
 		boolean uploaded = writeToFile(inputStream, filePath);
 
 		fileUploadModel.setUploaded(uploaded);
@@ -376,8 +367,7 @@ public class FileUploadService {
 				} catch (Exception ex) {
 				}
 			}
-			attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
-					BasicFileAttributes.class);
+			attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()), BasicFileAttributes.class);
 			Date uploadedDate = new Date(attributes.creationTime().toMillis());
 			uploadModel.setDateUploaded(uploadedDate);
 		}
