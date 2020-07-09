@@ -68,12 +68,12 @@ public class FileUploadService {
 		String fileExtension = Files.getFileExtension(fileName);
 
 		String folderName = "";
-		if (nestedFolder != null) {
+		if (nestedFolder != null && !nestedFolder.isEmpty()) {
 			folderName += String.join(String.valueOf(File.separatorChar), nestedFolder.split(",")) + File.separatorChar;
 		} else {
 			throw new IOException("Invalid NestedFolder Name");
 		}
-		folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
+		folderName += "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
 		if (resourceFolder) {
 			folderName += File.separatorChar + "resources";
 		}
