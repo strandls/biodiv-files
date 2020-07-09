@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -21,8 +22,6 @@ import javax.ws.rs.core.Response.Status;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.pac4j.core.profile.CommonProfile;
-
-import javax.inject.Inject;
 
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
@@ -153,6 +152,7 @@ public class FileUploadApi {
 			@FormDataParam("upload") FormDataContentDisposition fileDetails,
 			@DefaultValue("") @FormDataParam("hash") String hash,
 			@FormDataParam("directory") String directory,
+			@FormDataParam("nestedFolder") String nestedFolder,
 			@DefaultValue("false") @FormDataParam("resource") String resource) {
 		try {
 			Boolean createResourceFolder = Boolean.parseBoolean(resource);
@@ -163,7 +163,7 @@ public class FileUploadApi {
 			if (inputStream == null) {
 				return Response.status(Status.BAD_REQUEST).entity("File required").build();
 			}
-			FileUploadModel model = fileUploadService.uploadFile(directory, inputStream, fileDetails, request, hash, createResourceFolder);
+			FileUploadModel model = fileUploadService.uploadFile(directory, inputStream, fileDetails, request, nestedFolder, hash, createResourceFolder);
 			return Response.ok().entity(model).build();	
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
