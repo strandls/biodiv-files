@@ -68,7 +68,7 @@ public class FileUploadService {
 		String fileExtension = Files.getFileExtension(fileName);
 
 		String folderName = "";
-		if (nestedFolder != null && !nestedFolder.isEmpty()) {
+		if (nestedFolder != null) {
 			folderName += String.join(String.valueOf(File.separatorChar), nestedFolder.split(",")) + File.separatorChar;
 		} else {
 			throw new IOException("Invalid NestedFolder Name");
