@@ -59,7 +59,7 @@ public class FileUploadService {
 		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
 	}
 
-	public FileUploadModel uploadFile(BASE_FOLDERS directory, InputStream inputStream, FormDataContentDisposition fileDetails,
+	public FileUploadModel uploadFile(BASE_FOLDERS directory, String nestedFolder, InputStream inputStream, FormDataContentDisposition fileDetails,
 			HttpServletRequest request, String hashKey, boolean resourceFolder) throws IOException {
 
 		FileUploadModel fileUploadModel = new FileUploadModel();
