@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
