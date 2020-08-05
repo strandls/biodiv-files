@@ -100,15 +100,12 @@ public class QuartzJob implements Job {
 					Map<String, Object> data = new HashMap<>();
 					data.put(FIELDS.TYPE.getAction(), MAIL_TYPE.MY_UPLOADS_DELETE_MAIL.getAction());
 					data.put(FIELDS.TO.getAction(), new String[] { userData[0] });
+					data.put(FIELDS.SUBSCRIPTION.getAction(), new Boolean(userData[2]));
 					Map<String, Object> model = new HashMap<>();
 					model.put(MY_UPLOADS_DELETE_MAIL.USERNAME.getAction(), userData[1]);
 					model.put(MY_UPLOADS_DELETE_MAIL.FROM_DATE.getAction(), getFormattedDate(new Date(), -18));
 					model.put(MY_UPLOADS_DELETE_MAIL.TO_DATE.getAction(), getFormattedDate(new Date(), 2));
 					data.put(FIELDS.DATA.getAction(), JsonUtil.unflattenJSON(model));
-					producer.produceMail(RabbitMqConnection.EXCHANGE, RabbitMqConnection.ROUTING_KEY, null,
-							JsonUtil.mapToJSON(data));
-
-					data.put(FIELDS.TO.getAction(), PropertyFileUtil.fetchProperty("config.properties", "mail_bcc").split(","));
 					producer.produceMail(RabbitMqConnection.EXCHANGE, RabbitMqConnection.ROUTING_KEY, null,
 							JsonUtil.mapToJSON(data));
 				}
@@ -136,9 +133,9 @@ public class QuartzJob implements Job {
 	}
 
 	public static String getUserInfo(Session session, Long id) {
-		String sql = "select email, username from suser where id = ?";
+		String sql = "select email, username, send_notification from suser where id = ?";
 		Object[] userData = (Object[]) session.createNativeQuery(sql).setParameter(1, id).getSingleResult();
-		return userData != null && userData.length == 2 ? String.join(DELIMITER, userData[0].toString(), userData[1].toString()) : null;
+		return userData != null && userData.length == 3 ? String.join(DELIMITER, userData[0].toString(), userData[1].toString(), userData[2].toString()) : null;
 	}
 
 	public static LocalDate getFileCreationDate(Path f) {
