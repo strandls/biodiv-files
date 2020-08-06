@@ -21,12 +21,12 @@ public class AppUtil {
 	private static final int QUALITY = 90;
 
 	public static enum MODULE {
-		OBSERVATIONS, SPECIES, DOCUMENTS
+		OBSERVATION, SPECIES, DOCUMENT
 	};
 
 	public static MODULE getModule(String moduleName) {
 		for (MODULE module : MODULE.values()) {
-			if (module.name().equalsIgnoreCase(moduleName)) {
+			if (module.name().equalsIgnoreCase(moduleName.toLowerCase())) {
 				return module;
 			}
 		}
@@ -39,10 +39,10 @@ public class AppUtil {
 			return addToList;
 		}
 		switch (module) {
-		case DOCUMENTS:
+		case DOCUMENT:
 			addToList = contentType.endsWith("/pdf");
 			break;
-		case OBSERVATIONS:
+		case OBSERVATION:
 			addToList = contentType.startsWith("image") || contentType.startsWith("video")
 					|| contentType.startsWith("audio");
 			break;
