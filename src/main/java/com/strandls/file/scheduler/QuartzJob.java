@@ -101,6 +101,7 @@ public class QuartzJob implements Job {
 					Map<String, Object> data = new HashMap<>();
 					data.put(FIELDS.TYPE.getAction(), MAIL_TYPE.MY_UPLOADS_DELETE_MAIL.getAction());
 					data.put(FIELDS.TO.getAction(), new String[] { userData[0] });
+					System.out.println("userData[2]: " + userData[2] + " " + new Boolean(userData[2]));
 					data.put(FIELDS.SUBSCRIPTION.getAction(), new Boolean(userData[2]));
 					Map<String, Object> model = new HashMap<>();
 					model.put(MY_UPLOADS_DELETE_MAIL.USERNAME.getAction(), userData[1]);
