@@ -9,6 +9,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
@@ -82,14 +83,14 @@ public class QuartzJob implements Job {
 				}
 				List<String> files = Files.walk(Paths.get(BASE_PATH + File.separatorChar + folder))
 						.filter(Files::isRegularFile).filter(f -> {
-							long noOfDays = getDifference(getFileCreationDate(f));
+							long noOfDays = getDifferenceMinutes(getFileCreationDateTime(f));
 							if (noOfDays >= MAIL_THRESHOLD) {
 								return true;
 							}
 							return false;
 						}).map(f -> {
 							File tmp = f.toFile();
-							long noOfDays = getDifference(getFileCreationDate(f));
+							long noOfDays = getDifferenceMinutes(getFileCreationDateTime(f));
 							return String.join(DELIMITER, String.valueOf(noOfDays), tmp.getAbsolutePath());
 						}).collect(Collectors.toList());
 				boolean sendMail = files.stream().filter(f -> Long.parseLong(f.split(DELIMITER)[0]) == MAIL_THRESHOLD)
@@ -153,9 +154,26 @@ public class QuartzJob implements Job {
 				.atZone(ZoneId.systemDefault()).toLocalDate();
 		return creation;
 	}
+	
+	public static LocalDateTime getFileCreationDateTime(Path f) {
+		File tmp = f.toFile();
+		BasicFileAttributes attributes = null;
+		try {
+			attributes = Files.readAttributes(Paths.get(tmp.toURI()), BasicFileAttributes.class);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		LocalDateTime creation = Instant.ofEpochMilli(attributes.creationTime().toMillis())
+				.atZone(ZoneId.systemDefault()).toLocalDateTime();
+		return creation;
+	}
 
 	public static long getDifference(LocalDate date) {
 		return ChronoUnit.DAYS.between(date, LocalDate.now());
+	}
+	
+	public static long getDifferenceMinutes(LocalDateTime date) {
+		return ChronoUnit.MINUTES.between(date, LocalDateTime.now());
 	}
 
 	public static String getFormattedDate(Date d, int offset) {
