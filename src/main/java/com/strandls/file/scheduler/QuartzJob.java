@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ import com.strandls.file.RabbitMqConnection;
 import com.strandls.file.util.ImageUtil;
 import com.strandls.file.util.PropertyFileUtil;
 import com.strandls.mail_utility.model.EnumModel.FIELDS;
+import com.strandls.mail_utility.model.EnumModel.INFO_FIELDS;
 import com.strandls.mail_utility.model.EnumModel.MAIL_TYPE;
 import com.strandls.mail_utility.model.EnumModel.MY_UPLOADS_DELETE_MAIL;
 import com.strandls.mail_utility.producer.RabbitMQProducer;
@@ -108,8 +110,13 @@ public class QuartzJob implements Job {
 					model.put(MY_UPLOADS_DELETE_MAIL.FROM_DATE.getAction(), getFormattedDate(new Date(), -18));
 					model.put(MY_UPLOADS_DELETE_MAIL.TO_DATE.getAction(), getFormattedDate(new Date(), 2));
 					data.put(FIELDS.DATA.getAction(), JsonUtil.unflattenJSON(model));
+					
+
+					Map<String, Object> mailData = new HashMap<String, Object>();
+					mailData.put(INFO_FIELDS.TYPE.getAction(), MAIL_TYPE.MY_UPLOADS_DELETE_MAIL.getAction());
+					mailData.put(INFO_FIELDS.RECIPIENTS.getAction(), Arrays.asList(data));
 					producer.produceMail(RabbitMqConnection.EXCHANGE, RabbitMqConnection.ROUTING_KEY, null,
-							JsonUtil.mapToJSON(data));
+							JsonUtil.mapToJSON(mailData));
 				}
 
 				files.forEach(file -> {
