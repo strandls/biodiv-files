@@ -85,14 +85,14 @@ public class QuartzJob implements Job {
 				}
 				List<String> files = Files.walk(Paths.get(BASE_PATH + File.separatorChar + folder))
 						.filter(Files::isRegularFile).filter(f -> {
-							long noOfDays = getDifference(getFileCreationDate(f));
+							long noOfDays = getDifferenceMinutes(getFileCreationDateTime(f));
 							if (noOfDays >= MAIL_THRESHOLD) {
 								return true;
 							}
 							return false;
 						}).map(f -> {
 							File tmp = f.toFile();
-							long noOfDays = getDifference(getFileCreationDate(f));
+							long noOfDays = getDifferenceMinutes(getFileCreationDateTime(f));
 							return String.join(DELIMITER, String.valueOf(noOfDays), tmp.getAbsolutePath());
 						}).collect(Collectors.toList());
 				boolean sendMail = files.stream().filter(f -> Long.parseLong(f.split(DELIMITER)[0]) == MAIL_THRESHOLD)
