@@ -350,34 +350,32 @@ public class FileUploadService {
 					if (!dateStr.isEmpty()) {
 						capturedDate = sdf.parse(dateStr);
 					}
-				} else if (dataLength == 2) {
-					uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-					uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
-				} else if (dataLength == 3) {
-					uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-					uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
-					String dateStr = data[2];
-					Date capturedDate = null;
-					try {
-						if (!dateStr.isEmpty()) {
-							capturedDate = sdf.parse(dateStr);
-						}
-						uploadModel.setDateCreated(capturedDate);
-					} catch (Exception ex) {
+					uploadModel.setDateCreated(capturedDate);
+				} catch (Exception ex) {
+				}
+			} else if (dataLength == 2) {
+				uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
+				uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
+			} else if (dataLength == 3) {
+				uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
+				uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
+				String dateStr = data[2];
+				Date capturedDate = null;
+				try {
+					if (!dateStr.isEmpty()) {
+						capturedDate = sdf.parse(dateStr);
 					}
+					uploadModel.setDateCreated(capturedDate);
+				} catch (Exception ex) {
 				}
 			}
 			attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()), BasicFileAttributes.class);
 			Date uploadedDate = new Date(attributes.creationTime().toMillis());
 			uploadModel.setDateUploaded(uploadedDate);
 		}
-		attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()), BasicFileAttributes.class);
-		Date uploadedDate = new Date(attributes.creationTime().toMillis());
-		uploadModel.setDateUploaded(uploadedDate);
 		uploadModel.setPath(
 				File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar + tmpFile.getName());
 		uploadModel.setType(probeContentType);
-		uploadModel.setFileSize(String.valueOf(tmpFile.length()));
 		return uploadModel;
 	}
 
