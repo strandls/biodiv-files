@@ -445,4 +445,40 @@ public class FileUploadService {
 		}
 		return false;
 	}
+	
+	public MyUpload handleBulkUpload(InputStream is, MODULE module, BASE_FOLDERS baseFolder, FormDataContentDisposition fileDetails, String hash, Long userId)
+			throws Exception {
+		String baseHash = "";
+		if ("".equals(baseHash)) {
+			baseHash = "".equals(hash) ? UUID.randomUUID().toString() : hash;	
+		}
+		String dir = storageBasePath + File.separatorChar + BASE_FOLDERS.temp.getFolder() + File.separatorChar
+				+ userId + File.separatorChar + baseHash;
+		System.out.println("\n\n***** Temp Base Dir: " + dir + " *****\n\n");
+		File dirFile = new File(dir);
+		if (!dirFile.exists()) {
+			dirFile.mkdirs();
+		}
+		Tika tika = new Tika();
+		String fileName = dir + File.separatorChar + fileDetails.getFileName();
+		File file = new File(fileName);
+		if (!file.getCanonicalPath().startsWith(storageBasePath)) {
+			throw new Exception("Invalid folder");
+		}
+		String probeContentType = tika.detect(fileName);
+		boolean allowedContentType = AppUtil.filterFileTypeForModule(probeContentType, MODULE.BULK_UPLOAD);
+		if (!allowedContentType) {
+			throw new Exception("Invalid file type. Allowed types are " + String.join(", ", AppUtil.ALLOWED_CONTENT_TYPES.get(MODULE.BULK_UPLOAD)));
+		}
+		boolean isFileCreated = writeToFile(is, file.getAbsolutePath());
+		if (!isFileCreated) {
+			throw new Exception("File not created");
+		}
+		String destinationPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
+				+ userId + File.separatorChar + baseHash;
+		System.out.println("\n\n***** Destination Base Dir: " + destinationPath + " *****\n\n");
+		AppUtil.parseZipFiles(storageBasePath, file.getCanonicalPath(), destinationPath + File.separatorChar + ".", module);
+		MyUpload uploadModel = new MyUpload();
+		return uploadModel;
+	}
 }

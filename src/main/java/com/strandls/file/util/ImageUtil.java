@@ -15,7 +15,8 @@ public class ImageUtil {
 		traits("traits"),
 		myUploads("myUploads"),
 		thumbnails("thumbnails"),
-		documents(String.join(String.valueOf(File.separatorChar), "content", "documents"));
+		documents(String.join(String.valueOf(File.separatorChar), "content", "documents")),
+		temp("temp");
 		
 		private String folder;
 		

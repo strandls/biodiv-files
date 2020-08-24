@@ -116,7 +116,6 @@ public class FileDownloadApi {
 		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
 			return Response.status(Status.BAD_REQUEST).build();			
 		}
-		String hAccept = request.getHeader(HttpHeaders.ACCEPT);
 		return fileDownloadService.getLogo(request, directory, fileName, width, height);
 	}
 	
