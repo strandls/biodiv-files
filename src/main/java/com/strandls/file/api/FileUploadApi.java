@@ -185,5 +185,37 @@ public class FileUploadApi {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
+	
+	@POST
+	@Path(ApiContants.BULK_UPLOAD)
+	@ValidateUser
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Handle bulk upload", notes = "Returns uploaded file data", response = MyUpload.class)
+	public Response bulkUpload(@Context HttpServletRequest request,
+			@FormDataParam("upload") InputStream inputStream,
+			@FormDataParam("upload") FormDataContentDisposition fileDetails, @FormDataParam("hash") String hash,
+			@DefaultValue("") @FormDataParam("folder") String folder, @FormDataParam("module") String module)
+			throws Exception {
+		if (hash == null || hash.isEmpty()) {
+			return Response.status(Status.BAD_REQUEST).entity("Hash required").build();
+		}
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			MODULE baseModule = AppUtil.getModule(module);
+			if (baseModule == null) {
+				return Response.status(Status.BAD_REQUEST).entity("Invalid Folder").build();
+			}
+			BASE_FOLDERS baseFolder = ImageUtil.getFolder(folder);
+			if (baseFolder == null) {
+				return Response.status(Status.BAD_REQUEST).entity("Invalid Folder").build();
+			}
+			MyUpload uploadModel = fileUploadService.handleBulkUpload(inputStream, baseModule, baseFolder, fileDetails, hash, userId);
+			return Response.ok().entity(uploadModel).build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
 
 }

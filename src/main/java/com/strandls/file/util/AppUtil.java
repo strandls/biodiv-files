@@ -11,27 +11,39 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.CacheControl;
 
+import org.apache.tika.Tika;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.FileHeader;
+
 public class AppUtil {
 
 	private static final List<String> PREVENTIVE_TOKENS = Arrays.asList("&", "|", "`", "$", ";");
 	private static final int QUALITY = 90;
 	
+	private static final Logger logger = LoggerFactory.getLogger(AppUtil.class);
+	
 	public static final Map<MODULE, List<String>> ALLOWED_CONTENT_TYPES = new HashMap<MODULE, List<String>>();
 
 	public static enum MODULE {
-		OBSERVATION, SPECIES, DOCUMENT
+		OBSERVATION, SPECIES, DOCUMENT, BULK_UPLOAD
 	};
 
 	static {
 		ALLOWED_CONTENT_TYPES.put(MODULE.OBSERVATION, Arrays.asList("image", "video", "audio"));
-		ALLOWED_CONTENT_TYPES.put(MODULE.DOCUMENT, Arrays.asList("pdf", "zip"));
+		ALLOWED_CONTENT_TYPES.put(MODULE.DOCUMENT, Arrays.asList("pdf"));
 		ALLOWED_CONTENT_TYPES.put(MODULE.SPECIES, Arrays.asList());
+		ALLOWED_CONTENT_TYPES.put(MODULE.BULK_UPLOAD, Arrays.asList("zip", "vnd.ms-excel", "spreadsheetml.sheet", "csv"));
 	};
 
 	public static MODULE getModule(String moduleName) {
@@ -41,6 +53,33 @@ public class AppUtil {
 			}
 		}
 		return null;
+	}
+	
+	public static Map<String, String> parseZipFiles(String storageBasePath, String filePath, String destination, MODULE module) {
+		Map<String, String> files = new HashMap<>();
+		try {
+			ZipFile zipFile = new ZipFile(filePath);
+			List<FileHeader> headers = zipFile.getFileHeaders();
+			Iterator<FileHeader> it = headers.iterator();
+			Tika tika = new Tika();
+			while (it.hasNext()) {
+				FileHeader header = it.next();
+				final String contentType = tika.detect(header.getFileName());
+				boolean allowedType = ALLOWED_CONTENT_TYPES.get(module).stream().allMatch((type) -> {
+					return contentType.toLowerCase().startsWith(contentType)
+							|| contentType.toLowerCase().endsWith(type);
+				});
+				if (!allowedType) {
+					continue;
+				}
+				zipFile.extractFile(header, destination);
+			}
+		} catch (ZipException ex) {
+			logger.error(ex.getMessage());
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+		}
+		return files;
 	}
 	
 	public static boolean filterFileTypeForModule(String contentType, MODULE module) {
