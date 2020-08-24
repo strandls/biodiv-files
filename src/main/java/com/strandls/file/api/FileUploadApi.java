@@ -56,7 +56,8 @@ public class FileUploadApi {
 	@ApiOperation(value = "Upload files to myUploads", notes = "Returns uploaded file data", response = MyUpload.class)
 	public Response saveToMyUploads(@Context HttpServletRequest request,
 			@FormDataParam("upload") InputStream inputStream,
-			@FormDataParam("upload") FormDataContentDisposition fileDetails, @FormDataParam("hash") String hash)
+			@FormDataParam("upload") FormDataContentDisposition fileDetails, @FormDataParam("hash") String hash,
+			@FormDataParam("module") String module)
 			throws Exception {
 		if (hash == null || hash.isEmpty()) {
 			return Response.status(Status.BAD_REQUEST).entity("Hash required").build();
@@ -64,7 +65,11 @@ public class FileUploadApi {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			MyUpload uploadModel = fileUploadService.saveFile(inputStream, fileDetails, hash, userId);
+			MODULE mod = AppUtil.getModule(module);
+			if (mod == null) {
+				return Response.status(Status.BAD_REQUEST).entity("Invalid Module").build();
+			}
+			MyUpload uploadModel = fileUploadService.saveFile(inputStream, mod, fileDetails, hash, userId);
 			return Response.ok().entity(uploadModel).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
@@ -127,7 +132,7 @@ public class FileUploadApi {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			Map<String, String> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(), filesDTO.getModule());
+			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(), filesDTO.getModule());
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
