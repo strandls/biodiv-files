@@ -177,7 +177,7 @@ public class FileUploadService {
 		}
 	}
 
-	public MyUpload saveFile(InputStream is, FormDataContentDisposition fileDetails, String hash, Long userId)
+	public MyUpload saveFile(InputStream is, MODULE module, FormDataContentDisposition fileDetails, String hash, Long userId)
 			throws Exception {
 		String dir = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
 				+ userId + File.separatorChar + hash;
@@ -192,9 +192,9 @@ public class FileUploadService {
 			return getExistingFileData(file);
 		}
 		String probeContentType = tika.detect(fileName);
-		if (probeContentType == null || !probeContentType.startsWith("image") && !probeContentType.startsWith("audio")
-				&& !probeContentType.startsWith("video")) {
-			throw new Exception("Invalid file type. Allowed types are image, audio and video.");
+		boolean allowedContentType = AppUtil.filterFileTypeForModule(probeContentType, module);
+		if (!allowedContentType) {
+			throw new Exception("Invalid file type. Allowed types are " + String.join(", ", AppUtil.ALLOWED_CONTENT_TYPES.get(module)));
 		}
 		boolean isFileCreated = writeToFile(is, file.getAbsolutePath());
 		MyUpload uploadModel = new MyUpload();
@@ -330,7 +330,6 @@ public class FileUploadService {
 		uploadModel.setFileName(tmpFile.getName());
 		String exifData = AppUtil.getExifData(tmpFile.getAbsolutePath());
 		if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
-			System.out.println("\n\n***** Exif: " + exifData + " *****\n\n");
 			String[] data = exifData.split("\\*");
 			int dataLength = data.length;
 			BasicFileAttributes attributes;
@@ -382,8 +381,8 @@ public class FileUploadService {
 		return isDeleted;
 	}
 
-	public Map<String, String> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr) throws Exception {
-		Map<String, String> finalPaths = new HashMap<>();
+	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr) throws Exception {
+		Map<String, Object> finalPaths = new HashMap<>();
 		try {
 			BASE_FOLDERS folder = ImageUtil.getFolder(folderStr);
 			String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder()
@@ -395,6 +394,7 @@ public class FileUploadService {
 				existingHash = existingHash.substring(1);
 				existingHash = existingHash.substring(0, existingHash.indexOf(File.separatorChar));
 			}
+			Tika tika = new Tika();
 
 			for (String file : fileList) {
 				File f = new File(basePath + file);
@@ -403,7 +403,12 @@ public class FileUploadService {
 						String fileName = f.getName();
 						FileUploadModel model = uploadFile(f.getAbsolutePath(), folder.getFolder(),
 								existingHash == null ? hash : existingHash, fileName);
-						finalPaths.put(file, model.getUri());
+						
+						Map<String, String> fileAttributes = new HashMap<String, String>();
+						fileAttributes.put("name", model.getUri());
+						fileAttributes.put("mimeType", tika.detect(fileName));
+						fileAttributes.put("size", String.valueOf(java.nio.file.Files.size(f.toPath())));
+						finalPaths.put(file, fileAttributes);
 						f.getParentFile().delete();
 					}
 				} else {

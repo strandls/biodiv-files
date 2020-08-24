@@ -10,7 +10,9 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.CacheControl;
@@ -19,9 +21,17 @@ public class AppUtil {
 
 	private static final List<String> PREVENTIVE_TOKENS = Arrays.asList("&", "|", "`", "$", ";");
 	private static final int QUALITY = 90;
+	
+	public static final Map<MODULE, List<String>> ALLOWED_CONTENT_TYPES = new HashMap<MODULE, List<String>>();
 
 	public static enum MODULE {
 		OBSERVATION, SPECIES, DOCUMENT
+	};
+
+	static {
+		ALLOWED_CONTENT_TYPES.put(MODULE.OBSERVATION, Arrays.asList("image", "video", "audio"));
+		ALLOWED_CONTENT_TYPES.put(MODULE.DOCUMENT, Arrays.asList("pdf", "zip"));
+		ALLOWED_CONTENT_TYPES.put(MODULE.SPECIES, Arrays.asList());
 	};
 
 	public static MODULE getModule(String moduleName) {
@@ -38,19 +48,9 @@ public class AppUtil {
 		if (contentType == null) {
 			return addToList;
 		}
-		switch (module) {
-		case DOCUMENT:
-			addToList = contentType.endsWith("/pdf");
-			break;
-		case OBSERVATION:
-			addToList = contentType.startsWith("image") || contentType.startsWith("video")
-					|| contentType.startsWith("audio");
-			break;
-		case SPECIES:
-			break;
-		default:
-			break;
-		}
+		addToList = ALLOWED_CONTENT_TYPES.get(module).stream().anyMatch(type -> {
+			return contentType.toLowerCase().startsWith(type) || contentType.toLowerCase().endsWith(type);
+		});
 		return addToList;
 	}
 
