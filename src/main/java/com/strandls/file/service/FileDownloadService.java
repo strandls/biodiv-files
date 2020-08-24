@@ -220,6 +220,7 @@ public class FileDownloadService {
 			} else {
 				resizedFile = thumbnailFile;
 			}
+			System.out.println("\n\n***** Resized File: " + resizedFile.getName() + " *****\n\n");
 			String contentType = tika.detect(resizedFile.getName());
 			InputStream in = new FileInputStream(resizedFile);
 			long contentLength = resizedFile.length();
