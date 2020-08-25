@@ -44,6 +44,9 @@ public class ImageUtil {
 	}
 	
 	public static BASE_FOLDERS getFolder(String directory) {
+		if (directory == null || directory.isEmpty()) {
+			return null;
+		}
 		for (BASE_FOLDERS folders: BASE_FOLDERS.values()) {
 			if (folders.name().equals(directory)) {
 				return folders;
