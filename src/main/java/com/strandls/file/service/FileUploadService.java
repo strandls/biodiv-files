@@ -431,8 +431,6 @@ public class FileUploadService {
 						finalPaths.put(file, fileAttributes);
 						f.getParentFile().delete();
 					}
-				} else {
-					finalPaths.put(file, file);
 				}
 			}
 		} catch (Exception ex) {
