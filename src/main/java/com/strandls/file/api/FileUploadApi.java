@@ -178,7 +178,7 @@ public class FileUploadApi {
 			if (inputStream == null) {
 				return Response.status(Status.BAD_REQUEST).entity("File required").build();
 			}
-			FileUploadModel model = fileUploadService.uploadFile(folder, inputStream, fileDetails, request, hash,
+			FileUploadModel model = fileUploadService.uploadFile(folder, inputStream, fileDetails, request, nestedFolder, hash,
 					createResourceFolder);
 			return Response.ok().entity(model).build();
 		} catch (Exception ex) {
