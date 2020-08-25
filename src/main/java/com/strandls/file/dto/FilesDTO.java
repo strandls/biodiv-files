@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class FilesDTO {
 	
 	private List<String> files;
-	private String module;
+	private String folder;
 	
 	public List<String> getFiles() {
 		return files;
@@ -16,11 +16,11 @@ public class FilesDTO {
 	public void setFiles(List<String> files) {
 		this.files = files;
 	}
-	public String getModule() {
-		return module;
+	public String getFolder() {
+		return folder;
 	}
-	public void setModule(String module) {
-		this.module = module;
+	public void setFolder(String folder) {
+		this.folder = folder;
 	}
 
 }

@@ -401,6 +401,9 @@ public class FileUploadService {
 		Map<String, Object> finalPaths = new HashMap<>();
 		try {
 			BASE_FOLDERS folder = ImageUtil.getFolder(folderStr);
+			if (folder == null) {
+				throw new Exception("Invalid folder");
+			}
 			String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder()
 					+ File.separatorChar + userId;
 			String hash = UUID.randomUUID().toString();
