@@ -163,6 +163,7 @@ public class FileUploadService {
 		if (!destFile.getParentFile().exists()) {
 			destFile.getParentFile().mkdirs();
 		}
+		System.out.println("\n\n***** Source: " + source + " Destination: " + filePath + " *****\n\n");
 		Path path = java.nio.file.Files.move(Paths.get(source), Paths.get(filePath), StandardCopyOption.ATOMIC_MOVE);
 		boolean uploaded = path != null;
 
