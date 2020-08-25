@@ -132,7 +132,7 @@ public class FileUploadApi {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(), filesDTO.getModule());
+			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(), filesDTO.getFolder());
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
