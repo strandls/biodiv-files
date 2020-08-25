@@ -124,14 +124,14 @@ public class FileUploadApi {
 
 	@POST
 	@Path(ApiContants.MOVE_FILES)
+	@ValidateUser
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Moves files from MyUploads to the appropriate folder", notes = "Returns uploaded file data", response = Map.class)
 	public Response moveFiles(@Context HttpServletRequest request, @ApiParam("filesDTO") FilesDTO filesDTO) {
 		try {
-//			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-//			Long userId = Long.parseLong(profile.getId());
-			Long userId = 824141L;
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
 			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(), filesDTO.getFolder());
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
