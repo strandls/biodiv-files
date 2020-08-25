@@ -60,7 +60,7 @@ public class FileUploadService {
 	}
 
 	public FileUploadModel uploadFile(BASE_FOLDERS directory, InputStream inputStream, FormDataContentDisposition fileDetails,
-			HttpServletRequest request, String hashKey, boolean resourceFolder) throws IOException {
+			HttpServletRequest request, String nestedFolder, String hashKey, boolean resourceFolder) throws IOException {
 
 		FileUploadModel fileUploadModel = new FileUploadModel();
 
@@ -68,7 +68,13 @@ public class FileUploadService {
 
 		String fileExtension = Files.getFileExtension(fileName);
 
-		String folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
+		String folderName = "";
+		if (nestedFolder != null && !nestedFolder.isEmpty()) {
+			folderName += String.join(String.valueOf(File.separatorChar), nestedFolder.split(",")) + File.separatorChar;
+		} else {
+			throw new IOException("Invalid NestedFolder Name");
+		}
+		folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
 		if (resourceFolder) {
 			folderName += File.separatorChar + "resources";
 		}
@@ -92,6 +98,10 @@ public class FileUploadService {
 
 		String filePath = dirPath + File.separatorChar + generatedFileName;
 		System.out.println("\n\n FileLocation: " + filePath + " *****\n\n");
+		File file = new File(filePath);
+		if (!file.getCanonicalPath().startsWith(storageBasePath)) {
+			throw new IOException("Invalid folder");
+		}
 		boolean uploaded = writeToFile(inputStream, filePath);
 
 		fileUploadModel.setUploaded(uploaded);

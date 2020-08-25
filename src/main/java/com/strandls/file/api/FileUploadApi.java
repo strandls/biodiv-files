@@ -57,8 +57,7 @@ public class FileUploadApi {
 	public Response saveToMyUploads(@Context HttpServletRequest request,
 			@FormDataParam("upload") InputStream inputStream,
 			@FormDataParam("upload") FormDataContentDisposition fileDetails, @FormDataParam("hash") String hash,
-			@FormDataParam("module") String module)
-			throws Exception {
+			@FormDataParam("module") String module) throws Exception {
 		if (hash == null || hash.isEmpty()) {
 			return Response.status(Status.BAD_REQUEST).entity("Hash required").build();
 		}
@@ -132,7 +131,8 @@ public class FileUploadApi {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(), filesDTO.getFolder());
+			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(),
+					filesDTO.getFolder());
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
@@ -166,6 +166,7 @@ public class FileUploadApi {
 			@FormDataParam("upload") InputStream inputStream,
 			@FormDataParam("upload") FormDataContentDisposition fileDetails,
 			@DefaultValue("") @FormDataParam("hash") String hash, @FormDataParam("directory") String directory,
+			@FormDataParam("nestedFolder") String nestedFolder,
 			@DefaultValue("false") @FormDataParam("resource") String resource) {
 		try {
 			Boolean createResourceFolder = Boolean.parseBoolean(resource);
@@ -176,8 +177,8 @@ public class FileUploadApi {
 			if (inputStream == null) {
 				return Response.status(Status.BAD_REQUEST).entity("File required").build();
 			}
-			FileUploadModel model = fileUploadService.uploadFile(folder, inputStream, fileDetails, request, hash,
-					createResourceFolder);
+			FileUploadModel model = fileUploadService.uploadFile(folder, inputStream, fileDetails, request,
+					nestedFolder, hash, createResourceFolder);
 			return Response.ok().entity(model).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
