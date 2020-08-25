@@ -401,6 +401,7 @@ public class FileUploadService {
 
 			for (String file : fileList) {
 				File f = new File(basePath + file);
+				String size = String.valueOf(java.nio.file.Files.size(f.toPath()));
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					if (f.exists()) {
 						String fileName = f.getName();
@@ -410,7 +411,7 @@ public class FileUploadService {
 						Map<String, String> fileAttributes = new HashMap<String, String>();
 						fileAttributes.put("name", model.getUri());
 						fileAttributes.put("mimeType", tika.detect(fileName));
-						fileAttributes.put("size", String.valueOf(java.nio.file.Files.size(f.toPath())));
+						fileAttributes.put("size", size);
 						finalPaths.put(file, fileAttributes);
 						f.getParentFile().delete();
 					}
