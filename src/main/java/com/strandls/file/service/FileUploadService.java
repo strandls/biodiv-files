@@ -383,11 +383,11 @@ public class FileUploadService {
 
 	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr) throws Exception {
 		Map<String, Object> finalPaths = new HashMap<>();
+		BASE_FOLDERS folder = ImageUtil.getFolder(folderStr);
+		if (folder == null) {
+			throw new Exception("Invalid folder");
+		}
 		try {
-			BASE_FOLDERS folder = ImageUtil.getFolder(folderStr);
-			if (folder == null) {
-				throw new Exception("Invalid folder");
-			}
 			String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder()
 					+ File.separatorChar + userId;
 			String hash = UUID.randomUUID().toString();
