@@ -13,6 +13,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -25,11 +26,14 @@ import org.pac4j.core.profile.CommonProfile;
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.file.ApiContants;
+import com.strandls.file.dto.FilesDTO;
 import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.model.MyUpload;
 import com.strandls.file.service.FileUploadService;
 import com.strandls.file.util.AppUtil;
+import com.strandls.file.util.AppUtil.MODULE;
 import com.strandls.file.util.ImageUtil;
+import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -50,16 +54,22 @@ public class FileUploadApi {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Upload files to myUploads", notes = "Returns uploaded file data", response = MyUpload.class)
-	public Response saveToMyUploads(@Context HttpServletRequest request, @FormDataParam("upload") InputStream inputStream,
-			@FormDataParam("upload") FormDataContentDisposition fileDetails, 
-			@FormDataParam("hash") String hash) throws Exception {
+	public Response saveToMyUploads(@Context HttpServletRequest request,
+			@FormDataParam("upload") InputStream inputStream,
+			@FormDataParam("upload") FormDataContentDisposition fileDetails, @FormDataParam("hash") String hash,
+			@FormDataParam("module") String module)
+			throws Exception {
 		if (hash == null || hash.isEmpty()) {
-			return Response.status(Status.BAD_REQUEST).entity("Hash required").build();	
+			return Response.status(Status.BAD_REQUEST).entity("Hash required").build();
 		}
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			MyUpload uploadModel = fileUploadService.saveFile(inputStream, fileDetails, hash, userId);
+			MODULE mod = AppUtil.getModule(module);
+			if (mod == null) {
+				return Response.status(Status.BAD_REQUEST).entity("Invalid Module").build();
+			}
+			MyUpload uploadModel = fileUploadService.saveFile(inputStream, mod, fileDetails, hash, userId);
 			return Response.ok().entity(uploadModel).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
@@ -72,11 +82,16 @@ public class FileUploadApi {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Get files list from myUploads", notes = "Returns uploaded file data", response = MyUpload.class, responseContainer = "List")
-	public Response getFilesFromUploads(@Context HttpServletRequest request) throws Exception {
+	public Response getFilesFromUploads(@Context HttpServletRequest request, @QueryParam("module") String module)
+			throws Exception {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			List<MyUpload> files = fileUploadService.getFilesFromUploads(userId);
+			MODULE mod = AppUtil.getModule(module);
+			if (mod == null) {
+				return Response.status(Status.BAD_REQUEST).entity("Invalid Module").build();
+			}
+			List<MyUpload> files = fileUploadService.getFilesFromUploads(userId, mod);
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
@@ -113,17 +128,17 @@ public class FileUploadApi {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Moves files from MyUploads to the appropriate folder", notes = "Returns uploaded file data", response = Map.class)
-	public Response moveFiles(@Context HttpServletRequest request, @ApiParam("fileList") List<String> fileList) {
+	public Response moveFiles(@Context HttpServletRequest request, @ApiParam("filesDTO") FilesDTO filesDTO) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			Map<String, String> files = fileUploadService.moveFilesFromUploads(userId, fileList);
+			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(), filesDTO.getModule());
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
-	
+
 	@POST
 	@Path(ApiContants.REMOVE_FILE)
 	@ValidateUser
@@ -135,19 +150,20 @@ public class FileUploadApi {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			boolean deleted = fileUploadService.deleteFilesFromMyUploads(userId, file.getPath());
-			return Response.ok().entity(deleted).build();	
+			return Response.ok().entity(deleted).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
-	
+
 	@POST
 	@Path(ApiContants.RESOURCE_UPLOAD)
 	@ValidateUser
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Upload resources", notes = "Returns uploaded file data", response = FileUploadModel.class)
-	public Response uploadResource(@Context HttpServletRequest request, @FormDataParam("upload") InputStream inputStream,
+	public Response uploadResource(@Context HttpServletRequest request,
+			@FormDataParam("upload") InputStream inputStream,
 			@FormDataParam("upload") FormDataContentDisposition fileDetails,
 			@DefaultValue("") @FormDataParam("hash") String hash,
 			@FormDataParam("directory") String directory,
@@ -155,15 +171,48 @@ public class FileUploadApi {
 			@DefaultValue("false") @FormDataParam("resource") String resource) {
 		try {
 			Boolean createResourceFolder = Boolean.parseBoolean(resource);
-			boolean folderExists = ImageUtil.checkFolderExistence(directory);
-			if (!folderExists) {
+			BASE_FOLDERS folder = ImageUtil.getFolder(directory);
+			if (folder == null) {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid directory").build();
 			}
 			if (inputStream == null) {
 				return Response.status(Status.BAD_REQUEST).entity("File required").build();
 			}
-			FileUploadModel model = fileUploadService.uploadFile(directory, inputStream, fileDetails, request, nestedFolder, hash, createResourceFolder);
-			return Response.ok().entity(model).build();	
+			FileUploadModel model = fileUploadService.uploadFile(folder, inputStream, fileDetails, request, hash,
+					createResourceFolder);
+			return Response.ok().entity(model).build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
+	
+	@POST
+	@Path(ApiContants.BULK_UPLOAD)
+	@ValidateUser
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Handle bulk upload", notes = "Returns uploaded file data", response = MyUpload.class)
+	public Response bulkUpload(@Context HttpServletRequest request,
+			@FormDataParam("upload") InputStream inputStream,
+			@FormDataParam("upload") FormDataContentDisposition fileDetails, @FormDataParam("hash") String hash,
+			@DefaultValue("") @FormDataParam("folder") String folder, @FormDataParam("module") String module)
+			throws Exception {
+		if (hash == null || hash.isEmpty()) {
+			return Response.status(Status.BAD_REQUEST).entity("Hash required").build();
+		}
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			MODULE baseModule = AppUtil.getModule(module);
+			if (baseModule == null) {
+				return Response.status(Status.BAD_REQUEST).entity("Invalid Folder").build();
+			}
+			BASE_FOLDERS baseFolder = ImageUtil.getFolder(folder);
+			if (baseFolder == null) {
+				return Response.status(Status.BAD_REQUEST).entity("Invalid Folder").build();
+			}
+			MyUpload uploadModel = fileUploadService.handleBulkUpload(inputStream, baseModule, baseFolder, fileDetails, hash, userId);
+			return Response.ok().entity(uploadModel).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
