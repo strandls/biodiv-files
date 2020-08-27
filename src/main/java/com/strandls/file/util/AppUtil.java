@@ -10,17 +10,88 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.core.CacheControl;
+
+import org.apache.tika.Tika;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.FileHeader;
 
 public class AppUtil {
 
 	private static final List<String> PREVENTIVE_TOKENS = Arrays.asList("&", "|", "`", "$", ";");
 	private static final int QUALITY = 90;
+	
+	private static final Logger logger = LoggerFactory.getLogger(AppUtil.class);
+	
+	public static final Map<MODULE, List<String>> ALLOWED_CONTENT_TYPES = new HashMap<MODULE, List<String>>();
+
+	public static enum MODULE {
+		OBSERVATION, SPECIES, DOCUMENT, BULK_UPLOAD
+	};
+
+	static {
+		ALLOWED_CONTENT_TYPES.put(MODULE.OBSERVATION, Arrays.asList("image", "video", "audio"));
+		ALLOWED_CONTENT_TYPES.put(MODULE.DOCUMENT, Arrays.asList("pdf"));
+		ALLOWED_CONTENT_TYPES.put(MODULE.SPECIES, Arrays.asList());
+		ALLOWED_CONTENT_TYPES.put(MODULE.BULK_UPLOAD, Arrays.asList("zip", "vnd.ms-excel", "spreadsheetml.sheet", "csv"));
+	};
+
+	public static MODULE getModule(String moduleName) {
+		for (MODULE module : MODULE.values()) {
+			if (module.name().equalsIgnoreCase(moduleName.toLowerCase())) {
+				return module;
+			}
+		}
+		return null;
+	}
+	
+	public static Map<String, String> parseZipFiles(String storageBasePath, String filePath, String destination, MODULE module) {
+		Map<String, String> files = new HashMap<>();
+		try {
+			ZipFile zipFile = new ZipFile(filePath);
+			List<FileHeader> headers = zipFile.getFileHeaders();
+			Iterator<FileHeader> it = headers.iterator();
+			Tika tika = new Tika();
+			while (it.hasNext()) {
+				FileHeader header = it.next();
+				final String contentType = tika.detect(header.getFileName());
+				boolean allowedType = ALLOWED_CONTENT_TYPES.get(module).stream().allMatch((type) -> {
+					return contentType.toLowerCase().startsWith(contentType)
+							|| contentType.toLowerCase().endsWith(type);
+				});
+				if (!allowedType) {
+					continue;
+				}
+				zipFile.extractFile(header, destination);
+			}
+		} catch (ZipException ex) {
+			logger.error(ex.getMessage());
+		} catch (Exception ex) {
+			logger.error(ex.getMessage());
+		}
+		return files;
+	}
+	
+	public static boolean filterFileTypeForModule(String contentType, MODULE module) {
+		boolean addToList = false;
+		if (contentType == null) {
+			return addToList;
+		}
+		addToList = ALLOWED_CONTENT_TYPES.get(module).stream().anyMatch(type -> {
+			return contentType.toLowerCase().startsWith(type) || contentType.toLowerCase().endsWith(type);
+		});
+		return addToList;
+	}
 
 	public static CacheControl getCacheControl() {
 		CacheControl cache = new CacheControl();
@@ -135,7 +206,8 @@ public class AppUtil {
 		return String.join(" ", commands).trim();
 	}
 
-	public static String generateCommandLogo(String filePath, String outputFilePath, Integer w, Integer h, String format) {
+	public static String generateCommandLogo(String filePath, String outputFilePath, Integer w, Integer h,
+			String format) {
 		List<String> commands = new ArrayList<>();
 		StringBuilder command = new StringBuilder();
 		String fileName = filePath.substring(0, filePath.lastIndexOf("."));
@@ -158,10 +230,10 @@ public class AppUtil {
 		command.append("-quality").append(" ").append(QUALITY);
 		command.append(" ");
 		if (finalFilePath.contains(" ")) {
-			command.append("'").append(finalFilePath).append("_").append(w).append("x").append(h).append(".").append(format).append("'");
+			command.append("'").append(finalFilePath).append("_").append(w).append("x").append(h).append(".")
+					.append(format).append("'");
 		} else {
-			command.append(finalFilePath).append("_").append(w).append("x").append(h)
-					.append(".").append(format);
+			command.append(finalFilePath).append("_").append(w).append("x").append(h).append(".").append(format);
 		}
 		commands.add(command.toString());
 		return String.join(" ", commands).trim();
@@ -245,7 +317,8 @@ public class AppUtil {
 	}
 
 	public static String getExifData(String fileName) {
-		String command = "identify -format \"%[EXIF:GPSLatitude]*%[EXIF:GPSLongitude]*%[EXIF:DateTime]\" '" + fileName + "'";
+		String command = "identify -format \"%[EXIF:GPSLatitude]*%[EXIF:GPSLongitude]*%[EXIF:DateTime]\" '" + fileName
+				+ "'";
 		return executeCommand(command);
 	}
 
