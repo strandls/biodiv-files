@@ -201,7 +201,7 @@ public class FileUploadApi {
 			if (module == null) {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid Module").build();
 			}
-			FormDataBodyPart folderBodyPart = formDataMultiPart.getField("module");
+			FormDataBodyPart folderBodyPart = formDataMultiPart.getField("folder");
 			BASE_FOLDERS folder = ImageUtil.getFolder(folderBodyPart != null ? folderBodyPart.getValue() : null);
 			if (folder == null) {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid directory").build();
