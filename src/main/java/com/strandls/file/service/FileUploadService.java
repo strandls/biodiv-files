@@ -446,7 +446,8 @@ public class FileUploadService {
 			System.out.println("\n\n FileLocation: " + fileLocation + " *****\n\n");
 			File f = new File(fileLocation);
 			if (!f.getParentFile().exists()) {
-				f.getParentFile().mkdirs();
+				boolean created = f.getParentFile().mkdirs();
+				System.out.println(created ? "Folder Created" : "Not Created");
 			}
 			OutputStream out = new FileOutputStream(f);
 			int read = 0;
@@ -495,9 +496,6 @@ public class FileUploadService {
 				} else {
 					f = new File(myUploadsPath + File.separatorChar + hash + File.separatorChar + file.getFormDataContentDisposition().getFileName());
 					savedFiles.add(saveFile(bodyPart.getInputStream(), module, file.getFormDataContentDisposition(), hash, userId));
-				}
-				if (f != null) {
-					boolean deleted = f.delete() & f.getParentFile().delete();
 				}
 			}
 		} catch (Exception ex) {
