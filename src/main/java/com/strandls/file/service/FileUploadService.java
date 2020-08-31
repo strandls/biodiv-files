@@ -489,14 +489,10 @@ public class FileUploadService {
 						List<MyUpload> extractedFiles = AppUtil.parseZipFiles(myUploadsPath, hash, f.getCanonicalPath(), myUploadsPath + 
 								File.separatorChar + hash + File.separatorChar + ".", module);
 						savedFiles.addAll(extractedFiles);
-					}
-					
+					}					
 				} else {
 					f = new File(myUploadsPath + File.separatorChar + hash + File.separatorChar + file.getFormDataContentDisposition().getFileName());
 					savedFiles.add(saveFile(bodyPart.getInputStream(), module, file.getFormDataContentDisposition(), hash, userId));
-				}
-				if (f != null) {
-					boolean deleted = f.delete() & f.getParentFile().delete();
 				}
 			}
 		} catch (Exception ex) {
