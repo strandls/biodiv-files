@@ -192,7 +192,7 @@ public class FileUploadService {
 		}
 	}
 
-	public MyUpload saveFile(InputStream is, MODULE module, ContentDisposition contentDisposition, String hash,
+	public MyUpload saveFile(InputStream is, MODULE module, FormDataContentDisposition contentDisposition, String hash,
 			Long userId) throws Exception {
 		String dir = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
 				+ userId + File.separatorChar + hash;
@@ -490,7 +490,7 @@ public class FileUploadService {
 					
 				} else {
 					f = new File(myUploadsPath + File.separatorChar + hash + File.separatorChar + file.getFormDataContentDisposition().getFileName());
-					savedFiles.add(saveFile(file.getEntityAs(InputStream.class), module, file.getContentDisposition(), hash, userId));
+					savedFiles.add(saveFile(file.getEntityAs(InputStream.class), module, file.getFormDataContentDisposition(), hash, userId));
 				}
 				if (f != null) {
 					boolean deleted = f.delete() & f.getParentFile().delete();
