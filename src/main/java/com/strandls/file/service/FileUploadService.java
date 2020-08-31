@@ -476,7 +476,7 @@ public class FileUploadService {
 			String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar + userId;
 			String tempPath = storageBasePath + File.separatorChar + folder.getFolder() + File.separatorChar + userId;
 			for (FormDataBodyPart file: files) {
-				String contentType = tika.detect(file.getName());
+				String contentType = tika.detect(file.getContentDisposition().getFileName());
 				File f = null;
 				if (contentType.endsWith("zip")) {
 					String zipPath = tempPath + File.separatorChar + hash + File.separatorChar + file.getFormDataContentDisposition().getFileName();
