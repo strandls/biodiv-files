@@ -38,7 +38,7 @@ public class ImageUtil {
 			return hasFolder;
 		}
 		for (BASE_FOLDERS folders: BASE_FOLDERS.values()) {
-			if (folders.name().equals(directory)) {
+			if (folders.name().equalsIgnoreCase(directory)) {
 				hasFolder = true;
 				break;
 			}
