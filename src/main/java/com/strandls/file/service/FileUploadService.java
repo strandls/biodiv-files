@@ -59,8 +59,8 @@ public class FileUploadService {
 		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
 	}
 
-	public FileUploadModel uploadFile(BASE_FOLDERS directory, String nestedFolder, InputStream inputStream, FormDataContentDisposition fileDetails,
-			HttpServletRequest request, String hashKey, boolean resourceFolder) throws IOException {
+	public FileUploadModel uploadFile(BASE_FOLDERS directory, InputStream inputStream, FormDataContentDisposition fileDetails,
+			HttpServletRequest request, String nestedFolder, String hashKey, boolean resourceFolder) throws IOException {
 
 		FileUploadModel fileUploadModel = new FileUploadModel();
 
@@ -393,8 +393,11 @@ public class FileUploadService {
 
 	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr) throws Exception {
 		Map<String, Object> finalPaths = new HashMap<>();
+		BASE_FOLDERS folder = ImageUtil.getFolder(folderStr);
+		if (folder == null) {
+			throw new Exception("Invalid folder");
+		}
 		try {
-			BASE_FOLDERS folder = ImageUtil.getFolder(folderStr);
 			String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder()
 					+ File.separatorChar + userId;
 			String hash = UUID.randomUUID().toString();
@@ -408,6 +411,7 @@ public class FileUploadService {
 
 			for (String file : fileList) {
 				File f = new File(basePath + file);
+				String size = String.valueOf(java.nio.file.Files.size(f.toPath()));
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					if (f.exists()) {
 						String fileName = f.getName();
@@ -417,12 +421,10 @@ public class FileUploadService {
 						Map<String, String> fileAttributes = new HashMap<String, String>();
 						fileAttributes.put("name", model.getUri());
 						fileAttributes.put("mimeType", tika.detect(fileName));
-						fileAttributes.put("size", String.valueOf(java.nio.file.Files.size(f.toPath())));
+						fileAttributes.put("size", size);
 						finalPaths.put(file, fileAttributes);
 						f.getParentFile().delete();
 					}
-				} else {
-					finalPaths.put(file, file);
 				}
 			}
 		} catch (Exception ex) {
