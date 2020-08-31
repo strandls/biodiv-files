@@ -22,6 +22,8 @@ import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.strandls.file.model.MyUpload;
+
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
@@ -36,17 +38,20 @@ public class AppUtil {
 	public static final Map<MODULE, List<String>> ALLOWED_CONTENT_TYPES = new HashMap<MODULE, List<String>>();
 
 	public static enum MODULE {
-		OBSERVATION, SPECIES, DOCUMENT, BULK_UPLOAD
+		OBSERVATION, SPECIES, DOCUMENT, DATASETS
 	};
 
 	static {
 		ALLOWED_CONTENT_TYPES.put(MODULE.OBSERVATION, Arrays.asList("image", "video", "audio"));
 		ALLOWED_CONTENT_TYPES.put(MODULE.DOCUMENT, Arrays.asList("pdf"));
 		ALLOWED_CONTENT_TYPES.put(MODULE.SPECIES, Arrays.asList());
-		ALLOWED_CONTENT_TYPES.put(MODULE.BULK_UPLOAD, Arrays.asList("zip", "vnd.ms-excel", "spreadsheetml.sheet", "csv"));
+		ALLOWED_CONTENT_TYPES.put(MODULE.DATASETS, Arrays.asList("vnd.ms-excel", "spreadsheetml.sheet", "csv"));
 	};
 
 	public static MODULE getModule(String moduleName) {
+		if (moduleName == null || moduleName.isEmpty()) {
+			return null;
+		}
 		for (MODULE module : MODULE.values()) {
 			if (module.name().equalsIgnoreCase(moduleName.toLowerCase())) {
 				return module;
@@ -55,8 +60,8 @@ public class AppUtil {
 		return null;
 	}
 	
-	public static Map<String, String> parseZipFiles(String storageBasePath, String filePath, String destination, MODULE module) {
-		Map<String, String> files = new HashMap<>();
+	public static List<MyUpload> parseZipFiles(String storageBasePath, String hash, String filePath, String destination, MODULE module) {
+		List<MyUpload> files = new ArrayList<>();
 		try {
 			ZipFile zipFile = new ZipFile(filePath);
 			List<FileHeader> headers = zipFile.getFileHeaders();
@@ -73,6 +78,13 @@ public class AppUtil {
 					continue;
 				}
 				zipFile.extractFile(header, destination);
+				MyUpload upload = new MyUpload();
+				upload.setType(contentType);
+				String finalPath = String.join("", destination.substring(0, destination.length() - 1), header.getFileName());
+				upload.setPath(finalPath.substring(storageBasePath.length()));
+				upload.setFileName(header.getFileName());
+				upload.setHashKey(hash);
+				files.add(upload);
 			}
 		} catch (ZipException ex) {
 			logger.error(ex.getMessage());

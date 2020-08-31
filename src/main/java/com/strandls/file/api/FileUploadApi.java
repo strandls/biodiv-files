@@ -2,6 +2,7 @@ package com.strandls.file.api;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +20,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.pac4j.core.profile.CommonProfile;
 
@@ -190,28 +193,28 @@ public class FileUploadApi {
 	@ValidateUser
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Handle bulk upload", notes = "Returns uploaded file data", response = MyUpload.class)
-	public Response bulkUpload(@Context HttpServletRequest request,
-			@FormDataParam("upload") InputStream inputStream,
-			@FormDataParam("upload") FormDataContentDisposition fileDetails, @FormDataParam("hash") String hash,
-			@DefaultValue("") @FormDataParam("folder") String folder, @FormDataParam("module") String module)
-			throws Exception {
-		if (hash == null || hash.isEmpty()) {
-			return Response.status(Status.BAD_REQUEST).entity("Hash required").build();
-		}
+	@ApiOperation(value = "Bulk Upload", notes = "Returns uploaded file data", response = Map.class)
+	public Response handleBulkUpload(@Context HttpServletRequest httpServletRequest, FormDataMultiPart formDataMultiPart) {
 		try {
-			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			Long userId = Long.parseLong(profile.getId());
-			MODULE baseModule = AppUtil.getModule(module);
-			if (baseModule == null) {
-				return Response.status(Status.BAD_REQUEST).entity("Invalid Folder").build();
+			FormDataBodyPart moduleBodyPart = formDataMultiPart.getField("module");
+			MODULE module = AppUtil.getModule(moduleBodyPart != null ? moduleBodyPart.getValue() : null);
+			if (module == null) {
+				return Response.status(Status.BAD_REQUEST).entity("Invalid Module").build();
 			}
-			BASE_FOLDERS baseFolder = ImageUtil.getFolder(folder);
-			if (baseFolder == null) {
-				return Response.status(Status.BAD_REQUEST).entity("Invalid Folder").build();
+			FormDataBodyPart folderBodyPart = formDataMultiPart.getField("module");
+			BASE_FOLDERS folder = ImageUtil.getFolder(folderBodyPart != null ? folderBodyPart.getValue() : null);
+			if (folder == null) {
+				return Response.status(Status.BAD_REQUEST).entity("Invalid directory").build();
 			}
-			MyUpload uploadModel = fileUploadService.handleBulkUpload(inputStream, baseModule, baseFolder, fileDetails, hash, userId);
-			return Response.ok().entity(uploadModel).build();
+			List<FormDataBodyPart> filesBodyPart = formDataMultiPart.getFields("upload");
+			if (filesBodyPart == null || filesBodyPart.isEmpty()) {
+				return Response.status(Status.BAD_REQUEST).entity("File(s) required").build();				
+			}
+			Map<String, Object> response = new HashMap<String, Object>();
+			List<MyUpload> files = fileUploadService.handleBulkUpload(httpServletRequest, module, folder, filesBodyPart);
+			response.put("status", files.isEmpty());
+			response.put("files", files);
+			return Response.ok().entity(response).build();			
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
