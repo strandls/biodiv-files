@@ -212,7 +212,7 @@ public class FileUploadApi {
 			}
 			Map<String, Object> response = new HashMap<String, Object>();
 			List<MyUpload> files = fileUploadService.handleBulkUpload(httpServletRequest, module, folder, filesBodyPart);
-			response.put("status", files.isEmpty());
+			response.put("status", files.isEmpty() ? false : true);
 			response.put("files", files);
 			return Response.ok().entity(response).build();			
 		} catch (Exception ex) {
