@@ -1,6 +1,7 @@
 package com.strandls.file.util;
 
 import java.io.File;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -16,7 +17,8 @@ public class ImageUtil {
 		myUploads("myUploads"),
 		thumbnails("thumbnails"),
 		documents(String.join(String.valueOf(File.separatorChar), "content", "documents")),
-		temp("temp");
+		temp("temp"),
+		datasets(String.join(String.valueOf(File.separatorChar), "content", "datasets"));
 		
 		private String folder;
 		
