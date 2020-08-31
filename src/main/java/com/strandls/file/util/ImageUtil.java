@@ -1,7 +1,6 @@
 package com.strandls.file.util;
 
 import java.io.File;
-import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -51,7 +50,7 @@ public class ImageUtil {
 			return null;
 		}
 		for (BASE_FOLDERS folders: BASE_FOLDERS.values()) {
-			if (folders.name().equals(directory)) {
+			if (folders.name().equalsIgnoreCase(directory)) {
 				return folders;
 			}
 		}
