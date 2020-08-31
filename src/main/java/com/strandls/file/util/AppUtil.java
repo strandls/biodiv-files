@@ -77,6 +77,7 @@ public class AppUtil {
 				if (!allowedType) {
 					continue;
 				}
+				System.out.println(header.getFileName());
 				zipFile.extractFile(header, destination);
 				MyUpload upload = new MyUpload();
 				upload.setType(contentType);
