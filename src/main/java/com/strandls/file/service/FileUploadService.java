@@ -24,6 +24,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.tika.Tika;
+import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.ContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -475,13 +476,15 @@ public class FileUploadService {
 			String hash = String.join("", "ibpmu-", UUID.randomUUID().toString());
 			String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar + userId;
 			String tempPath = storageBasePath + File.separatorChar + folder.getFolder() + File.separatorChar + userId;
-			for (FormDataBodyPart file: files) {
+			for (int i = 0; i < files.size(); i++) {
+				FormDataBodyPart file = files.get(i);
 				String contentType = tika.detect(file.getContentDisposition().getFileName());
 				System.out.println(contentType);
 				File f = null;
+				BodyPartEntity bodyPart = (BodyPartEntity) file.getEntity();
 				if (contentType.endsWith("zip")) {
 					String zipPath = tempPath + File.separatorChar + hash + File.separatorChar + file.getFormDataContentDisposition().getFileName();
-					boolean isZipCreated = writeToFile(file.getEntityAs(InputStream.class), zipPath);
+					boolean isZipCreated = writeToFile(bodyPart.getInputStream(), zipPath);
 					f = new File(zipPath);
 					if (isZipCreated) {
 						List<MyUpload> extractedFiles = AppUtil.parseZipFiles(myUploadsPath, hash, f.getCanonicalPath(), myUploadsPath + 
@@ -491,7 +494,7 @@ public class FileUploadService {
 					
 				} else {
 					f = new File(myUploadsPath + File.separatorChar + hash + File.separatorChar + file.getFormDataContentDisposition().getFileName());
-					savedFiles.add(saveFile(file.getEntityAs(InputStream.class), module, file.getFormDataContentDisposition(), hash, userId));
+					savedFiles.add(saveFile(bodyPart.getInputStream(), module, file.getFormDataContentDisposition(), hash, userId));
 				}
 				if (f != null) {
 					boolean deleted = f.delete() & f.getParentFile().delete();
