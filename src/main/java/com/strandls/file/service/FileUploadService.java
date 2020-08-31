@@ -473,8 +473,8 @@ public class FileUploadService {
 			Long userId = Long.parseLong(profile.getId());
 			Tika tika = new Tika();
 			String hash = String.join("", "ibpmu-", UUID.randomUUID().toString());
-			String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads + File.separatorChar + userId;
-			String tempPath = storageBasePath + File.separatorChar + BASE_FOLDERS.temp + File.separatorChar + userId;
+			String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar + userId;
+			String tempPath = storageBasePath + File.separatorChar + folder.getFolder() + File.separatorChar + userId;
 			for (FormDataBodyPart file: files) {
 				String contentType = tika.detect(file.getName());
 				File f = null;
