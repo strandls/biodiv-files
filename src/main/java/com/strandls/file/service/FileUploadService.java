@@ -426,7 +426,6 @@ public class FileUploadService {
 
 			for (String file : fileList) {
 				File folderFile = new File(folderBasePath + file);
-				String folderFileSize = String.valueOf(java.nio.file.Files.size(folderFile.toPath()));
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					File f = new File(basePath + file);
 					String size = String.valueOf(java.nio.file.Files.size(f.toPath()));
@@ -442,6 +441,7 @@ public class FileUploadService {
 						f.getParentFile().delete();
 					}
 				} else if (folderFile.exists()) {
+					String folderFileSize = String.valueOf(java.nio.file.Files.size(folderFile.toPath()));
 					FileUploadModel model = new FileUploadModel();
 					Map<String, String> fileAttributes = new HashMap<String, String>();
 					fileAttributes.put("name", model.getUri());
