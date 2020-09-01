@@ -141,6 +141,32 @@ public class FileUploadApi {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
+	
+	@POST
+	@Path(ApiContants.BULK + ApiContants.MOVE_FILES)
+	@ValidateUser
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Bulk Upload - Moves files from MyUploads to the appropriate folder", notes = "Returns uploaded file data", response = Map.class)
+	public Response handleBulkUploadMoveFiles(@Context HttpServletRequest request, @ApiParam("filesDTO") FilesDTO filesDTO) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			BASE_FOLDERS folder = ImageUtil.getFolder(filesDTO.getFolder());
+			if (folder == null) {
+				throw new Exception("Invalid folder");
+			}
+			MODULE module = AppUtil.getModule(filesDTO.getModule());
+			if (module == null) {
+				throw new Exception("Invalid module");
+			}
+			Map<String, Map<String, Object>> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(),
+					folder, module);			
+			return Response.ok().entity(files).build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
 
 	@POST
 	@Path(ApiContants.REMOVE_FILE)

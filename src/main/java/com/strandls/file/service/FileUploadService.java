@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.tika.Tika;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
-import org.glassfish.jersey.media.multipart.ContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.pac4j.core.profile.CommonProfile;
@@ -441,6 +440,36 @@ public class FileUploadService {
 		return finalPaths;
 	}
 
+	// Handles bulk upload
+	public Map<String, Map<String, Object>> moveFilesFromUploads(Long userId, List<String> fileList, BASE_FOLDERS folder, MODULE module)
+			throws Exception {
+		Map<String, Map<String, Object>> finalPaths = new HashMap<>();
+		try {
+			String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder()
+					+ File.separatorChar + userId;
+			Map<String, String> files = new HashMap<String, String>();
+			Tika tika = new Tika();
+			
+			// stream the user directory and prepare a map of file and file path
+			java.nio.file.Files.walk(java.nio.file.Paths.get(basePath)).filter(f -> {
+				String type = tika.detect(f.getFileName().toString());
+				return java.nio.file.Files.isRegularFile(f) && AppUtil.filterFileTypeForModule(type, module);
+			}).forEach(file -> {
+				File f = file.toFile();
+				try {
+					files.put(f.getName(), f.getCanonicalPath().substring(basePath.length()));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			});
+			
+			System.out.println("\n\n***** All files in User " + userId + ": " + files + " *****\n\n");
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return finalPaths;
+	}
+
 	private boolean writeToFile(InputStream inputStream, String fileLocation) {
 		try {
 			System.out.println("\n\n FileLocation: " + fileLocation + " *****\n\n");
@@ -467,15 +496,16 @@ public class FileUploadService {
 		return false;
 	}
 
-	@SuppressWarnings("unused")
-	public List<MyUpload> handleBulkUpload(HttpServletRequest request, MODULE module, BASE_FOLDERS folder, List<FormDataBodyPart> files) {
+	public List<MyUpload> handleBulkUpload(HttpServletRequest request, MODULE module, BASE_FOLDERS folder,
+			List<FormDataBodyPart> files) {
 		List<MyUpload> savedFiles = new ArrayList<>();
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Tika tika = new Tika();
 			String hash = String.join("", "ibpmu-", UUID.randomUUID().toString());
-			String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar + userId;
+			String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder()
+					+ File.separatorChar + userId;
 			String tempPath = storageBasePath + File.separatorChar + folder.getFolder() + File.separatorChar + userId;
 			for (int i = 0; i < files.size(); i++) {
 				FormDataBodyPart file = files.get(i);
@@ -484,17 +514,20 @@ public class FileUploadService {
 				File f = null;
 				BodyPartEntity bodyPart = (BodyPartEntity) file.getEntity();
 				if (contentType.endsWith("zip")) {
-					String zipPath = tempPath + File.separatorChar + hash + File.separatorChar + file.getFormDataContentDisposition().getFileName();
+					String zipPath = tempPath + File.separatorChar + hash + File.separatorChar
+							+ file.getFormDataContentDisposition().getFileName();
 					boolean isZipCreated = writeToFile(bodyPart.getInputStream(), zipPath);
 					f = new File(zipPath);
 					if (isZipCreated) {
-						List<MyUpload> extractedFiles = AppUtil.parseZipFiles(myUploadsPath, hash, f.getCanonicalPath(), myUploadsPath + 
-								File.separatorChar + hash + File.separatorChar + ".", module);
+						List<MyUpload> extractedFiles = AppUtil.parseZipFiles(myUploadsPath, hash, f.getCanonicalPath(),
+								myUploadsPath + File.separatorChar + hash + File.separatorChar + ".", module);
 						savedFiles.addAll(extractedFiles);
-					}					
+						f.delete(); // delete zip
+						f.getParentFile().delete(); // delete zip temp folder
+					}
 				} else {
-					f = new File(myUploadsPath + File.separatorChar + hash + File.separatorChar + file.getFormDataContentDisposition().getFileName());
-					savedFiles.add(saveFile(bodyPart.getInputStream(), module, file.getFormDataContentDisposition(), hash, userId));
+					savedFiles.add(saveFile(bodyPart.getInputStream(), module, file.getFormDataContentDisposition(),
+							hash, userId));
 				}
 			}
 		} catch (Exception ex) {
