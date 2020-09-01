@@ -420,7 +420,7 @@ public class FileUploadService {
 			String existingHash = fileList.stream().filter(path -> !path.startsWith(File.separatorChar + "ibpmu-"))
 					.findAny().orElse(null);
 			if (existingHash != null && !existingHash.isEmpty()) {
-				existingHash = existingHash.substring(1, existingHash.indexOf(File.separatorChar));
+				existingHash = existingHash.substring(1, existingHash.lastIndexOf(File.separatorChar));
 			}
 			Tika tika = new Tika();
 
