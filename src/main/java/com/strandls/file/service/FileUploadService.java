@@ -24,9 +24,13 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.tika.Tika;
+import org.glassfish.jersey.media.multipart.ContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.pac4j.core.profile.CommonProfile;
 
 import com.google.common.io.Files;
+import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.file.model.FileMetaData;
 import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.model.MyUpload;
@@ -59,8 +63,9 @@ public class FileUploadService {
 		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
 	}
 
-	public FileUploadModel uploadFile(BASE_FOLDERS directory, InputStream inputStream, FormDataContentDisposition fileDetails,
-			HttpServletRequest request, String nestedFolder, String hashKey, boolean resourceFolder) throws IOException {
+	public FileUploadModel uploadFile(BASE_FOLDERS directory, InputStream inputStream,
+			FormDataContentDisposition fileDetails, HttpServletRequest request, String nestedFolder, String hashKey,
+			boolean resourceFolder) throws IOException {
 
 		FileUploadModel fileUploadModel = new FileUploadModel();
 
@@ -71,10 +76,8 @@ public class FileUploadService {
 		String folderName = "";
 		if (nestedFolder != null && !nestedFolder.isEmpty()) {
 			folderName += String.join(String.valueOf(File.separatorChar), nestedFolder.split(",")) + File.separatorChar;
-		} else {
-			throw new IOException("Invalid NestedFolder Name");
 		}
-		folderName = "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
+		folderName += "".equals(hashKey) ? UUID.randomUUID().toString() : hashKey;
 		if (resourceFolder) {
 			folderName += File.separatorChar + "resources";
 		}
@@ -91,7 +94,7 @@ public class FileUploadService {
 
 		FileMetaData fileMetaData = new FileMetaData();
 		fileMetaData.setFileName(fileName);
-		fileMetaData.setPath(folderName);
+		fileMetaData.setPath(resourceFolder ? folderName + File.separatorChar + "resources": folderName);
 		fileMetaDataService.save(fileMetaData);
 
 		String generatedFileName = fileMetaData.getId() + "." + fileExtension;
@@ -165,6 +168,7 @@ public class FileUploadService {
 		if (!destFile.getParentFile().exists()) {
 			destFile.getParentFile().mkdirs();
 		}
+		System.out.println("\n\n***** Source: " + source + " Destination: " + filePath + " *****\n\n");
 		Path path = java.nio.file.Files.move(Paths.get(source), Paths.get(filePath), StandardCopyOption.ATOMIC_MOVE);
 		boolean uploaded = path != null;
 
@@ -187,8 +191,8 @@ public class FileUploadService {
 		}
 	}
 
-	public MyUpload saveFile(InputStream is, MODULE module, FormDataContentDisposition fileDetails, String hash, Long userId)
-			throws Exception {
+	public MyUpload saveFile(InputStream is, MODULE module, ContentDisposition contentDisposition, String hash,
+			Long userId) throws Exception {
 		String dir = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
 				+ userId + File.separatorChar + hash;
 		File dirFile = new File(dir);
@@ -196,7 +200,7 @@ public class FileUploadService {
 			dirFile.mkdirs();
 		}
 		Tika tika = new Tika();
-		String fileName = dir + File.separatorChar + fileDetails.getFileName();
+		String fileName = dir + File.separatorChar + contentDisposition.getFileName();
 		File file = new File(fileName);
 		if (file.getCanonicalPath().startsWith(dir) && file.getCanonicalFile().exists()) {
 			return getExistingFileData(file);
@@ -204,7 +208,8 @@ public class FileUploadService {
 		String probeContentType = tika.detect(fileName);
 		boolean allowedContentType = AppUtil.filterFileTypeForModule(probeContentType, module);
 		if (!allowedContentType) {
-			throw new Exception("Invalid file type. Allowed types are " + String.join(", ", AppUtil.ALLOWED_CONTENT_TYPES.get(module)));
+			throw new Exception("Invalid file type. Allowed types are "
+					+ String.join(", ", AppUtil.ALLOWED_CONTENT_TYPES.get(module)));
 		}
 		boolean isFileCreated = writeToFile(is, file.getAbsolutePath());
 		MyUpload uploadModel = new MyUpload();
@@ -215,44 +220,43 @@ public class FileUploadService {
 					.setPath(File.separatorChar + file.getParentFile().getName() + File.separatorChar + file.getName());
 			uploadModel.setType(probeContentType);
 			BasicFileAttributes attributes;
-			String exifData = AppUtil.getExifData(file.getAbsolutePath());
-			String[] data = exifData.split("\\*");
-			if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
-				int dataLength = data.length;
-				if (dataLength == 1) {
-					String dateStr = data[0];
-					Date capturedDate = null;
-					try {
-						if (!dateStr.isEmpty()) {
-							capturedDate = sdf.parse(dateStr);
-							attributes = java.nio.file.Files.readAttributes(Paths.get(file.toURI()),
-									BasicFileAttributes.class);
-							Date uploadedDate = new Date(attributes.creationTime().toMillis());
-							uploadModel.setDateUploaded(uploadedDate);
+			if (probeContentType.startsWith("image")) {
+				String exifData = AppUtil.getExifData(file.getAbsolutePath());
+				String[] data = exifData.split("\\*");
+				if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
+					int dataLength = data.length;
+					if (dataLength == 1) {
+						String dateStr = data[0];
+						Date capturedDate = null;
+						try {
+							if (!dateStr.isEmpty()) {
+								capturedDate = sdf.parse(dateStr);
+							}
+							uploadModel.setDateCreated(capturedDate);
+						} catch (Exception ex) {
 						}
-						uploadModel.setDateCreated(capturedDate);
-					} catch (Exception ex) {
-					}
-				} else if (dataLength == 2) {
-					uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-					uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
-				} else if (dataLength == 3) {
-					uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-					uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
-					String dateStr = data[2];
-					Date capturedDate = null;
-					try {
-						if (!dateStr.isEmpty()) {
-							capturedDate = sdf.parse(dateStr);
+					} else if (dataLength == 2) {
+						uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
+						uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
+					} else if (dataLength == 3) {
+						uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
+						uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
+						String dateStr = data[2];
+						Date capturedDate = null;
+						try {
+							if (!dateStr.isEmpty()) {
+								capturedDate = sdf.parse(dateStr);
+							}
+							uploadModel.setDateCreated(capturedDate);
+						} catch (Exception ex) {
 						}
-						uploadModel.setDateCreated(capturedDate);
-					} catch (Exception ex) {
 					}
 				}
-				attributes = java.nio.file.Files.readAttributes(Paths.get(file.toURI()), BasicFileAttributes.class);
-				Date uploadedDate = new Date(attributes.creationTime().toMillis());
-				uploadModel.setDateUploaded(uploadedDate);
 			}
+			attributes = java.nio.file.Files.readAttributes(Paths.get(file.toURI()), BasicFileAttributes.class);
+			Date uploadedDate = new Date(attributes.creationTime().toMillis());
+			uploadModel.setDateUploaded(uploadedDate);
+			uploadModel.setFileSize(String.valueOf(file.length()));
 		} else {
 			throw new Exception("File not created");
 		}
@@ -274,54 +278,57 @@ public class FileUploadService {
 						MyUpload uploadModel = new MyUpload();
 						uploadModel.setHashKey(tmpFile.getParentFile().getName());
 						uploadModel.setFileName(tmpFile.getName());
-						String exifData = AppUtil.getExifData(tmpFile.getAbsolutePath());
-						if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
-							String[] data = exifData.split("\\*");
-							int dataLength = data.length;
-							BasicFileAttributes attributes = null;
-							if (dataLength == 1) {
-								String dateStr = data[0];
-								Date capturedDate = null;
-								try {
-									if (!dateStr.isEmpty()) {
-										attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
-												BasicFileAttributes.class);
-										Date uploadedDate = new Date(attributes.creationTime().toMillis());
-										uploadModel.setDateUploaded(uploadedDate);
-										capturedDate = sdf.parse(dateStr);
+						BasicFileAttributes attributes = null;
+						if (probeContentType.startsWith("image")) {
+							String exifData = AppUtil.getExifData(tmpFile.getAbsolutePath());
+							if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
+								String[] data = exifData.split("\\*");
+								int dataLength = data.length;
+								if (dataLength == 1) {
+									String dateStr = data[0];
+									Date capturedDate = null;
+									try {
+										if (!dateStr.isEmpty()) {
+											attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
+													BasicFileAttributes.class);
+											Date uploadedDate = new Date(attributes.creationTime().toMillis());
+											uploadModel.setDateUploaded(uploadedDate);
+											capturedDate = sdf.parse(dateStr);
+										}
+										uploadModel.setDateCreated(capturedDate);
+									} catch (Exception ex) {
 									}
-									uploadModel.setDateCreated(capturedDate);
-								} catch (Exception ex) {
-								}
-							} else if (dataLength == 2) {
-								uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-								uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
-							} else if (dataLength == 3) {
-								uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-								uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
-								String dateStr = data[2];
-								Date capturedDate = null;
-								try {
-									if (!dateStr.isEmpty()) {
-										capturedDate = sdf.parse(dateStr);
+								} else if (dataLength == 2) {
+									uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
+									uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
+								} else if (dataLength == 3) {
+									uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
+									uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
+									String dateStr = data[2];
+									Date capturedDate = null;
+									try {
+										if (!dateStr.isEmpty()) {
+											capturedDate = sdf.parse(dateStr);
+										}
+										uploadModel.setDateCreated(capturedDate);
+									} catch (Exception ex) {
 									}
-									uploadModel.setDateCreated(capturedDate);
-								} catch (Exception ex) {
 								}
 							}
-							Date uploadedDate = null;
-							try {
-								attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
-										BasicFileAttributes.class);
-								uploadedDate = new Date(attributes.creationTime().toMillis());
-								uploadModel.setDateUploaded(uploadedDate);
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
+						}
+						Date uploadedDate = null;
+						try {
+							attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()),
+									BasicFileAttributes.class);
+							uploadedDate = new Date(attributes.creationTime().toMillis());
+							uploadModel.setDateUploaded(uploadedDate);
+						} catch (IOException e) {
+							e.printStackTrace();
 						}
 						uploadModel.setPath(File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar
 								+ tmpFile.getName());
 						uploadModel.setType(probeContentType);
+						uploadModel.setFileSize(String.valueOf(tmpFile.length()));
 						return uploadModel;
 					}).collect(Collectors.toList());
 			files.addAll(filesList);
@@ -338,44 +345,50 @@ public class FileUploadService {
 		MyUpload uploadModel = new MyUpload();
 		uploadModel.setHashKey(tmpFile.getParentFile().getName());
 		uploadModel.setFileName(tmpFile.getName());
-		String exifData = AppUtil.getExifData(tmpFile.getAbsolutePath());
-		if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
-			String[] data = exifData.split("\\*");
-			int dataLength = data.length;
-			BasicFileAttributes attributes;
-			if (dataLength == 1) {
-				String dateStr = data[0];
-				Date capturedDate = null;
-				try {
-					if (!dateStr.isEmpty()) {
-						capturedDate = sdf.parse(dateStr);
+		BasicFileAttributes attributes;
+		if (probeContentType.startsWith("image")) {
+			String exifData = AppUtil.getExifData(tmpFile.getAbsolutePath());
+			if (exifData != null && !exifData.isEmpty() && exifData.contains("*")) {
+				String[] data = exifData.split("\\*");
+				int dataLength = data.length;
+				if (dataLength == 1) {
+					String dateStr = data[0];
+					Date capturedDate = null;
+					try {
+						if (!dateStr.isEmpty()) {
+							capturedDate = sdf.parse(dateStr);
+						}
+						uploadModel.setDateCreated(capturedDate);
+					} catch (Exception ex) {
 					}
-					uploadModel.setDateCreated(capturedDate);
-				} catch (Exception ex) {
-				}
-			} else if (dataLength == 2) {
-				uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-				uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
-			} else if (dataLength == 3) {
-				uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
-				uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
-				String dateStr = data[2];
-				Date capturedDate = null;
-				try {
-					if (!dateStr.isEmpty()) {
-						capturedDate = sdf.parse(dateStr);
+				} else if (dataLength == 2) {
+					uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
+					uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
+				} else if (dataLength == 3) {
+					uploadModel.setLatitude(AppUtil.calculateValues(data[0]));
+					uploadModel.setLongitude(AppUtil.calculateValues(data[1]));
+					String dateStr = data[2];
+					Date capturedDate = null;
+					try {
+						if (!dateStr.isEmpty()) {
+							capturedDate = sdf.parse(dateStr);
+						}
+						uploadModel.setDateCreated(capturedDate);
+					} catch (Exception ex) {
 					}
-					uploadModel.setDateCreated(capturedDate);
-				} catch (Exception ex) {
 				}
 			}
 			attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()), BasicFileAttributes.class);
 			Date uploadedDate = new Date(attributes.creationTime().toMillis());
 			uploadModel.setDateUploaded(uploadedDate);
 		}
+		attributes = java.nio.file.Files.readAttributes(Paths.get(tmpFile.toURI()), BasicFileAttributes.class);
+		Date uploadedDate = new Date(attributes.creationTime().toMillis());
+		uploadModel.setDateUploaded(uploadedDate);
 		uploadModel.setPath(
 				File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar + tmpFile.getName());
 		uploadModel.setType(probeContentType);
+		uploadModel.setFileSize(String.valueOf(tmpFile.length()));
 		return uploadModel;
 	}
 
@@ -391,7 +404,8 @@ public class FileUploadService {
 		return isDeleted;
 	}
 
-	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr) throws Exception {
+	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr)
+			throws Exception {
 		Map<String, Object> finalPaths = new HashMap<>();
 		BASE_FOLDERS folder = ImageUtil.getFolder(folderStr);
 		if (folder == null) {
@@ -420,7 +434,6 @@ public class FileUploadService {
 						String fileName = f.getName();
 						FileUploadModel model = uploadFile(f.getAbsolutePath(), folder.getFolder(),
 								existingHash == null ? hash : existingHash, fileName);
-						
 						Map<String, String> fileAttributes = new HashMap<String, String>();
 						fileAttributes.put("name", model.getUri());
 						fileAttributes.put("mimeType", tika.detect(fileName));
@@ -466,5 +479,42 @@ public class FileUploadService {
 			e.printStackTrace();
 		}
 		return false;
+	}
+
+	@SuppressWarnings("unused")
+	public List<MyUpload> handleBulkUpload(HttpServletRequest request, MODULE module, BASE_FOLDERS folder, List<FormDataBodyPart> files) {
+		List<MyUpload> savedFiles = new ArrayList<>();
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			Tika tika = new Tika();
+			String hash = String.join("", "ibpmu-", UUID.randomUUID().toString());
+			String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads + File.separatorChar + userId;
+			String tempPath = storageBasePath + File.separatorChar + BASE_FOLDERS.temp + File.separatorChar + userId;
+			for (FormDataBodyPart file: files) {
+				String contentType = tika.detect(file.getName());
+				File f = null;
+				if (contentType.endsWith("zip")) {
+					String zipPath = tempPath + File.separatorChar + hash + File.separatorChar + file.getFormDataContentDisposition().getFileName();
+					boolean isZipCreated = writeToFile(file.getEntityAs(InputStream.class), zipPath);
+					f = new File(zipPath);
+					if (isZipCreated) {
+						List<MyUpload> extractedFiles = AppUtil.parseZipFiles(myUploadsPath, hash, f.getCanonicalPath(), myUploadsPath + 
+								File.separatorChar + hash + File.separatorChar + ".", module);
+						savedFiles.addAll(extractedFiles);
+					}
+					
+				} else {
+					f = new File(myUploadsPath + File.separatorChar + hash + File.separatorChar + file.getFormDataContentDisposition().getFileName());
+					savedFiles.add(saveFile(file.getEntityAs(InputStream.class), module, file.getContentDisposition(), hash, userId));
+				}
+				if (f != null) {
+					boolean deleted = f.delete() & f.getParentFile().delete();
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return savedFiles;
 	}
 }
