@@ -2,9 +2,6 @@ package com.strandls.file.dto;
 
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 public class FilesDTO {
 	
 	private List<String> files;
