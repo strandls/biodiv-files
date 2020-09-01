@@ -160,7 +160,7 @@ public class FileUploadApi {
 			if (module == null) {
 				throw new Exception("Invalid module");
 			}
-			Map<String, Map<String, Object>> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(),
+			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(),
 					folder, module);			
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
