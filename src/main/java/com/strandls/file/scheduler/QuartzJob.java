@@ -9,6 +9,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -157,9 +158,26 @@ public class QuartzJob implements Job {
 				.atZone(ZoneId.systemDefault()).toLocalDate();
 		return creation;
 	}
+	
+	public static LocalDateTime getFileCreationDateTime(Path f) {
+		File tmp = f.toFile();
+		BasicFileAttributes attributes = null;
+		try {
+			attributes = Files.readAttributes(Paths.get(tmp.toURI()), BasicFileAttributes.class);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		LocalDateTime creation = Instant.ofEpochMilli(attributes.creationTime().toMillis())
+				.atZone(ZoneId.systemDefault()).toLocalDateTime();
+		return creation;
+	}
 
 	public static long getDifference(LocalDate date) {
 		return ChronoUnit.DAYS.between(date, LocalDate.now());
+	}
+	
+	public static long getDifferenceMinutes(LocalDateTime date) {
+		return ChronoUnit.MINUTES.between(date, LocalDateTime.now());
 	}
 
 	public static String getFormattedDate(Date d, int offset) {
