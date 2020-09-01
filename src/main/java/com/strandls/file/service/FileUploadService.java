@@ -400,19 +400,22 @@ public class FileUploadService {
 		try {
 			String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder()
 					+ File.separatorChar + userId;
+			String folderBasePath = storageBasePath + File.separatorChar + folder.getFolder()
+			+ File.separatorChar + userId;
 			String hash = UUID.randomUUID().toString();
 			String existingHash = fileList.stream().filter(path -> !path.startsWith(File.separatorChar + "ibpmu-"))
 					.findAny().orElse(null);
 			if (existingHash != null && !existingHash.isEmpty()) {
-				existingHash = existingHash.substring(1);
-				existingHash = existingHash.substring(0, existingHash.indexOf(File.separatorChar));
+				existingHash = existingHash.substring(1, existingHash.indexOf(File.separatorChar));
 			}
 			Tika tika = new Tika();
 
 			for (String file : fileList) {
-				File f = new File(basePath + file);
-				String size = String.valueOf(java.nio.file.Files.size(f.toPath()));
+				File folderFile = new File(folderBasePath + file);
+				String folderFileSize = String.valueOf(java.nio.file.Files.size(folderFile.toPath()));
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
+					File f = new File(basePath + file);
+					String size = String.valueOf(java.nio.file.Files.size(f.toPath()));
 					if (f.exists()) {
 						String fileName = f.getName();
 						FileUploadModel model = uploadFile(f.getAbsolutePath(), folder.getFolder(),
@@ -425,8 +428,13 @@ public class FileUploadService {
 						finalPaths.put(file, fileAttributes);
 						f.getParentFile().delete();
 					}
-				} else {
-					finalPaths.put(file, file);
+				} else if (folderFile.exists()) {
+					FileUploadModel model = new FileUploadModel();
+					Map<String, String> fileAttributes = new HashMap<String, String>();
+					fileAttributes.put("name", model.getUri());
+					fileAttributes.put("mimeType", tika.detect(folderFile));
+					fileAttributes.put("size", folderFileSize);
+					finalPaths.put(file, fileAttributes);
 				}
 			}
 		} catch (Exception ex) {
