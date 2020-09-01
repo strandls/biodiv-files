@@ -441,9 +441,9 @@ public class FileUploadService {
 	}
 
 	// Handles bulk upload
-	public Map<String, Map<String, Object>> moveFilesFromUploads(Long userId, List<String> fileList, BASE_FOLDERS folder, MODULE module)
+	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, BASE_FOLDERS folder, MODULE module)
 			throws Exception {
-		Map<String, Map<String, Object>> finalPaths = new HashMap<>();
+		Map<String, Object> finalPaths = new HashMap<>();
 		try {
 			String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder()
 					+ File.separatorChar + userId;
@@ -464,6 +464,15 @@ public class FileUploadService {
 			});
 			
 			System.out.println("\n\n***** All files in User " + userId + ": " + files + " *****\n\n");
+			
+			List<String> filesWithPath = new ArrayList<String>();
+			for (String file: fileList) {
+				if (files.containsKey(file)) {
+					filesWithPath.add(files.get(file));
+				}
+			}
+			
+			finalPaths.putAll(moveFilesFromUploads(userId, filesWithPath, folder.getFolder()));
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
