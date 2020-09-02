@@ -138,14 +138,7 @@ public class FileUploadService {
 
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(fileName);
-
-		if (probeContentType == null || !probeContentType.startsWith("image") && !probeContentType.startsWith("audio")
-				&& !probeContentType.startsWith("video")) {
-			fileUploadModel.setError("Invalid file type. Allowed types are image, audio and video");
-			return fileUploadModel;
-		} else {
-			fileUploadModel.setType(probeContentType);
-		}
+		fileUploadModel.setType(probeContentType);
 
 		if ("".equals(hashKey)) {
 			File dir = new File(dirPath);
