@@ -138,14 +138,7 @@ public class FileUploadService {
 
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(fileName);
-
-		if (probeContentType == null || !probeContentType.startsWith("image") && !probeContentType.startsWith("audio")
-				&& !probeContentType.startsWith("video")) {
-			fileUploadModel.setError("Invalid file type. Allowed types are image, audio and video");
-			return fileUploadModel;
-		} else {
-			fileUploadModel.setType(probeContentType);
-		}
+		fileUploadModel.setType(probeContentType);
 
 		if ("".equals(hashKey)) {
 			File dir = new File(dirPath);
@@ -435,7 +428,7 @@ public class FileUploadService {
 								existingHash == null ? hash : existingHash, fileName);
 						if (model.getError() == null) {
 							Map<String, String> fileAttributes = new HashMap<String, String>();
-							fileAttributes.put("name", model.getUri());
+							fileAttributes.put("name", model.getUri()); // file name with hash
 							fileAttributes.put("mimeType", tika.detect(fileName));
 							fileAttributes.put("size", size);
 							finalPaths.put(file, fileAttributes);
@@ -445,7 +438,7 @@ public class FileUploadService {
 				} else if (folderFile.exists()) {
 					String folderFileSize = String.valueOf(java.nio.file.Files.size(folderFile.toPath()));
 					Map<String, String> fileAttributes = new HashMap<String, String>();
-					fileAttributes.put("name", file);
+					fileAttributes.put("name", file); // file name with hash
 					fileAttributes.put("mimeType", tika.detect(folderFile));
 					fileAttributes.put("size", folderFileSize);
 					finalPaths.put(file, fileAttributes);
