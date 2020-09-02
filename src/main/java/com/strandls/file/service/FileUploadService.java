@@ -435,7 +435,7 @@ public class FileUploadService {
 								existingHash == null ? hash : existingHash, fileName);
 						if (model.getError() == null) {
 							Map<String, String> fileAttributes = new HashMap<String, String>();
-							fileAttributes.put("name", model.getFileName());
+							fileAttributes.put("name", model.getUri()); // file name with hash
 							fileAttributes.put("mimeType", tika.detect(fileName));
 							fileAttributes.put("size", size);
 							finalPaths.put(file, fileAttributes);
@@ -445,7 +445,7 @@ public class FileUploadService {
 				} else if (folderFile.exists()) {
 					String folderFileSize = String.valueOf(java.nio.file.Files.size(folderFile.toPath()));
 					Map<String, String> fileAttributes = new HashMap<String, String>();
-					fileAttributes.put("name", folderFile.getName());
+					fileAttributes.put("name", file); // file name with hash
 					fileAttributes.put("mimeType", tika.detect(folderFile));
 					fileAttributes.put("size", folderFileSize);
 					finalPaths.put(file, fileAttributes);
