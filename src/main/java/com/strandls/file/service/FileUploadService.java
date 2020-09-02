@@ -472,7 +472,7 @@ public class FileUploadService {
 				}
 			}
 			
-			finalPaths.putAll(moveFilesFromUploads(userId, filesWithPath, folder.getFolder()));
+			finalPaths.putAll(moveFilesFromUploads(userId, filesWithPath, folder.toString()));
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
