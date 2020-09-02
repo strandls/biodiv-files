@@ -149,7 +149,7 @@ public class FileUploadService {
 
 		if ("".equals(hashKey)) {
 			File dir = new File(dirPath);
-			boolean created = dir.mkdir();
+			boolean created = dir.mkdirs();
 			if (!created) {
 				fileUploadModel.setError("Directory creation failed");
 				return fileUploadModel;
@@ -433,19 +433,19 @@ public class FileUploadService {
 						String fileName = f.getName();
 						FileUploadModel model = uploadFile(f.getAbsolutePath(), folder.getFolder(),
 								existingHash == null ? hash : existingHash, fileName);
-						
-						Map<String, String> fileAttributes = new HashMap<String, String>();
-						fileAttributes.put("name", model.getUri());
-						fileAttributes.put("mimeType", tika.detect(fileName));
-						fileAttributes.put("size", size);
-						finalPaths.put(file, fileAttributes);
-						f.getParentFile().delete();
+						if (model.getError() == null) {
+							Map<String, String> fileAttributes = new HashMap<String, String>();
+							fileAttributes.put("name", model.getFileName());
+							fileAttributes.put("mimeType", tika.detect(fileName));
+							fileAttributes.put("size", size);
+							finalPaths.put(file, fileAttributes);
+							f.getParentFile().delete();
+						}
 					}
 				} else if (folderFile.exists()) {
 					String folderFileSize = String.valueOf(java.nio.file.Files.size(folderFile.toPath()));
-					FileUploadModel model = new FileUploadModel();
 					Map<String, String> fileAttributes = new HashMap<String, String>();
-					fileAttributes.put("name", model.getUri());
+					fileAttributes.put("name", folderFile.getName());
 					fileAttributes.put("mimeType", tika.detect(folderFile));
 					fileAttributes.put("size", folderFileSize);
 					finalPaths.put(file, fileAttributes);
@@ -488,8 +488,13 @@ public class FileUploadService {
 					filesWithPath.add(files.get(file));
 				}
 			}
-			
-			finalPaths.putAll(moveFilesFromUploads(userId, filesWithPath, folder.toString()));
+			Map<String, Object> result = moveFilesFromUploads(userId, filesWithPath, folder.toString());
+			if (result != null && !result.isEmpty()) {
+				for (Map.Entry<String, Object> file: result.entrySet()) {
+					String fileNameWithPath = file.getKey();
+					finalPaths.put(fileNameWithPath.substring(fileNameWithPath.lastIndexOf(File.separatorChar)), file.getValue());
+				}
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
