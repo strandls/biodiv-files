@@ -485,7 +485,7 @@ public class FileUploadService {
 			if (result != null && !result.isEmpty()) {
 				for (Map.Entry<String, Object> file: result.entrySet()) {
 					String fileNameWithPath = file.getKey();
-					finalPaths.put(fileNameWithPath.substring(fileNameWithPath.lastIndexOf(File.separatorChar)), file.getValue());
+					finalPaths.put(fileNameWithPath.substring(fileNameWithPath.lastIndexOf(File.separatorChar) + 1), file.getValue());
 				}
 			}
 		} catch (Exception ex) {
