@@ -125,7 +125,6 @@ public class QuartzJob implements Job {
 					if (fileCreatedBefore >= DELETE_THRESHOLD) {
 						File f = new File(filePath);
 						f.delete();
-						f.getParentFile().delete();
 					}
 				});
 			}
