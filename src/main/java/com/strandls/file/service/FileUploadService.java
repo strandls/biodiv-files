@@ -269,7 +269,9 @@ public class FileUploadService {
 						File tmpFile = f.toFile();
 						String probeContentType = tika.detect(tmpFile.getName());
 						MyUpload uploadModel = new MyUpload();
-						uploadModel.setHashKey(tmpFile.getParentFile().getName());
+						String uri = tmpFile.getAbsolutePath().substring(userDir.length());
+						String hash = uri.substring(1, uri.indexOf(File.separatorChar));
+						uploadModel.setHashKey(hash);
 						uploadModel.setFileName(tmpFile.getName());
 						BasicFileAttributes attributes = null;
 						if (probeContentType.startsWith("image")) {
@@ -318,8 +320,7 @@ public class FileUploadService {
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
-						uploadModel.setPath(File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar
-								+ tmpFile.getName());
+						uploadModel.setPath(uri);
 						uploadModel.setType(probeContentType);
 						uploadModel.setFileSize(String.valueOf(tmpFile.length()));
 						return uploadModel;
