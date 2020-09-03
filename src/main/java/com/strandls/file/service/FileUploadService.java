@@ -259,6 +259,7 @@ public class FileUploadService {
 	public List<MyUpload> getFilesFromUploads(Long userId, MODULE module) throws Exception {
 		List<MyUpload> files = new ArrayList<>();
 		String userDir = BASE_FOLDERS.myUploads.getFolder() + File.separatorChar + userId;
+		String storagePath = storageBasePath + File.separatorChar + userDir;
 		try {
 			Tika tika = new Tika();
 			List<MyUpload> filesList = java.nio.file.Files
@@ -269,7 +270,7 @@ public class FileUploadService {
 						File tmpFile = f.toFile();
 						String probeContentType = tika.detect(tmpFile.getName());
 						MyUpload uploadModel = new MyUpload();
-						String uri = tmpFile.getAbsolutePath().substring(userDir.length());
+						String uri = tmpFile.getAbsolutePath().substring(storagePath.length());
 						String hash = uri.substring(1, uri.indexOf(File.separatorChar));
 						uploadModel.setHashKey(hash);
 						uploadModel.setFileName(tmpFile.getName());
