@@ -272,7 +272,7 @@ public class FileUploadService {
 						MyUpload uploadModel = new MyUpload();
 						String uri = tmpFile.getAbsolutePath().substring(storagePath.length());
 						String uriWoFile = uri.substring(1);
-						String hash = uri.substring(1, uriWoFile.indexOf(File.separatorChar));
+						String hash = uriWoFile.substring(0, uriWoFile.indexOf(File.separatorChar));
 						uploadModel.setHashKey(hash);
 						uploadModel.setFileName(tmpFile.getName());
 						BasicFileAttributes attributes = null;
