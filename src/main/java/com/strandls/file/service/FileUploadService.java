@@ -392,7 +392,7 @@ public class FileUploadService {
 		boolean isDeleted = false;
 		String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
 				+ userId;
-		File f = new File(basePath + File.separatorChar + fileName);
+		File f = new File(basePath + fileName);
 		if (f.exists() && java.nio.file.Files.isRegularFile(Paths.get(f.toURI()))
 				&& f.getCanonicalPath().startsWith(basePath)) {
 			isDeleted = f.delete() && f.getParentFile().delete();
