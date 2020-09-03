@@ -181,6 +181,7 @@ public class FileUploadApi {
 			boolean deleted = fileUploadService.deleteFilesFromMyUploads(userId, file.getPath());
 			return Response.ok().entity(deleted).build();
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
