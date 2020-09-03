@@ -271,7 +271,8 @@ public class FileUploadService {
 						String probeContentType = tika.detect(tmpFile.getName());
 						MyUpload uploadModel = new MyUpload();
 						String uri = tmpFile.getAbsolutePath().substring(storagePath.length());
-						String hash = uri.substring(1, uri.indexOf(File.separatorChar));
+						String uriWoFile = uri.substring(1);
+						String hash = uri.substring(1, uriWoFile.indexOf(File.separatorChar));
 						uploadModel.setHashKey(hash);
 						uploadModel.setFileName(tmpFile.getName());
 						BasicFileAttributes attributes = null;
