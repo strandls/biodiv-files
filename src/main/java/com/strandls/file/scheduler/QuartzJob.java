@@ -80,7 +80,7 @@ public class QuartzJob implements Job {
 					continue;
 				}
 				String user = getUserInfo(session, Long.parseLong(folder));
-				if (user == null || user.contains("@ibp.org")) {
+				if (user == null) {
 					continue;
 				}
 				List<String> files = Files.walk(Paths.get(BASE_PATH + File.separatorChar + folder))
