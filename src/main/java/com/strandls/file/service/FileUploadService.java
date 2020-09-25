@@ -429,13 +429,14 @@ public class FileUploadService {
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					File f = new File(basePath + file);
 					if (f.exists()) {
+						String fileSize = String.valueOf(java.nio.file.Files.size(f.toPath()));
 						String fileName = f.getName();
 						FileUploadModel model = uploadFile(f.getAbsolutePath(), folder.getFolder(),
 								existingHash == null ? hash : existingHash, fileName);
 						Map<String, String> fileAttributes = new HashMap<String, String>();
 						fileAttributes.put("name", model.getUri());
 						fileAttributes.put("mimeType", tika.detect(fileName));
-						fileAttributes.put("size", String.valueOf(java.nio.file.Files.size(f.toPath())));
+						fileAttributes.put("size", fileSize);
 						finalPaths.put(file, fileAttributes);
 						f.getParentFile().delete();
 					}
