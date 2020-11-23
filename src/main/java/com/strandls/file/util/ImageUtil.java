@@ -13,6 +13,7 @@ public class ImageUtil {
 		species("species"), 
 		userGroups("userGroups"), 
 		users("users"), 
+		pages("pages"),
 		traits("traits"),
 		myUploads("myUploads"),
 		thumbnails("thumbnails"),
