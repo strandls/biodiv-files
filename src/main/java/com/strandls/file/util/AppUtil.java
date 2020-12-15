@@ -41,6 +41,10 @@ public class AppUtil {
 		OBSERVATION, SPECIES, DOCUMENT, DATASETS
 	};
 
+	public enum FILE_UPLOAD_TYPES {
+		UPLOAD, MOVE
+	}
+
 	static {
 		ALLOWED_CONTENT_TYPES.put(MODULE.OBSERVATION, Arrays.asList("image", "video", "audio"));
 		ALLOWED_CONTENT_TYPES.put(MODULE.DOCUMENT, Arrays.asList("pdf"));
