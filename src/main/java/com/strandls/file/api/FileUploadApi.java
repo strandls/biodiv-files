@@ -1,31 +1,5 @@
 package com.strandls.file.api;
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.pac4j.core.profile.CommonProfile;
-
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.file.ApiContants;
@@ -34,15 +8,27 @@ import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.model.MyUpload;
 import com.strandls.file.service.FileUploadService;
 import com.strandls.file.util.AppUtil;
+import com.strandls.file.util.AppUtil.BASE_FOLDERS;
 import com.strandls.file.util.AppUtil.MODULE;
-import com.strandls.file.util.ImageUtil;
-import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
+import io.swagger.annotations.*;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.pac4j.core.profile.CommonProfile;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.io.File;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Path(ApiContants.UPLOAD)
 @Api("Upload")
@@ -60,7 +46,7 @@ public class FileUploadApi {
 	public Response saveToMyUploads(@Context HttpServletRequest request,
 			@FormDataParam("upload") InputStream inputStream,
 			@FormDataParam("upload") FormDataContentDisposition fileDetails, @FormDataParam("hash") String hash,
-			@FormDataParam("module") String module) throws Exception {
+			@FormDataParam("module") String module) {
 		if (hash == null || hash.isEmpty()) {
 			return Response.status(Status.BAD_REQUEST).entity("Hash required").build();
 		}
@@ -84,8 +70,7 @@ public class FileUploadApi {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Get files list from myUploads", notes = "Returns uploaded file data", response = MyUpload.class, responseContainer = "List")
-	public Response getFilesFromUploads(@Context HttpServletRequest request, @QueryParam("module") String module)
-			throws Exception {
+	public Response getFilesFromUploads(@Context HttpServletRequest request, @QueryParam("module") String module) {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
@@ -106,8 +91,7 @@ public class FileUploadApi {
 
 	@ApiOperation(value = "Mapping of Document", notes = "Returns Document", response = Response.class)
 	@ApiResponses(value = { @ApiResponse(code = 500, message = "ERROR", response = String.class) })
-
-	public Response createDwcFILE() throws Exception {
+	public Response createDwcFILE() {
 		// folder where script is placed
 		String filePath = "/app/configurations/scripts/";
 		// folder where the new file will be placed
@@ -172,8 +156,8 @@ public class FileUploadApi {
 			@FormDataParam("nestedFolder") String nestedFolder,
 			@DefaultValue("false") @FormDataParam("resource") String resource) {
 		try {
-			Boolean createResourceFolder = Boolean.parseBoolean(resource);
-			BASE_FOLDERS folder = ImageUtil.getFolder(directory);
+			boolean createResourceFolder = Boolean.parseBoolean(resource);
+			BASE_FOLDERS folder = AppUtil.getFolder(directory);
 			if (folder == null) {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid directory").build();
 			}
@@ -202,7 +186,7 @@ public class FileUploadApi {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid Module").build();
 			}
 			FormDataBodyPart folderBodyPart = formDataMultiPart.getField("module");
-			BASE_FOLDERS folder = ImageUtil.getFolder(folderBodyPart != null ? folderBodyPart.getValue() : null);
+			BASE_FOLDERS folder = AppUtil.getFolder(folderBodyPart != null ? folderBodyPart.getValue() : null);
 			if (folder == null) {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid directory").build();
 			}
@@ -210,7 +194,7 @@ public class FileUploadApi {
 			if (filesBodyPart == null || filesBodyPart.isEmpty()) {
 				return Response.status(Status.BAD_REQUEST).entity("File(s) required").build();				
 			}
-			Map<String, Object> response = new HashMap<String, Object>();
+			Map<String, Object> response = new HashMap<>();
 			List<MyUpload> files = fileUploadService.handleBulkUpload(httpServletRequest, module, folder, filesBodyPart);
 			response.put("status", files.isEmpty());
 			response.put("files", files);

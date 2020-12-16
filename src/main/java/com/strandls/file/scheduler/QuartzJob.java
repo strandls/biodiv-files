@@ -1,5 +1,23 @@
 package com.strandls.file.scheduler;
 
+import com.google.inject.Inject;
+import com.rabbitmq.client.Channel;
+import com.strandls.file.RabbitMqConnection;
+import com.strandls.file.util.AppUtil;
+import com.strandls.file.util.PropertyFileUtil;
+import com.strandls.mail_utility.model.EnumModel.FIELDS;
+import com.strandls.mail_utility.model.EnumModel.INFO_FIELDS;
+import com.strandls.mail_utility.model.EnumModel.MAIL_TYPE;
+import com.strandls.mail_utility.model.EnumModel.MY_UPLOADS_DELETE_MAIL;
+import com.strandls.mail_utility.producer.RabbitMQProducer;
+import com.strandls.mail_utility.util.JsonUtil;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,49 +30,23 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
-import com.rabbitmq.client.Channel;
-import com.strandls.file.RabbitMqConnection;
-import com.strandls.file.util.ImageUtil;
-import com.strandls.file.util.PropertyFileUtil;
-import com.strandls.mail_utility.model.EnumModel.FIELDS;
-import com.strandls.mail_utility.model.EnumModel.INFO_FIELDS;
-import com.strandls.mail_utility.model.EnumModel.MAIL_TYPE;
-import com.strandls.mail_utility.model.EnumModel.MY_UPLOADS_DELETE_MAIL;
-import com.strandls.mail_utility.producer.RabbitMQProducer;
-import com.strandls.mail_utility.util.JsonUtil;
 
 public class QuartzJob implements Job {
 
 	private static final Logger logger = LoggerFactory.getLogger(QuartzJob.class);
 	
 	private static final String DELIMITER = "@@@";
-	private static final String DATE_FOMRAT = "dd/MM/yyyy";
+	private static final String DATE_FORMAT = "dd/MM/yyyy";
 	private static final String BASE_PATH;
 	private static final long MAIL_THRESHOLD;
 	private static final long DELETE_THRESHOLD;
-	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FOMRAT);
+	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FORMAT);
 
 	static {
 		Properties props = PropertyFileUtil.fetchProperty("config.properties");
-		BASE_PATH = props.getProperty("storage_dir") + File.separatorChar + ImageUtil.BASE_FOLDERS.myUploads.getFolder();
+		BASE_PATH = props.getProperty("storage_dir") + File.separatorChar + AppUtil.BASE_FOLDERS.myUploads.getFolder();
 		MAIL_THRESHOLD = Long.parseLong(props.getProperty("scheduler_mail_trigger"));
 		DELETE_THRESHOLD = Long.parseLong(props.getProperty("scheduler_delete_trigger"));
 	}
@@ -66,7 +58,7 @@ public class QuartzJob implements Job {
 	Channel channel;
 
 	@Override
-	public void execute(JobExecutionContext context) throws JobExecutionException {
+	public void execute(JobExecutionContext context) {
 		Session session = null;
 		try {
 			System.out.println("\n\n***** SCHEDULER STARTS *****\n\n");
@@ -86,10 +78,7 @@ public class QuartzJob implements Job {
 				List<String> files = Files.walk(Paths.get(BASE_PATH + File.separatorChar + folder))
 						.filter(Files::isRegularFile).filter(f -> {
 							long noOfDays = getDifference(getFileCreationDate(f));
-							if (noOfDays >= MAIL_THRESHOLD) {
-								return true;
-							}
-							return false;
+							return noOfDays >= MAIL_THRESHOLD;
 						}).map(f -> {
 							File tmp = f.toFile();
 							long noOfDays = getDifference(getFileCreationDate(f));
@@ -103,7 +92,7 @@ public class QuartzJob implements Job {
 					Map<String, Object> data = new HashMap<>();
 					data.put(FIELDS.TYPE.getAction(), MAIL_TYPE.MY_UPLOADS_DELETE_MAIL.getAction());
 					data.put(FIELDS.TO.getAction(), new String[] { userData[0] });
-					data.put(FIELDS.SUBSCRIPTION.getAction(), new Boolean(userData[2]));
+					data.put(FIELDS.SUBSCRIPTION.getAction(), Boolean.valueOf(userData[2]));
 					Map<String, Object> model = new HashMap<>();
 					model.put(MY_UPLOADS_DELETE_MAIL.USERNAME.getAction(), userData[1]);
 					model.put(MY_UPLOADS_DELETE_MAIL.FROM_DATE.getAction(), getFormattedDate(new Date(), -18));

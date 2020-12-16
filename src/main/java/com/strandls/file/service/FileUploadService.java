@@ -1,50 +1,32 @@
 package com.strandls.file.service;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-
+import com.google.common.io.Files;
+import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.file.model.FileUploadModel;
+import com.strandls.file.model.MyUpload;
+import com.strandls.file.model.comparator.UploadDateSort;
+import com.strandls.file.util.AppUtil;
+import com.strandls.file.util.AppUtil.BASE_FOLDERS;
+import com.strandls.file.util.AppUtil.MODULE;
+import com.strandls.file.util.ThumbnailUtil;
 import org.apache.tika.Tika;
 import org.glassfish.jersey.media.multipart.ContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.pac4j.core.profile.CommonProfile;
 
-import com.google.common.io.Files;
-import com.strandls.authentication_utility.util.AuthUtil;
-import com.strandls.file.model.FileMetaData;
-import com.strandls.file.model.FileUploadModel;
-import com.strandls.file.model.MyUpload;
-import com.strandls.file.model.comparator.UploadDateSort;
-import com.strandls.file.util.AppUtil;
-import com.strandls.file.util.AppUtil.MODULE;
-import com.strandls.file.util.ImageUtil;
-import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
-import com.strandls.file.util.ThumbnailUtil;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class FileUploadService {
-
-    @Inject
-    private FileMetaDataService fileMetaDataService;
 
     @Inject
     private UploadedMetaDataService uploadedMetaDataService;
@@ -66,6 +48,9 @@ public class FileUploadService {
         storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
     }
 
+    /**
+     * Resource Upload
+     * */
     public FileUploadModel uploadFile(BASE_FOLDERS directory, InputStream inputStream,
                                       FormDataContentDisposition fileDetails, HttpServletRequest request, String nestedFolder, String hashKey,
                                       boolean resourceFolder) throws IOException {
@@ -95,12 +80,8 @@ public class FileUploadService {
             fileUploadModel.setType(probeContentType);
         }
 
-        FileMetaData fileMetaData = new FileMetaData();
-        fileMetaData.setFileName(fileName);
-        fileMetaData.setPath(resourceFolder ? folderName + File.separatorChar + "resources" : folderName);
-        fileMetaDataService.save(fileMetaData);
-
-        String generatedFileName = fileMetaData.getId() + "." + fileExtension;
+        String tempFileName = UUID.randomUUID().toString().replaceAll("-", "");
+        String generatedFileName = tempFileName + "." + fileExtension;
 
         String filePath = dirPath + File.separatorChar + generatedFileName;
         System.out.println("\n\n FileLocation: " + filePath + " *****\n\n");
@@ -113,7 +94,7 @@ public class FileUploadService {
         fileUploadModel.setUploaded(uploaded);
 
         if (probeContentType.startsWith("image")) {
-            Thread thread = new Thread(new ThumbnailUtil(filePath, dirPath, fileMetaData.getId(), fileExtension));
+            Thread thread = new Thread(new ThumbnailUtil(filePath, dirPath, tempFileName, fileExtension));
             thread.start();
         }
 
@@ -159,12 +140,8 @@ public class FileUploadService {
             }
         }
 
-        FileMetaData fileMetaData = new FileMetaData();
-        fileMetaData.setFileName(fileName);
-        fileMetaData.setPath(folderName);
-        fileMetaDataService.save(fileMetaData);
-
-        String generatedFileName = fileMetaData.getId() + "." + fileExtension;
+        String tempFileName = UUID.randomUUID().toString().replaceAll("-", "");
+        String generatedFileName = tempFileName + "." + fileExtension;
 
         String filePath = dirPath + File.separatorChar + generatedFileName;
         File destFile = new File(filePath);
@@ -178,7 +155,7 @@ public class FileUploadService {
         fileUploadModel.setUploaded(uploaded);
 
         if (probeContentType.startsWith("image")) {
-            Thread thread = new Thread(new ThumbnailUtil(filePath, dirPath, fileMetaData.getId(), fileExtension));
+            Thread thread = new Thread(new ThumbnailUtil(filePath, dirPath, tempFileName, fileExtension));
             thread.start();
         }
 
@@ -194,6 +171,9 @@ public class FileUploadService {
         }
     }
 
+    /**
+     * Upload File to My-Uploads
+     * */
     public MyUpload saveFile(InputStream is, MODULE module, ContentDisposition contentDisposition, String hash,
                              Long userId) throws Exception {
         String dir = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
@@ -203,9 +183,7 @@ public class FileUploadService {
             dirFile.mkdirs();
         }
         Tika tika = new Tika();
-        String extension = Files.getFileExtension(contentDisposition.getFileName());
-        String newFileName = UUID.randomUUID().toString().replaceAll("-", "") + "." + extension;
-        String fileName = dir + File.separatorChar + newFileName;
+        String fileName = dir + File.separatorChar + contentDisposition.getFileName();
         File file = new File(fileName);
         if (file.getCanonicalPath().startsWith(dir) && file.getCanonicalFile().exists()) {
             return getExistingFileData(file);
@@ -219,8 +197,6 @@ public class FileUploadService {
         boolean isFileCreated = writeToFile(is, file.getAbsolutePath());
         MyUpload uploadModel = new MyUpload();
         if (isFileCreated) {
-            uploadedMetaDataService.saveUploadedFileMetadata(userId, contentDisposition.getFileName(),
-                    newFileName, AppUtil.FILE_UPLOAD_TYPES.UPLOAD.toString());
             uploadModel.setFileName(file.getName());
             uploadModel.setHashKey(hash);
             uploadModel
@@ -270,6 +246,9 @@ public class FileUploadService {
         return uploadModel;
     }
 
+    /**
+     * List Files in My-Uploads
+     * */
     public List<MyUpload> getFilesFromUploads(Long userId, MODULE module) throws Exception {
         List<MyUpload> files = new ArrayList<>();
         String userDir = BASE_FOLDERS.myUploads.getFolder() + File.separatorChar + userId;
@@ -399,6 +378,9 @@ public class FileUploadService {
         return uploadModel;
     }
 
+    /**
+     * Delete Files from My-Uploads
+     * */
     public boolean deleteFilesFromMyUploads(Long userId, String fileName) throws IOException {
         boolean isDeleted = false;
         String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
@@ -411,10 +393,13 @@ public class FileUploadService {
         return isDeleted;
     }
 
+    /**
+     * Move Files from My-Uploads
+     * */
     public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr)
             throws Exception {
         Map<String, Object> finalPaths = new HashMap<>();
-        BASE_FOLDERS folder = ImageUtil.getFolder(folderStr);
+        BASE_FOLDERS folder = AppUtil.getFolder(folderStr);
         if (folder == null) {
             throw new Exception("Invalid folder");
         }
@@ -444,7 +429,7 @@ public class FileUploadService {
                         uri = uri.substring(uri.lastIndexOf(File.separatorChar) + 1);
                         uploadedMetaDataService.saveUploadedFileMetadata(userId, fileName,
                                 uri, AppUtil.FILE_UPLOAD_TYPES.MOVE.toString());
-                        Map<String, String> fileAttributes = new HashMap<String, String>();
+                        Map<String, String> fileAttributes = new HashMap<>();
                         fileAttributes.put("name", model.getUri());
                         fileAttributes.put("mimeType", tika.detect(fileName));
                         fileAttributes.put("size", fileSize);
@@ -454,7 +439,7 @@ public class FileUploadService {
                 } else if (folderFile.exists()) {
                     String folderFileSize = String.valueOf(java.nio.file.Files.size(folderFile.toPath()));
                     FileUploadModel model = new FileUploadModel();
-                    Map<String, String> fileAttributes = new HashMap<String, String>();
+                    Map<String, String> fileAttributes = new HashMap<>();
                     fileAttributes.put("name", model.getUri());
                     fileAttributes.put("mimeType", tika.detect(folderFile));
                     fileAttributes.put("size", folderFileSize);

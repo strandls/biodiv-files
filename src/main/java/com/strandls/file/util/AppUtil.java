@@ -35,15 +35,7 @@ public class AppUtil {
 	
 	private static final Logger logger = LoggerFactory.getLogger(AppUtil.class);
 	
-	public static final Map<MODULE, List<String>> ALLOWED_CONTENT_TYPES = new HashMap<MODULE, List<String>>();
-
-	public static enum MODULE {
-		OBSERVATION, SPECIES, DOCUMENT, DATASETS
-	};
-
-	public enum FILE_UPLOAD_TYPES {
-		UPLOAD, MOVE
-	}
+	public static final Map<MODULE, List<String>> ALLOWED_CONTENT_TYPES = new HashMap<>();
 
 	static {
 		ALLOWED_CONTENT_TYPES.put(MODULE.OBSERVATION, Arrays.asList("image", "video", "audio"));
@@ -51,6 +43,51 @@ public class AppUtil {
 		ALLOWED_CONTENT_TYPES.put(MODULE.SPECIES, Arrays.asList());
 		ALLOWED_CONTENT_TYPES.put(MODULE.DATASETS, Arrays.asList("vnd.ms-excel", "spreadsheetml.sheet", "csv"));
 	};
+
+	public enum MODULE {
+		OBSERVATION, SPECIES, DOCUMENT, DATASETS
+	}
+
+	public enum FILE_UPLOAD_TYPES {
+		UPLOAD, MOVE
+	}
+
+	public enum BASE_FOLDERS {
+		observations("observations"),
+		img("img"),
+		species("species"),
+		userGroups("userGroups"),
+		users("users"),
+		pages("pages"),
+		traits("traits"),
+		myUploads("myUploads"),
+		thumbnails("thumbnails"),
+		documents(String.join(String.valueOf(File.separatorChar), "content", "documents")),
+		temp("temp"),
+		datasets(String.join(String.valueOf(File.separatorChar), "content", "datasets"));
+
+		private String folder;
+
+		BASE_FOLDERS(String folder) {
+			this.folder = folder;
+		}
+
+		public String getFolder() {
+			return folder;
+		}
+	};
+
+	public static BASE_FOLDERS getFolder(String directory) {
+		if (directory == null || directory.isEmpty()) {
+			return null;
+		}
+		for (BASE_FOLDERS folders: BASE_FOLDERS.values()) {
+			if (folders.name().equals(directory)) {
+				return folders;
+			}
+		}
+		return null;
+	}
 
 	public static MODULE getModule(String moduleName) {
 		if (moduleName == null || moduleName.isEmpty()) {
