@@ -1,13 +1,14 @@
 package com.strandls.file.service;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Properties;
+import com.google.common.io.Files;
+import com.strandls.file.ApiContants;
+import com.strandls.file.util.AppUtil;
+import com.strandls.file.util.AppUtil.BASE_FOLDERS;
+import com.strandls.file.util.ImageUtil;
+import com.strandls.file.util.ThumbnailUtil;
+import org.apache.tika.Tika;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
@@ -15,17 +16,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
-
-import org.apache.tika.Tika;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.io.Files;
-import com.strandls.file.ApiContants;
-import com.strandls.file.util.AppUtil;
-import com.strandls.file.util.ImageUtil;
-import com.strandls.file.util.ImageUtil.BASE_FOLDERS;
-import com.strandls.file.util.ThumbnailUtil;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.Properties;
 
 public class FileDownloadService {
 
