@@ -178,7 +178,7 @@ public class AppUtil {
 			for (File f : file.listFiles()) {
 				String name = f.getCanonicalFile().getName();
 				if (!f.isDirectory() && name.contains(".")
-						&& name.substring(0, name.indexOf(".")).equalsIgnoreCase(fileName)) {
+						&& name.substring(0, name.lastIndexOf(".")).equalsIgnoreCase(fileName)) {
 					expectedFile = f;
 					break;
 				}
