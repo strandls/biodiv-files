@@ -8,6 +8,8 @@ import java.util.Date;
 @Table(name = "uploaded_file_metadata")
 public class UploadedFileMetadata implements Serializable {
 
+    public UploadedFileMetadata() {}
+
     public UploadedFileMetadata(Long userId, String uploadedFileOriginalName, String uploadedFileRenamed, String type, Date movementDate) {
         this.userId = userId;
         this.fileOriginalName = uploadedFileOriginalName;

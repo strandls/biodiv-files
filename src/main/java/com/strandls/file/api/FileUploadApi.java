@@ -164,7 +164,7 @@ public class FileUploadApi {
 			if (inputStream == null) {
 				return Response.status(Status.BAD_REQUEST).entity("File required").build();
 			}
-			FileUploadModel model = fileUploadService.uploadFile(folder, inputStream, fileDetails, request, nestedFolder, hash,
+			FileUploadModel model = fileUploadService.uploadFile(folder, inputStream, fileDetails, nestedFolder, hash,
 					createResourceFolder);
 			return Response.ok().entity(model).build();
 		} catch (Exception ex) {
@@ -185,7 +185,7 @@ public class FileUploadApi {
 			if (module == null) {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid Module").build();
 			}
-			FormDataBodyPart folderBodyPart = formDataMultiPart.getField("module");
+			FormDataBodyPart folderBodyPart = formDataMultiPart.getField("folder");
 			BASE_FOLDERS folder = AppUtil.getFolder(folderBodyPart != null ? folderBodyPart.getValue() : null);
 			if (folder == null) {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid directory").build();
@@ -195,7 +195,7 @@ public class FileUploadApi {
 				return Response.status(Status.BAD_REQUEST).entity("File(s) required").build();				
 			}
 			Map<String, Object> response = new HashMap<>();
-			List<MyUpload> files = fileUploadService.handleBulkUpload(httpServletRequest, module, folder, filesBodyPart);
+			List<MyUpload> files = fileUploadService.handleBulkUpload(httpServletRequest, module, filesBodyPart);
 			response.put("status", files.isEmpty());
 			response.put("files", files);
 			return Response.ok().entity(response).build();			
@@ -203,6 +203,30 @@ public class FileUploadApi {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
-	
 
+	@POST
+	@Path(ApiContants.BULK + ApiContants.MOVE_FILES)
+	@ValidateUser
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Bulk Upload - Moves files from MyUploads to the appropriate folder", notes = "Returns uploaded file data", response = Map.class)
+	public Response handleBulkUploadMoveFiles(@Context HttpServletRequest request, @ApiParam("filesDTO") FilesDTO filesDTO) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			BASE_FOLDERS folder = AppUtil.getFolder(filesDTO.getFolder());
+			if (folder == null) {
+				throw new Exception("Invalid folder");
+			}
+			MODULE module = AppUtil.getModule(filesDTO.getModule());
+			if (module == null) {
+				throw new Exception("Invalid module");
+			}
+			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(),
+					folder, module);
+			return Response.ok().entity(files).build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
 }

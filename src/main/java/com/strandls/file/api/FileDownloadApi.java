@@ -57,11 +57,11 @@ public class FileDownloadApi {
 		if (height == null && width == null) {
 			return Response.status(Status.BAD_REQUEST).entity("Height or Width required").build();			
 		}
+		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
+			return Response.status(Status.BAD_REQUEST).build();
+		}
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
-		}
-		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
-			return Response.status(Status.BAD_REQUEST).build();			
 		}
 		String hAccept = request.getHeader(HttpHeaders.ACCEPT);
 		boolean preserveFormat = Boolean.parseBoolean(presereve);
@@ -69,7 +69,7 @@ public class FileDownloadApi {
 				hAccept.contains("webp") && 
 				format.equalsIgnoreCase("webp") ? 
 						"webp" : !format.equalsIgnoreCase("webp") ? format : "jpg";
-		return fileDownloadService.getImage(request, directory, fileName, width, height, userRequestedFormat, fit, preserveFormat);
+		return fileDownloadService.getImage(directory, fileName, width, height, userRequestedFormat, fit, preserveFormat);
 	}
 	
 	@Path("raw/{directory:.+}/{fileName}")
@@ -77,12 +77,12 @@ public class FileDownloadApi {
 	@ApiOperation(value = "Get the raw resource", response = StreamingOutput.class)
 	public Response getRawResource(@PathParam("directory") String directory,
 			@PathParam("fileName") String fileName) throws Exception {
-		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());		
+		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
+		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
+			return Response.status(Status.BAD_REQUEST).build();
+		}
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
-		}
-		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
-			return Response.status(Status.BAD_REQUEST).build();			
 		}
 		return fileDownloadService.getRawResource(directory, fileName);
 	}
@@ -97,13 +97,13 @@ public class FileDownloadApi {
 		if (height == null && width == null) {
 			return Response.status(Status.BAD_REQUEST).entity("Height or Width required").build();			
 		}
+		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
+			return Response.status(Status.BAD_REQUEST).build();
+		}
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 		}
-		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
-			return Response.status(Status.BAD_REQUEST).build();			
-		}
-		return fileDownloadService.getLogo(request, directory, fileName, width, height);
+		return fileDownloadService.getLogo(directory, fileName, width, height);
 	}
 	
 	@GET
