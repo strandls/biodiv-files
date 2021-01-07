@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import com.strandls.file.util.AppUtil;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.quartz.Job;
@@ -54,7 +55,7 @@ public class QuartzJob implements Job {
 
 	static {
 		Properties props = PropertyFileUtil.fetchProperty("config.properties");
-		BASE_PATH = props.getProperty("storage_dir") + File.separatorChar + ImageUtil.BASE_FOLDERS.myUploads.getFolder();
+		BASE_PATH = props.getProperty("storage_dir") + File.separatorChar + AppUtil.BASE_FOLDERS.myUploads.getFolder();
 		MAIL_THRESHOLD = Long.parseLong(props.getProperty("scheduler_mail_trigger"));
 		DELETE_THRESHOLD = Long.parseLong(props.getProperty("scheduler_delete_trigger"));
 	}
