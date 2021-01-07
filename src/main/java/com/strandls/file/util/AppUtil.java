@@ -116,7 +116,7 @@ public class AppUtil {
 						+ File.separatorChar;
 				FileHeader header = it.next();
 				final String contentType = tika.detect(header.getFileName());
-				boolean allowedType = ALLOWED_CONTENT_TYPES.get(module).stream().allMatch((type) -> contentType.toLowerCase().startsWith(contentType)
+				boolean allowedType = ALLOWED_CONTENT_TYPES.get(module).stream().allMatch((type) -> contentType.toLowerCase().startsWith(type)
 						|| contentType.toLowerCase().endsWith(type));
 				if (!allowedType) {
 					continue;
