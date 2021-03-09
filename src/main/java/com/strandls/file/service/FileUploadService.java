@@ -416,14 +416,15 @@ public class FileUploadService {
 			String hash = UUID.randomUUID().toString();
 			String existingHash = fileList.stream().filter(path -> !path.startsWith(File.separatorChar + "ibpmu-"))
 					.findAny().orElse(null);
-			if (existingHash != null && !existingHash.isEmpty()) {
-				existingHash = existingHash.substring(1, existingHash.lastIndexOf(File.separatorChar));
-			}
+			
 			Tika tika = new Tika();
 
 			for (String file : fileList) {
 				File folderFile = new File(folderBasePath + file);
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
+					if (existingHash != null && !existingHash.isEmpty()) {
+						existingHash = existingHash.substring(1, existingHash.lastIndexOf(File.separatorChar));
+					}
 					File f = new File(basePath + file);
 					String size = String.valueOf(java.nio.file.Files.size(f.toPath()));
 					if (f.exists()) {
