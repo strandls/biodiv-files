@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.CacheControl;
@@ -32,9 +33,9 @@ public class AppUtil {
 
 	private static final List<String> PREVENTIVE_TOKENS = Arrays.asList("&", "|", "`", "$", ";");
 	private static final int QUALITY = 90;
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(AppUtil.class);
-	
+
 	public static final Map<MODULE, List<String>> ALLOWED_CONTENT_TYPES = new HashMap<>();
 
 	static {
@@ -52,23 +53,15 @@ public class AppUtil {
 		UPLOAD, MOVE
 	}
 
-	public enum BASE_FOLDERS {
-		observations("observations"),
-		img("img"),
-		species("species"),
-		userGroups("userGroups"),
-		users("users"),
-		pages("pages"),
-		traits("traits"),
-		myUploads("myUploads"),
-		thumbnails("thumbnails"),
-		documents(String.join(String.valueOf(File.separatorChar), "content", "documents")),
-		temp("temp"),
+	public static enum BASE_FOLDERS {
+		observations("observations"), img("img"), species("species"), userGroups("userGroups"), users("users"),
+		pages("pages"), traits("traits"), myUploads("myUploads"), thumbnails("thumbnails"), landscape("landscape"),
+		documents(String.join(String.valueOf(File.separatorChar), "content", "documents")), temp("temp"),
 		datasets(String.join(String.valueOf(File.separatorChar), "content", "datasets"));
 
 		private String folder;
 
-		BASE_FOLDERS(String folder) {
+		private BASE_FOLDERS(String folder) {
 			this.folder = folder;
 		}
 
@@ -77,12 +70,26 @@ public class AppUtil {
 		}
 	};
 
+	public static boolean checkFolderExistence(String directory) {
+		boolean hasFolder = false;
+		if (directory == null) {
+			return hasFolder;
+		}
+		for (BASE_FOLDERS folders : BASE_FOLDERS.values()) {
+			if (folders.name().equalsIgnoreCase(directory)) {
+				hasFolder = true;
+				break;
+			}
+		}
+		return hasFolder;
+	}
+
 	public static BASE_FOLDERS getFolder(String directory) {
 		if (directory == null || directory.isEmpty()) {
 			return null;
 		}
-		for (BASE_FOLDERS folders: BASE_FOLDERS.values()) {
-			if (folders.name().equals(directory)) {
+		for (BASE_FOLDERS folders : BASE_FOLDERS.values()) {
+			if (folders.name().equalsIgnoreCase(directory)) {
 				return folders;
 			}
 		}
@@ -100,8 +107,8 @@ public class AppUtil {
 		}
 		return null;
 	}
-	
-	public static List<MyUpload> parseZipFiles(String storageBasePath, String hash, String filePath, String destination, MODULE module) {
+
+	public static List<MyUpload> parseZipFiles(String storageBasePath, String filePath, MODULE module) {
 		List<MyUpload> files = new ArrayList<>();
 		try {
 			ZipFile zipFile = new ZipFile(filePath);
@@ -109,19 +116,21 @@ public class AppUtil {
 			Iterator<FileHeader> it = headers.iterator();
 			Tika tika = new Tika();
 			while (it.hasNext()) {
+				String hash = String.join("", "ibpmu-", UUID.randomUUID().toString());
+				String destinationPath = storageBasePath + File.separatorChar + hash + File.separatorChar;
 				FileHeader header = it.next();
 				final String contentType = tika.detect(header.getFileName());
-				boolean allowedType = ALLOWED_CONTENT_TYPES.get(module).stream().allMatch((type) -> {
-					return contentType.toLowerCase().startsWith(contentType)
-							|| contentType.toLowerCase().endsWith(type);
-				});
+				boolean allowedType = ALLOWED_CONTENT_TYPES.get(module).stream()
+						.allMatch((type) -> contentType.toLowerCase().startsWith(type)
+								|| contentType.toLowerCase().endsWith(type));
 				if (!allowedType) {
 					continue;
 				}
-				zipFile.extractFile(header, destination);
+				zipFile.extractFile(header, destinationPath);
 				MyUpload upload = new MyUpload();
 				upload.setType(contentType);
-				String finalPath = String.join("", destination.substring(0, destination.length() - 1), header.getFileName());
+				String finalPath = String.join("", destinationPath.substring(0, destinationPath.length() - 1),
+						header.getFileName());
 				upload.setPath(finalPath.substring(storageBasePath.length()));
 				upload.setFileName(header.getFileName());
 				upload.setHashKey(hash);
@@ -134,7 +143,7 @@ public class AppUtil {
 		}
 		return files;
 	}
-	
+
 	public static boolean filterFileTypeForModule(String contentType, MODULE module) {
 		boolean addToList = false;
 		if (contentType == null) {

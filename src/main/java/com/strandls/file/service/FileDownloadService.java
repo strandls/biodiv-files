@@ -1,14 +1,13 @@
 package com.strandls.file.service;
 
-import com.google.common.io.Files;
-import com.strandls.file.ApiContants;
-import com.strandls.file.util.AppUtil;
-import com.strandls.file.util.AppUtil.BASE_FOLDERS;
-import com.strandls.file.util.ImageUtil;
-import com.strandls.file.util.ThumbnailUtil;
-import org.apache.tika.Tika;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Properties;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
@@ -16,9 +15,17 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.util.Properties;
+
+import org.apache.tika.Tika;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.io.Files;
+import com.strandls.file.ApiContants;
+import com.strandls.file.util.AppUtil;
+import com.strandls.file.util.AppUtil.BASE_FOLDERS;
+import com.strandls.file.util.ImageUtil;
+import com.strandls.file.util.ThumbnailUtil;
 
 public class FileDownloadService {
 
@@ -198,10 +205,10 @@ public class FileDownloadService {
 
 			String extension = name.substring(name.indexOf(".") + 1);
 			String thumbnailFolder = storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.getFolder()
-			+ file.getParentFile().getAbsolutePath().substring(storageBasePath.length());
+					+ file.getParentFile().getAbsolutePath().substring(storageBasePath.length());
 			String command = null;
-			command = AppUtil.generateCommand(file.getAbsolutePath(), thumbnailFolder,
-					width, height, preserve ? extension : format, null, fit);
+			command = AppUtil.generateCommand(file.getAbsolutePath(), thumbnailFolder, width, height,
+					preserve ? extension : format, null, fit);
 			File thumbnailFile = AppUtil.getResizedImage(command);
 			File resizedFile;
 			Tika tika = new Tika();
@@ -213,6 +220,7 @@ public class FileDownloadService {
 			} else {
 				resizedFile = thumbnailFile;
 			}
+			System.out.println("\n\n***** Resized File: " + resizedFile.getName() + " *****\n\n");
 			String contentType = tika.detect(resizedFile.getName());
 			InputStream in = new FileInputStream(resizedFile);
 			long contentLength = resizedFile.length();
@@ -282,7 +290,8 @@ public class FileDownloadService {
 		}
 	}
 
-	public Response getLogo(HttpServletRequest req, String directory, String fileName, Integer width, Integer height) throws Exception {
+	public Response getLogo(HttpServletRequest req, String directory, String fileName, Integer width, Integer height)
+			throws Exception {
 		try {
 
 			String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
@@ -299,10 +308,9 @@ public class FileDownloadService {
 
 			String extension = name.substring(name.indexOf(".") + 1);
 			String thumbnailFolder = storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.getFolder()
-			+ file.getParentFile().getAbsolutePath().substring(storageBasePath.length());
+					+ file.getParentFile().getAbsolutePath().substring(storageBasePath.length());
 			String command = null;
-			command = AppUtil.generateCommandLogo(file.getAbsolutePath(), thumbnailFolder,
-					width, height, extension);
+			command = AppUtil.generateCommandLogo(file.getAbsolutePath(), thumbnailFolder, width, height, extension);
 			System.out.println("\n\n***** Command: " + command + " *****\n\n");
 			File thumbnailFile = AppUtil.getResizedImage(command);
 			File resizedFile;
@@ -335,9 +343,8 @@ public class FileDownloadService {
 					out.close();
 				}
 			};
-			return Response.ok(sout)
-					.type(contentType)
-					.header("Content-Length", contentLength).cacheControl(AppUtil.getCacheControl()).build();
+			return Response.ok(sout).type(contentType).header("Content-Length", contentLength)
+					.cacheControl(AppUtil.getCacheControl()).build();
 		} catch (FileNotFoundException fe) {
 			fe.printStackTrace();
 			logger.error(fe.getMessage());

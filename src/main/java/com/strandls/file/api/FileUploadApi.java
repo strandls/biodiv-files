@@ -1,5 +1,31 @@
 package com.strandls.file.api;
 
+import java.io.File;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.pac4j.core.profile.CommonProfile;
+
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.file.ApiContants;
@@ -10,25 +36,12 @@ import com.strandls.file.service.FileUploadService;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.AppUtil.BASE_FOLDERS;
 import com.strandls.file.util.AppUtil.MODULE;
-import io.swagger.annotations.*;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.pac4j.core.profile.CommonProfile;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import java.io.File;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 @Path(ApiContants.UPLOAD)
 @Api("Upload")
@@ -164,45 +177,72 @@ public class FileUploadApi {
 			if (inputStream == null) {
 				return Response.status(Status.BAD_REQUEST).entity("File required").build();
 			}
-			FileUploadModel model = fileUploadService.uploadFile(folder, inputStream, fileDetails, request, nestedFolder, hash,
-					createResourceFolder);
+			FileUploadModel model = fileUploadService.uploadFile(folder, inputStream, fileDetails, request,
+					nestedFolder, hash, createResourceFolder);
 			return Response.ok().entity(model).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
-	
+
 	@POST
 	@Path(ApiContants.BULK_UPLOAD)
 	@ValidateUser
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Bulk Upload", notes = "Returns uploaded file data", response = Map.class)
-	public Response handleBulkUpload(@Context HttpServletRequest httpServletRequest, FormDataMultiPart formDataMultiPart) {
+	public Response handleBulkUpload(@Context HttpServletRequest httpServletRequest,
+			FormDataMultiPart formDataMultiPart) {
 		try {
 			FormDataBodyPart moduleBodyPart = formDataMultiPart.getField("module");
 			MODULE module = AppUtil.getModule(moduleBodyPart != null ? moduleBodyPart.getValue() : null);
 			if (module == null) {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid Module").build();
 			}
-			FormDataBodyPart folderBodyPart = formDataMultiPart.getField("module");
+			FormDataBodyPart folderBodyPart = formDataMultiPart.getField("folder");
 			BASE_FOLDERS folder = AppUtil.getFolder(folderBodyPart != null ? folderBodyPart.getValue() : null);
 			if (folder == null) {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid directory").build();
 			}
 			List<FormDataBodyPart> filesBodyPart = formDataMultiPart.getFields("upload");
 			if (filesBodyPart == null || filesBodyPart.isEmpty()) {
-				return Response.status(Status.BAD_REQUEST).entity("File(s) required").build();				
+				return Response.status(Status.BAD_REQUEST).entity("File(s) required").build();
 			}
 			Map<String, Object> response = new HashMap<>();
-			List<MyUpload> files = fileUploadService.handleBulkUpload(httpServletRequest, module, folder, filesBodyPart);
-			response.put("status", files.isEmpty());
+			List<MyUpload> files = fileUploadService.handleBulkUpload(httpServletRequest, module, filesBodyPart);
+			response.put("status", !files.isEmpty());
 			response.put("files", files);
-			return Response.ok().entity(response).build();			
+			return Response.ok().entity(response).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
-	
+
+	@POST
+	@Path(ApiContants.BULK + ApiContants.MOVE_FILES)
+	@ValidateUser
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Bulk Upload - Moves files from MyUploads to the appropriate folder", notes = "Returns uploaded file data", response = Map.class)
+	public Response handleBulkUploadMoveFiles(@Context HttpServletRequest request,
+			@ApiParam("filesDTO") FilesDTO filesDTO) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			BASE_FOLDERS folder = AppUtil.getFolder(filesDTO.getFolder());
+			if (folder == null) {
+				throw new Exception("Invalid folder");
+			}
+			MODULE module = AppUtil.getModule(filesDTO.getModule());
+			if (module == null) {
+				throw new Exception("Invalid module");
+			}
+			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(), folder,
+					module);
+			return Response.ok().entity(files).build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
 
 }
