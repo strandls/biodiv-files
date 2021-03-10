@@ -30,21 +30,21 @@ public class FileDownloadApi {
 	private FileDownloadService fileDownloadService;
 	@Inject
 	private FileAccessService accessService;
-	
+
 	@Path("ping")
 	@GET
 	@ApiOperation(value = "Dummy URI to print FileMetaData model", response = String.class)
 	public Response ping() {
 		return Response.status(Status.OK).entity("pong").build();
 	}
-	
+
 	@Path("model")
 	@GET
 	@ApiOperation(value = "Dummy URI to print FileUploadModel model", response = FileUploadModel.class)
 	public Response model() {
 		return Response.status(Status.OK).entity(new FileUploadModel()).build();
 	}
-	
+
 	@Path("crop/{directory:.+}/{fileName}")
 	@GET
 	@Consumes(MediaType.TEXT_PLAIN)
@@ -55,34 +55,61 @@ public class FileDownloadApi {
 			@DefaultValue("false") @QueryParam("preserve") String presereve) throws Exception {
 		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
 		if (height == null && width == null) {
-			return Response.status(Status.BAD_REQUEST).entity("Height or Width required").build();			
+			return Response.status(Status.BAD_REQUEST).entity("Height or Width required").build();
 		}
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 		}
 		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
-			return Response.status(Status.BAD_REQUEST).build();			
+			return Response.status(Status.BAD_REQUEST).build();
 		}
 		String hAccept = request.getHeader(HttpHeaders.ACCEPT);
 		boolean preserveFormat = Boolean.parseBoolean(presereve);
-		String userRequestedFormat = 
-				hAccept.contains("webp") && 
-				format.equalsIgnoreCase("webp") ? 
-						"webp" : !format.equalsIgnoreCase("webp") ? format : "jpg";
-		return fileDownloadService.getImage(request, directory, fileName, width, height, userRequestedFormat, fit, preserveFormat);
+		String userRequestedFormat = hAccept.contains("webp") && format.equalsIgnoreCase("webp") ? "webp"
+				: !format.equalsIgnoreCase("webp") ? format : "jpg";
+		return fileDownloadService.getImage(request, directory, fileName, width, height, userRequestedFormat, fit,
+				preserveFormat);
 	}
-	
+
+	@GET
+	@Path(ApiContants.ICON + "/{height}/{width}/{directory:.+}/{fileName}")
+	@Consumes(MediaType.TEXT_PLAIN)
+
+	@ApiOperation(value = "Get the image resource for mail icon by url", response = StreamingOutput.class)
+
+	public Response getMailIcon(@Context HttpServletRequest request, @PathParam("directory") String directory,
+			@PathParam("fileName") String fileName, @PathParam("height") Integer height,
+			@PathParam("width") Integer width) {
+		try {
+
+			fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
+			if (directory.contains("..") || fileName.contains("..")) {
+				return Response.status(Status.NOT_ACCEPTABLE).build();
+			}
+			if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
+				return Response.status(Status.BAD_REQUEST).build();
+			}
+
+			String fileExtension = com.google.common.io.Files.getFileExtension(fileName);
+			return fileDownloadService.getImage(request, directory, fileName, width, height, fileExtension, "center",
+					true);
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
 	@Path("raw/{directory:.+}/{fileName}")
 	@GET
 	@ApiOperation(value = "Get the raw resource", response = StreamingOutput.class)
-	public Response getRawResource(@PathParam("directory") String directory,
-			@PathParam("fileName") String fileName) throws Exception {
-		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());		
+	public Response getRawResource(@PathParam("directory") String directory, @PathParam("fileName") String fileName)
+			throws Exception {
+		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 		}
 		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
-			return Response.status(Status.BAD_REQUEST).build();			
+			return Response.status(Status.BAD_REQUEST).build();
 		}
 		return fileDownloadService.getRawResource(directory, fileName);
 	}
@@ -92,39 +119,40 @@ public class FileDownloadApi {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@ApiOperation(value = "Get the image resource with custom height & width by url", response = StreamingOutput.class)
 	public Response getUserGroupLogo(@Context HttpServletRequest request, @PathParam("directory") String directory,
-			@PathParam("fileName") String fileName, @QueryParam("w") Integer width, @QueryParam("h") Integer height) throws Exception {
+			@PathParam("fileName") String fileName, @QueryParam("w") Integer width, @QueryParam("h") Integer height)
+			throws Exception {
 		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
 		if (height == null && width == null) {
-			return Response.status(Status.BAD_REQUEST).entity("Height or Width required").build();			
+			return Response.status(Status.BAD_REQUEST).entity("Height or Width required").build();
 		}
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 		}
 		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
-			return Response.status(Status.BAD_REQUEST).build();			
+			return Response.status(Status.BAD_REQUEST).build();
 		}
 		return fileDownloadService.getLogo(request, directory, fileName, width, height);
 	}
-	
+
 	@GET
-	@Path(value = ApiContants.DOWNLOAD+"/requestfile")
+	@Path(value = ApiContants.DOWNLOAD + "/requestfile")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@ApiOperation(value = "", notes = "Returns Document", response = Response.class)
-	@ApiResponses(value = { @ApiResponse(code = 500, message = "ERROR", response = String.class) })	
-	public Response downloadFileGivenPath(@QueryParam("type")String fileType, 
-			@QueryParam("name")String fileName) {
+	@ApiResponses(value = { @ApiResponse(code = 500, message = "ERROR", response = String.class) })
+	public Response downloadFileGivenPath(@QueryParam("type") String fileType, @QueryParam("name") String fileName) {
 		String path = null;
-		if(fileType.equalsIgnoreCase("observation")) {
+		if (fileType.equalsIgnoreCase("observation")) {
 			path = "/app/data/biodiv/data-archive/listpagecsv";
 		}
-			try {
-				if(Files.exists(Paths.get(path+File.separator+fileName), new LinkOption[]{ LinkOption.NOFOLLOW_LINKS}))
-					return accessService.genericFileDownload(path+File.separator+fileName);
-			} catch (IOException e) {
-				e.printStackTrace();
-				return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		try {
+			if (Files.exists(Paths.get(path + File.separator + fileName),
+					new LinkOption[] { LinkOption.NOFOLLOW_LINKS }))
+				return accessService.genericFileDownload(path + File.separator + fileName);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 
-			}
+		}
 		return Response.status(Status.BAD_REQUEST).build();
 	}
 }
