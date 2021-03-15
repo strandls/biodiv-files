@@ -425,7 +425,7 @@ public class FileUploadService {
 			String existingHash = fileList.stream().filter(path -> !path.startsWith(File.separatorChar + "ibpmu-"))
 					.findAny().orElse(null);
 			if (existingHash != null && !existingHash.isEmpty()) {
-				existingHash = existingHash.substring(1, existingHash.lastIndexOf(File.separatorChar));
+				existingHash = existingHash.substring(0, existingHash.lastIndexOf(File.separatorChar));
 			}
 			Tika tika = new Tika();
 
@@ -556,7 +556,7 @@ public class FileUploadService {
 			List<String> filesWithPath = new ArrayList<>();
 			for (String file : fileList) {
 				if (files.containsKey(file)) {
-					filesWithPath.add(files.get(file));
+					filesWithPath.add(File.separatorChar+files.get(file));
 				}
 			}
 			Map<String, Object> result = moveFilesFromUploads(userId, filesWithPath, folder.toString());
