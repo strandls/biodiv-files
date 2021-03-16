@@ -115,13 +115,14 @@ public class AppUtil {
 			List<FileHeader> headers = zipFile.getFileHeaders();
 			Iterator<FileHeader> it = headers.iterator();
 			Tika tika = new Tika();
+			String hash = String.join("", "ibpmu-", UUID.randomUUID().toString());
+			System.out.println("==================Bulk Upload for Unzip started==================");
 			while (it.hasNext()) {
-				String hash = String.join("", "ibpmu-", UUID.randomUUID().toString());
 				String destinationPath = storageBasePath + File.separatorChar + hash + File.separatorChar;
 				FileHeader header = it.next();
 				final String contentType = tika.detect(header.getFileName());
 				boolean allowedType = ALLOWED_CONTENT_TYPES.get(module).stream()
-						.allMatch((type) -> contentType.toLowerCase().startsWith(type)
+						.anyMatch((type) -> contentType.toLowerCase().startsWith(type)
 								|| contentType.toLowerCase().endsWith(type));
 				if (!allowedType) {
 					continue;
@@ -136,6 +137,7 @@ public class AppUtil {
 				upload.setHashKey(hash);
 				files.add(upload);
 			}
+			System.out.println("=====================Completed UnZip bulk Uploads=================");
 		} catch (ZipException ex) {
 			logger.error(ex.getMessage());
 		} catch (Exception ex) {
