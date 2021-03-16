@@ -427,12 +427,15 @@ public class FileUploadService {
 			if (existingHash != null && !existingHash.isEmpty()) {
 				existingHash = existingHash.substring(0, existingHash.lastIndexOf(File.separatorChar));
 			}
+			
+			System.out.println("Folder base path====================="+folderBasePath);
 			Tika tika = new Tika();
 
 			for (String file : fileList) {
 				File folderFile = new File(folderBasePath + file);
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					File f = new File(basePath + file);
+					System.out.println("Folder base path"+f.exists());
 					if (f.exists()) {
 						String fileSize = String.valueOf(java.nio.file.Files.size(f.toPath()));
 						String fileName = f.getName();
