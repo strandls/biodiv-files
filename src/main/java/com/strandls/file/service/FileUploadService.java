@@ -427,15 +427,18 @@ public class FileUploadService {
 			if (existingHash != null && !existingHash.isEmpty()) {
 				existingHash = existingHash.substring(0, existingHash.lastIndexOf(File.separatorChar));
 			}
-			
-			System.out.println("Folder base path====================="+folderBasePath);
+
+			System.out.println("Folder base path=====================" + folderBasePath);
+
+			System.out.println("the exsisting hash data" + existingHash);
 			Tika tika = new Tika();
 
 			for (String file : fileList) {
 				File folderFile = new File(folderBasePath + file);
+				System.out.println("the file data iis" + file);
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					File f = new File(basePath + file);
-					System.out.println("Folder base path"+f.exists());
+					System.out.println("Folder base path" + f.exists());
 					if (f.exists()) {
 						String fileSize = String.valueOf(java.nio.file.Files.size(f.toPath()));
 						String fileName = f.getName();
@@ -559,7 +562,7 @@ public class FileUploadService {
 			List<String> filesWithPath = new ArrayList<>();
 			for (String file : fileList) {
 				if (files.containsKey(file)) {
-					filesWithPath.add(File.separatorChar+files.get(file));
+					filesWithPath.add(File.separatorChar + files.get(file));
 				}
 			}
 			Map<String, Object> result = moveFilesFromUploads(userId, filesWithPath, folder.toString());
