@@ -562,7 +562,7 @@ public class FileUploadService {
 			List<String> filesWithPath = new ArrayList<>();
 			for (String file : fileList) {
 				if (files.containsKey(file)) {
-					filesWithPath.add(File.separatorChar + files.get(file));
+					filesWithPath.add(files.get(file));
 				}
 			}
 			Map<String, Object> result = moveFilesFromUploads(userId, filesWithPath, folder.toString());
