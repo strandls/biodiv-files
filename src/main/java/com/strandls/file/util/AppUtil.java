@@ -157,6 +157,13 @@ public class AppUtil {
 		return addToList;
 	}
 
+	public static boolean filterFileByName(String filename, List<String> fileList) {
+		if (fileList.size() > 1) {
+			return true;
+		}
+		return filename.contains(fileList.get(0));
+	}
+
 	public static CacheControl getCacheControl() {
 		CacheControl cache = new CacheControl();
 		cache.setMaxAge(365 * 24 * 60 * 60);

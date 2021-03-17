@@ -533,33 +533,40 @@ public class FileUploadService {
 	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, BASE_FOLDERS folder,
 			MODULE module) {
 		Map<String, Object> finalPaths = new HashMap<>();
+		Map<String, String> files = new HashMap<>();
+		List<String> filesWithPath = new ArrayList<>();
 		try {
 			String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder()
 					+ File.separatorChar + userId;
-			Map<String, String> files = new HashMap<>();
 			Tika tika = new Tika();
 
 			// stream the user directory and prepare a map of file and file path
 			java.nio.file.Files.find(java.nio.file.Paths.get(basePath), Integer.MAX_VALUE, (f, bfa) -> {
 				String type = tika.detect(f.getFileName().toString());
-				return java.nio.file.Files.isRegularFile(f) && AppUtil.filterFileTypeForModule(type, module);
+				return java.nio.file.Files.isRegularFile(f) && AppUtil.filterFileTypeForModule(type, module)
+						&& AppUtil.filterFileByName(f.getFileName().toString(), fileList);
 			}).forEach(file -> {
 				File f = file.toFile();
 				try {
-					files.put(f.getName(), f.getCanonicalPath().substring(basePath.length()));
+					if (fileList.size() > 1) {
+						filesWithPath.add(f.getCanonicalPath().substring(basePath.length()));
+					} else {
+						files.put(f.getName(), f.getCanonicalPath().substring(basePath.length()));
+					}
+
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			});
 
-			System.out.println("\n\n***** All files in User " + userId + ": " + files + " *****\n\n");
-
-			List<String> filesWithPath = new ArrayList<>();
-			for (String file : fileList) {
-				if (files.containsKey(file)) {
-					filesWithPath.add(files.get(file));
+			if (fileList.size() > 1) {
+				for (String file : fileList) {
+					if (files.containsKey(file)) {
+						filesWithPath.add(files.get(file));
+					}
 				}
 			}
+
 			Map<String, Object> result = moveFilesFromUploads(userId, filesWithPath, folder.toString());
 			if (result != null && !result.isEmpty()) {
 				for (Map.Entry<String, Object> file : result.entrySet()) {
