@@ -427,15 +427,10 @@ public class FileUploadService {
 			if (existingHash != null && !existingHash.isEmpty()) {
 				existingHash = existingHash.substring(1, existingHash.lastIndexOf(File.separatorChar));
 			}
-
-			System.out.println("Folder base path=====================" + folderBasePath);
-
-			System.out.println("the exsisting hash data" + existingHash);
 			Tika tika = new Tika();
 
 			for (String file : fileList) {
 				File folderFile = new File(folderBasePath + file);
-				System.out.println("the file data iis" + file);
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					File f = new File(basePath + file);
 					System.out.println("Folder base path" + f.exists());
