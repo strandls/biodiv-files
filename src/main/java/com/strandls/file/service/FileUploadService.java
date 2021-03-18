@@ -530,7 +530,7 @@ public class FileUploadService {
 		return savedFiles;
 	}
 
-	public Map<String, String> getAllFilePathsByUser(Long userId, List<String> fileList, BASE_FOLDERS folder,
+	public Map<String, String> getAllFilePathsByUser(Long userId, BASE_FOLDERS folder,
 			MODULE module) throws IOException {
 		Map<String, String> filesMap = new HashMap<>();
 
@@ -560,7 +560,7 @@ public class FileUploadService {
 		Map<String, Object> finalPaths = new HashMap<>();
 		try {
 			Map<String, String> files = new HashMap<>();
-			files = getAllFilePathsByUser(userId, fileList, folder, module);
+			files = getAllFilePathsByUser(userId, folder, module);
 			System.out.println("\n\n***** All files in User " + userId + ": " + files + " *****\n\n");
 
 			List<String> filesWithPath = new ArrayList<>();

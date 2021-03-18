@@ -220,8 +220,8 @@ public class FileUploadApi {
 	
 	
 
-	@GET
-	@Path(ApiContants.BULK + ApiContants.MOVE_FILES)
+	@POST
+	@Path(ApiContants.BULK + ApiContants.FILES_PATH)
 	@ValidateUser
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -240,7 +240,7 @@ public class FileUploadApi {
 			if (module == null) {
 				throw new Exception("Invalid module");
 			}
-			Map<String, String> files = fileUploadService.getAllFilePathsByUser(userId, filesDTO.getFiles(), folder,
+			Map<String, String> files = fileUploadService.getAllFilePathsByUser(userId, folder,
 					module);
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
