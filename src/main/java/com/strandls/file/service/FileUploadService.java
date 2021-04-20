@@ -200,7 +200,7 @@ public class FileUploadService {
 		String fileName = dir + File.separatorChar + contentDisposition.getFileName();
 		File file = new File(fileName);
 		if (file.getCanonicalPath().startsWith(dir) && file.getCanonicalFile().exists()) {
-			return getExistingFileData(file);
+			return getExistingFileData(file,module);
 		}
 		String probeContentType = tika.detect(fileName);
 		boolean allowedContentType = AppUtil.filterFileTypeForModule(probeContentType, module);
@@ -344,7 +344,7 @@ public class FileUploadService {
 		return files;
 	}
 
-	private MyUpload getExistingFileData(File tmpFile) throws Exception {
+	private MyUpload getExistingFileData(File tmpFile, MODULE module) throws Exception {
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(tmpFile.getName());
 		MyUpload uploadModel = new MyUpload();
@@ -394,6 +394,11 @@ public class FileUploadService {
 				File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar + tmpFile.getName());
 		uploadModel.setType(probeContentType);
 		uploadModel.setFileSize(String.valueOf(tmpFile.length()));
+		 if (module == MODULE.DATASETS) {
+				SheetUtil sheetUtil = new SheetUtil(tmpFile.getAbsolutePath());
+				List<Object> excelJson = sheetUtil.convertObjects2JsonString();
+				uploadModel.setExcelJson(excelJson);
+		}
 		return uploadModel;
 	}
 

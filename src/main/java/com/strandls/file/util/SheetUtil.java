@@ -45,15 +45,12 @@ public class SheetUtil {
 					headerList = extractHeaders(headerRow);
 				} else {
 					Iterator<Cell> cellsInRow = currentRow.iterator();
-
+					List<String> Hist = headerList;
 					Map<String, Object> cust = new HashMap<String, Object>();
-
-					int cellIndex = 0;
-					while (cellsInRow.hasNext()) {
-						Cell currentCell = cellsInRow.next();
-						cust.put(headerList.get(cellIndex), cellToObject(currentCell));
-						cellIndex++;
-					}
+					Hist.forEach((item)->{
+						Cell currentCell =cellsInRow.hasNext()? cellsInRow.next():null;
+						cust.put(item, currentCell != null ?cellToObject(currentCell):"");
+					});
 					observationList.add(cust);
 				}
 				rowNumber++;
