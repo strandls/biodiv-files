@@ -37,6 +37,7 @@ import com.strandls.file.model.comparator.UploadDateSort;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.AppUtil.BASE_FOLDERS;
 import com.strandls.file.util.AppUtil.MODULE;
+import com.strandls.file.util.SheetUtil;
 import com.strandls.file.util.ThumbnailUtil;
 
 public class FileUploadService {
@@ -248,6 +249,11 @@ public class FileUploadService {
 						}
 					}
 				}
+			} else if (allowedContentType && module == MODULE.DATASETS) {
+				SheetUtil sheetUtil = new SheetUtil(file.getAbsolutePath());
+				List<Object> excelJson = sheetUtil.convertObjects2JsonString();
+				uploadModel.setExcelJson(excelJson);
+
 			}
 			attributes = java.nio.file.Files.readAttributes(Paths.get(file.toURI()), BasicFileAttributes.class);
 			Date uploadedDate = new Date(attributes.creationTime().toMillis());
@@ -530,8 +536,8 @@ public class FileUploadService {
 		return savedFiles;
 	}
 
-	public Map<String, String> getAllFilePathsByUser(Long userId, BASE_FOLDERS folder,
-			MODULE module) throws IOException {
+	public Map<String, String> getAllFilePathsByUser(Long userId, BASE_FOLDERS folder, MODULE module)
+			throws IOException {
 		Map<String, String> filesMap = new HashMap<>();
 
 		String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar

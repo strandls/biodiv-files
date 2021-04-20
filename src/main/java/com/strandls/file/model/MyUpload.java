@@ -1,6 +1,7 @@
 package com.strandls.file.model;
 
 import java.util.Date;
+import java.util.List;
 
 public class MyUpload {
 	
@@ -13,7 +14,14 @@ public class MyUpload {
 	private Double latitude;
 	private Double longitude;
 	private String fileSize;
+	private List<Object> excelJson;
 	
+	public List<Object> getExcelJson() {
+		return excelJson;
+	}
+	public void setExcelJson(List<Object> excelJson) {
+		this.excelJson = excelJson;
+	}
 	public String getHashKey() {
 		return hashKey;
 	}

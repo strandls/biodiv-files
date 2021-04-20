@@ -63,6 +63,11 @@ public class FileUploadApi {
 		if (hash == null || hash.isEmpty()) {
 			return Response.status(Status.BAD_REQUEST).entity("Hash required").build();
 		}
+
+		if (inputStream == null) {
+			return Response.status(Status.BAD_REQUEST).entity("Input upload  Stream required").build();
+		}
+		
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
