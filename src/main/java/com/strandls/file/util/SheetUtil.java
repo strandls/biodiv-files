@@ -38,7 +38,7 @@ public class SheetUtil {
 			List<String> headerList = new ArrayList<String>();
 
 			int rowNumber = 0;
-			while (rows.hasNext()) {
+			while (rows.hasNext() && rowNumber <= 3) {
 				Row currentRow = rows.next();
 				if (rowNumber == 0) {
 					Iterator<Cell> headerRow = currentRow.iterator();
