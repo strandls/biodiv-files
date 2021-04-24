@@ -27,14 +27,14 @@ public class SheetUtil {
 		this.filePath = filePath;
 	}
 
-	private List<Object> readExcelFile(String filePath) {
+	private  Map<String,Object>  readExcelFile(String filePath) {
 		try {
 			FileInputStream excelFile = new FileInputStream(new File(filePath));
 			XSSFWorkbook workbook = new XSSFWorkbook(excelFile);
 
 			XSSFSheet sheet = workbook.getSheetAt(0);
 			Iterator<Row> rows = sheet.iterator();
-			List<Object> observationList = new ArrayList<Object>();
+			 Map<String,Object>  observationList = new HashMap<String,Object>();
 			List<String> headerList = new ArrayList<String>();
 
 			int rowNumber = 0;
@@ -51,10 +51,11 @@ public class SheetUtil {
 						Cell currentCell = cellsInRow.hasNext() ? cellsInRow.next() : null;
 						cust.put(item, currentCell != null ? cellToObject(currentCell) : "");
 					});
-					observationList.add(cust);
+					observationList.put("rowData",cust);
+					observationList.put("headerData", Hist);
 				}
 				rowNumber++;
-			}
+			}											
 			// Close WorkBook
 			workbook.close();
 
@@ -113,7 +114,7 @@ public class SheetUtil {
 	 * @param customers
 	 * @param fileName
 	 */
-	public List<Object> convertObjects2JsonString() {
+	public  Map<String,Object>  convertObjects2JsonString() {
 		return readExcelFile(filePath);
 	}
 

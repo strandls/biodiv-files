@@ -251,7 +251,7 @@ public class FileUploadService {
 				}
 			} else if (allowedContentType && module == MODULE.DATASETS) {
 				SheetUtil sheetUtil = new SheetUtil(file.getAbsolutePath());
-				List<Object> excelJson = sheetUtil.convertObjects2JsonString();
+				 Map<String,Object> excelJson = sheetUtil.convertObjects2JsonString();
 				uploadModel.setExcelJson(excelJson);
 
 			}
@@ -396,7 +396,7 @@ public class FileUploadService {
 		uploadModel.setFileSize(String.valueOf(tmpFile.length()));
 		 if (module == MODULE.DATASETS) {
 				SheetUtil sheetUtil = new SheetUtil(tmpFile.getAbsolutePath());
-				List<Object> excelJson = sheetUtil.convertObjects2JsonString();
+				Map<String,Object> excelJson = sheetUtil.convertObjects2JsonString();
 				uploadModel.setExcelJson(excelJson);
 		}
 		return uploadModel;
