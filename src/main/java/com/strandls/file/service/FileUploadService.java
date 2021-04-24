@@ -124,7 +124,7 @@ public class FileUploadService {
 		}
 	}
 
-	private FileUploadModel uploadFile(String source, String directory, String hashKey, String fileName)
+	private FileUploadModel uploadFile(String source, String directory, String hashKey, String fileName, MODULE module)
 			throws IOException {
 
 		FileUploadModel fileUploadModel = new FileUploadModel();
@@ -137,8 +137,8 @@ public class FileUploadService {
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(fileName);
 
-		if (probeContentType == null || !probeContentType.startsWith("image") && !probeContentType.startsWith("audio")
-				&& !probeContentType.startsWith("video")) {
+		boolean allowedContentType = AppUtil.filterFileTypeForModule(probeContentType, module);
+		if (probeContentType == null || !allowedContentType) {
 			fileUploadModel.setError("Invalid file type. Allowed types are image, audio and video");
 			return fileUploadModel;
 		} else {
@@ -420,7 +420,7 @@ public class FileUploadService {
 	/**
 	 * Move Files from My-Uploads
 	 */
-	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr)
+	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr,MODULE module)
 			throws Exception {
 		Map<String, Object> finalPaths = new HashMap<>();
 		BASE_FOLDERS folder = AppUtil.getFolder(folderStr);
@@ -449,7 +449,7 @@ public class FileUploadService {
 						String fileSize = String.valueOf(java.nio.file.Files.size(f.toPath()));
 						String fileName = f.getName();
 						FileUploadModel model = uploadFile(f.getAbsolutePath(), folder.getFolder(),
-								existingHash == null ? hash : existingHash, fileName);
+								existingHash == null ? hash : existingHash, fileName,module);
 						String uri = model.getUri();
 						uri = uri.substring(uri.lastIndexOf(File.separatorChar) + 1);
 						uploadedMetaDataService.saveUploadedFileMetadata(userId, fileName, uri,
@@ -580,7 +580,7 @@ public class FileUploadService {
 					filesWithPath.add(files.get(file));
 				}
 			}
-			Map<String, Object> result = moveFilesFromUploads(userId, filesWithPath, folder.toString());
+			Map<String, Object> result = moveFilesFromUploads(userId, filesWithPath, folder.toString(),module);
 			if (result != null && !result.isEmpty()) {
 				for (Map.Entry<String, Object> file : result.entrySet()) {
 					String fileNameWithPath = file.getKey();

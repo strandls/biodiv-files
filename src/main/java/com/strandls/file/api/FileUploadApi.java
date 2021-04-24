@@ -136,8 +136,13 @@ public class FileUploadApi {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
+			
+			MODULE module = AppUtil.getModule(filesDTO.getModule() != null ? filesDTO.getModule() : null);
+			if (module == null) {
+				return Response.status(Status.BAD_REQUEST).entity("Invalid Module").build();
+			}
 			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(),
-					filesDTO.getFolder());
+					filesDTO.getFolder(),module);
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();

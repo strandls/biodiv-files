@@ -47,9 +47,9 @@ public class SheetUtil {
 					Iterator<Cell> cellsInRow = currentRow.iterator();
 					List<String> Hist = headerList;
 					Map<String, Object> cust = new HashMap<String, Object>();
-					Hist.forEach((item)->{
-						Cell currentCell =cellsInRow.hasNext()? cellsInRow.next():null;
-						cust.put(item, currentCell != null ?cellToObject(currentCell):"");
+					Hist.forEach((item) -> {
+						Cell currentCell = cellsInRow.hasNext() ? cellsInRow.next() : null;
+						cust.put(item, currentCell != null ? cellToObject(currentCell) : "");
 					});
 					observationList.add(cust);
 				}
@@ -67,7 +67,9 @@ public class SheetUtil {
 	private List<String> extractHeaders(Iterator<Cell> cellsInRow) {
 		List<String> headers = new ArrayList<String>();
 		cellsInRow.forEachRemaining((Cell item) -> {
-			headers.add(cleanString(item.getStringCellValue()));
+			if (!item.getStringCellValue().isEmpty()) {
+				headers.add(cleanString(item.getStringCellValue()));
+			}
 		});
 		return headers;
 	}
