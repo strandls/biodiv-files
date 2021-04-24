@@ -27,14 +27,15 @@ public class SheetUtil {
 		this.filePath = filePath;
 	}
 
-	private  Map<String,Object>  readExcelFile(String filePath) {
+	private Map<String, Object> readExcelFile(String filePath) {
 		try {
 			FileInputStream excelFile = new FileInputStream(new File(filePath));
 			XSSFWorkbook workbook = new XSSFWorkbook(excelFile);
 
 			XSSFSheet sheet = workbook.getSheetAt(0);
 			Iterator<Row> rows = sheet.iterator();
-			 Map<String,Object>  observationList = new HashMap<String,Object>();
+			Map<String, Object> observationList = new HashMap<String, Object>();
+			List<Object> rowData = new ArrayList<Object>();
 			List<String> headerList = new ArrayList<String>();
 
 			int rowNumber = 0;
@@ -51,14 +52,15 @@ public class SheetUtil {
 						Cell currentCell = cellsInRow.hasNext() ? cellsInRow.next() : null;
 						cust.put(item, currentCell != null ? cellToObject(currentCell) : "");
 					});
-					observationList.put("rowData",cust);
-					observationList.put("headerData", Hist);
+					rowData.add(cust);
+
 				}
 				rowNumber++;
-			}											
+			}
 			// Close WorkBook
 			workbook.close();
-
+			observationList.put("rowData", rowData);
+			observationList.put("headerData", headerList);
 			return observationList;
 		} catch (IOException e) {
 			throw new RuntimeException("FAIL! -> message = " + e.getMessage());
@@ -114,7 +116,7 @@ public class SheetUtil {
 	 * @param customers
 	 * @param fileName
 	 */
-	public  Map<String,Object>  convertObjects2JsonString() {
+	public Map<String, Object> convertObjects2JsonString() {
 		return readExcelFile(filePath);
 	}
 
