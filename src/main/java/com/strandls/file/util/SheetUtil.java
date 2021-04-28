@@ -15,9 +15,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 public class SheetUtil {
 
 	XSSFWorkbook workbook = null;
@@ -45,15 +42,15 @@ public class SheetUtil {
 					Iterator<Cell> headerRow = currentRow.iterator();
 					headerList = extractHeaders(headerRow);
 				} else {
-					Iterator<Cell> cellsInRow = currentRow.iterator();
 					List<String> Hist = headerList;
 					Map<String, Object> cust = new HashMap<String, Object>();
-					Hist.forEach((item) -> {
-						Cell currentCell = cellsInRow.hasNext() ? cellsInRow.next() : null;
+					int index = 0;
+					for (String item : Hist) {
+						Cell currentCell = currentRow.getCell(index);
 						cust.put(item, currentCell != null ? cellToObject(currentCell) : "");
-					});
+						index++;
+					}
 					rowData.add(cust);
-
 				}
 				rowNumber++;
 			}
