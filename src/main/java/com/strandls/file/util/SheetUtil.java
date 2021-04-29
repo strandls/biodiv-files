@@ -47,7 +47,11 @@ public class SheetUtil {
 					int index = 0;
 					for (String item : Hist) {
 						Cell currentCell = currentRow.getCell(index);
-						cust.put(item, currentCell != null ? cellToObject(currentCell) : "");
+						if (item.matches("observed_on")) {
+							cust.put(item, currentCell != null ? currentCell.getLocalDateTimeCellValue().toString() : "");
+						} else {
+							cust.put(item, currentCell != null ? cellToObject(currentCell) : "");
+						}
 						index++;
 					}
 					rowData.add(cust);
