@@ -116,9 +116,9 @@ public class AppUtil {
 			List<FileHeader> headers = zipFile.getFileHeaders();
 			Iterator<FileHeader> it = headers.iterator();
 			Tika tika = new Tika();
-			String hash = String.join("", "ibpmu-", UUID.randomUUID().toString());
 			System.out.println("==================Bulk Upload for Unzip started==================");
 			while (it.hasNext()) {
+				String hash = String.join("", "ibpmu-", UUID.randomUUID().toString());
 				String destinationPath = storageBasePath + File.separatorChar + hash + File.separatorChar;
 				FileHeader header = it.next();
 				final String contentType = tika.detect(header.getFileName());
