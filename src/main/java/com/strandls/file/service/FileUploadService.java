@@ -32,20 +32,19 @@ import org.pac4j.core.profile.CommonProfile;
 
 import com.google.common.io.Files;
 import com.strandls.authentication_utility.util.AuthUtil;
-import com.strandls.file.model.FileMetaData;
 import com.strandls.file.model.FileUploadModel;
 import com.strandls.file.model.MyUpload;
 import com.strandls.file.model.comparator.UploadDateSort;
 import com.strandls.file.util.AppUtil;
-import com.strandls.file.util.AppUtil.MODULE;
-import com.strandls.file.util.ImageUtil;
 import com.strandls.file.util.AppUtil.BASE_FOLDERS;
+import com.strandls.file.util.AppUtil.MODULE;
+import com.strandls.file.util.SheetUtil;
 import com.strandls.file.util.ThumbnailUtil;
 
 public class FileUploadService {
 
 	@Inject
-	private FileMetaDataService fileMetaDataService;
+	private UploadedMetaDataService uploadedMetaDataService;
 
 	String storageBasePath = null;
 	SimpleDateFormat sdf;
@@ -64,6 +63,9 @@ public class FileUploadService {
 		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
 	}
 
+	/**
+	 * Resource Upload
+	 */
 	public FileUploadModel uploadFile(BASE_FOLDERS directory, InputStream inputStream,
 			FormDataContentDisposition fileDetails, HttpServletRequest request, String nestedFolder, String hashKey,
 			boolean resourceFolder) throws IOException {
@@ -93,12 +95,8 @@ public class FileUploadService {
 			fileUploadModel.setType(probeContentType);
 		}
 
-		FileMetaData fileMetaData = new FileMetaData();
-		fileMetaData.setFileName(fileName);
-		fileMetaData.setPath(resourceFolder ? folderName + File.separatorChar + "resources": folderName);
-		fileMetaDataService.save(fileMetaData);
-
-		String generatedFileName = fileMetaData.getId() + "." + fileExtension;
+		String tempFileName = UUID.randomUUID().toString().replaceAll("-", "");
+		String generatedFileName = tempFileName + "." + fileExtension;
 
 		String filePath = dirPath + File.separatorChar + generatedFileName;
 		System.out.println("\n\n FileLocation: " + filePath + " *****\n\n");
@@ -111,7 +109,7 @@ public class FileUploadService {
 		fileUploadModel.setUploaded(uploaded);
 
 		if (probeContentType.startsWith("image")) {
-			Thread thread = new Thread(new ThumbnailUtil(filePath, dirPath, fileMetaData.getId(), fileExtension));
+			Thread thread = new Thread(new ThumbnailUtil(filePath, dirPath, tempFileName, fileExtension));
 			thread.start();
 		}
 
@@ -127,7 +125,7 @@ public class FileUploadService {
 		}
 	}
 
-	private FileUploadModel uploadFile(String source, String directory, String hashKey, String fileName)
+	private FileUploadModel uploadFile(String source, String directory, String hashKey, String fileName, MODULE module)
 			throws IOException {
 
 		FileUploadModel fileUploadModel = new FileUploadModel();
@@ -139,7 +137,14 @@ public class FileUploadService {
 
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(fileName);
-		fileUploadModel.setType(probeContentType);
+
+		boolean allowedContentType = AppUtil.filterFileTypeForModule(probeContentType, module);
+		if (probeContentType == null || !allowedContentType) {
+			fileUploadModel.setError("Invalid file type. Allowed types are image, audio and video");
+			return fileUploadModel;
+		} else {
+			fileUploadModel.setType(probeContentType);
+		}
 
 		if ("".equals(hashKey)) {
 			File dir = new File(dirPath);
@@ -150,12 +155,8 @@ public class FileUploadService {
 			}
 		}
 
-		FileMetaData fileMetaData = new FileMetaData();
-		fileMetaData.setFileName(fileName);
-		fileMetaData.setPath(folderName);
-		fileMetaDataService.save(fileMetaData);
-
-		String generatedFileName = fileMetaData.getId() + "." + fileExtension;
+		String tempFileName = UUID.randomUUID().toString().replaceAll("-", "");
+		String generatedFileName = tempFileName + "." + fileExtension;
 
 		String filePath = dirPath + File.separatorChar + generatedFileName;
 		File destFile = new File(filePath);
@@ -169,7 +170,7 @@ public class FileUploadService {
 		fileUploadModel.setUploaded(uploaded);
 
 		if (probeContentType.startsWith("image")) {
-			Thread thread = new Thread(new ThumbnailUtil(filePath, dirPath, fileMetaData.getId(), fileExtension));
+			Thread thread = new Thread(new ThumbnailUtil(filePath, dirPath, tempFileName, fileExtension));
 			thread.start();
 		}
 
@@ -185,6 +186,9 @@ public class FileUploadService {
 		}
 	}
 
+	/**
+	 * Upload File to My-Uploads
+	 */
 	public MyUpload saveFile(InputStream is, MODULE module, ContentDisposition contentDisposition, String hash,
 							 Long userId) throws Exception {
 		String dir = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
@@ -197,7 +201,7 @@ public class FileUploadService {
 		String fileName = dir + File.separatorChar + contentDisposition.getFileName();
 		File file = new File(fileName);
 		if (file.getCanonicalPath().startsWith(dir) && file.getCanonicalFile().exists()) {
-			return getExistingFileData(file);
+			return getExistingFileData(file,module);
 		}
 		String probeContentType = tika.detect(fileName);
 		boolean allowedContentType = AppUtil.filterFileTypeForModule(probeContentType, module);
@@ -246,6 +250,11 @@ public class FileUploadService {
 						}
 					}
 				}
+			} else if (allowedContentType && module == MODULE.DATASETS) {
+				SheetUtil sheetUtil = new SheetUtil(file.getAbsolutePath());
+				 Map<String,Object> excelJson = sheetUtil.convertObjects2JsonString();
+				uploadModel.setExcelJson(excelJson);
+
 			}
 			attributes = java.nio.file.Files.readAttributes(Paths.get(file.toURI()), BasicFileAttributes.class);
 			Date uploadedDate = new Date(attributes.creationTime().toMillis());
@@ -257,6 +266,9 @@ public class FileUploadService {
 		return uploadModel;
 	}
 
+	/**
+	 * List Files in My-Uploads
+	 */
 	public List<MyUpload> getFilesFromUploads(Long userId, MODULE module) throws Exception {
 		List<MyUpload> files = new ArrayList<>();
 		String userDir = BASE_FOLDERS.myUploads.getFolder() + File.separatorChar + userId;
@@ -336,7 +348,7 @@ public class FileUploadService {
 		return files;
 	}
 
-	private MyUpload getExistingFileData(File tmpFile) throws Exception {
+	private MyUpload getExistingFileData(File tmpFile, MODULE module) throws Exception {
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(tmpFile.getName());
 		MyUpload uploadModel = new MyUpload();
@@ -386,9 +398,17 @@ public class FileUploadService {
 				File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar + tmpFile.getName());
 		uploadModel.setType(probeContentType);
 		uploadModel.setFileSize(String.valueOf(tmpFile.length()));
+		 if (module == MODULE.DATASETS) {
+				SheetUtil sheetUtil = new SheetUtil(tmpFile.getAbsolutePath());
+				Map<String,Object> excelJson = sheetUtil.convertObjects2JsonString();
+				uploadModel.setExcelJson(excelJson);
+		}
 		return uploadModel;
 	}
 
+	/**
+	 * Delete Files from My-Uploads
+	 */
 	public boolean deleteFilesFromMyUploads(Long userId, String fileName) throws IOException {
 		boolean isDeleted = false;
 		String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
@@ -401,7 +421,10 @@ public class FileUploadService {
 		return isDeleted;
 	}
 
-	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr)
+	/**
+	 * Move Files from My-Uploads
+	 */
+	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr,MODULE module)
 			throws Exception {
 		Map<String, Object> finalPaths = new HashMap<>();
 		BASE_FOLDERS folder = AppUtil.getFolder(folderStr);
@@ -411,8 +434,8 @@ public class FileUploadService {
 		try {
 			String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder()
 					+ File.separatorChar + userId;
-			String folderBasePath = storageBasePath + File.separatorChar + folder.getFolder()
-			+ File.separatorChar + userId;
+			String folderBasePath = storageBasePath + File.separatorChar + folder.getFolder() + File.separatorChar
+					+ userId;
 			String hash = UUID.randomUUID().toString();
 			String existingHash = fileList.stream().filter(path -> !path.startsWith(File.separatorChar + "ibpmu-"))
 					.findAny().orElse(null);
@@ -426,24 +449,28 @@ public class FileUploadService {
 						existingHash = existingHash.substring(1, existingHash.lastIndexOf(File.separatorChar));
 					}
 					File f = new File(basePath + file);
-					String size = String.valueOf(java.nio.file.Files.size(f.toPath()));
+					System.out.println("Folder base path" + f.exists());
 					if (f.exists()) {
+						String fileSize = String.valueOf(java.nio.file.Files.size(f.toPath()));
 						String fileName = f.getName();
 						FileUploadModel model = uploadFile(f.getAbsolutePath(), folder.getFolder(),
-								existingHash == null ? hash : existingHash, fileName);
-						if (model.getError() == null) {
-							Map<String, String> fileAttributes = new HashMap<String, String>();
-							fileAttributes.put("name", model.getUri()); // file name with hash
-							fileAttributes.put("mimeType", tika.detect(fileName));
-							fileAttributes.put("size", size);
-							finalPaths.put(file, fileAttributes);
-							f.getParentFile().delete();
-						}
+								existingHash == null ? hash : existingHash, fileName,module);
+						String uri = model.getUri();
+						uri = uri.substring(uri.lastIndexOf(File.separatorChar) + 1);
+						uploadedMetaDataService.saveUploadedFileMetadata(userId, fileName, uri,
+								AppUtil.FILE_UPLOAD_TYPES.MOVE.toString());
+						Map<String, String> fileAttributes = new HashMap<>();
+						fileAttributes.put("name", model.getUri());
+						fileAttributes.put("mimeType", tika.detect(fileName));
+						fileAttributes.put("size", fileSize);
+						finalPaths.put(file, fileAttributes);
+						f.getParentFile().delete();
 					}
 				} else if (folderFile.exists()) {
 					String folderFileSize = String.valueOf(java.nio.file.Files.size(folderFile.toPath()));
-					Map<String, String> fileAttributes = new HashMap<String, String>();
-					fileAttributes.put("name", file); // file name with hash
+					FileUploadModel model = new FileUploadModel();
+					Map<String, String> fileAttributes = new HashMap<>();
+					fileAttributes.put("name", model.getUri());
 					fileAttributes.put("mimeType", tika.detect(folderFile));
 					fileAttributes.put("size", folderFileSize);
 					finalPaths.put(file, fileAttributes);
@@ -489,7 +516,8 @@ public class FileUploadService {
 			Long userId = Long.parseLong(profile.getId());
 			Tika tika = new Tika();
 			String hash = String.join("", "ibpmu-", UUID.randomUUID().toString());
-			String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads + File.separatorChar + userId;
+			String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads + File.separatorChar
+					+ userId;
 			String tempPath = storageBasePath + File.separatorChar + BASE_FOLDERS.temp + File.separatorChar + userId;
 			for (FormDataBodyPart file : files) {
 				String fileName = file.getContentDisposition().getFileName();
@@ -500,13 +528,16 @@ public class FileUploadService {
 					boolean isZipCreated = writeToFile(file.getEntityAs(InputStream.class), zipPath);
 					f = new File(zipPath);
 					if (isZipCreated) {
-						List<MyUpload> extractedFiles = AppUtil.parseZipFiles(myUploadsPath, f.getCanonicalPath(), module);
+						List<MyUpload> extractedFiles = AppUtil.parseZipFiles(myUploadsPath, f.getCanonicalPath(),
+								module);
 						savedFiles.addAll(extractedFiles);
 					}
 
 				} else {
-					f = new File(myUploadsPath + File.separatorChar + hash + File.separatorChar + file.getFormDataContentDisposition().getFileName());
-					savedFiles.add(saveFile(file.getEntityAs(InputStream.class), module, file.getContentDisposition(), hash, userId));
+					f = new File(myUploadsPath + File.separatorChar + hash + File.separatorChar
+							+ file.getFormDataContentDisposition().getFileName());
+					savedFiles.add(saveFile(file.getEntityAs(InputStream.class), module, file.getContentDisposition(),
+							hash, userId));
 				}
 				boolean deleted = f.delete() && f.getParentFile().delete();
 			}
@@ -516,31 +547,37 @@ public class FileUploadService {
 		return savedFiles;
 	}
 
-	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, BASE_FOLDERS folder, MODULE module) {
+	public Map<String, String> getAllFilePathsByUser(Long userId, BASE_FOLDERS folder, MODULE module)
+			throws IOException {
+		Map<String, String> filesMap = new HashMap<>();
+
+		String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
+				+ userId;
+		Tika tika = new Tika();
+
+		// stream the user directory and prepare a map of file and file path
+		java.nio.file.Files.find(java.nio.file.Paths.get(basePath), Integer.MAX_VALUE, (f, bfa) -> {
+			String type = tika.detect(f.getFileName().toString());
+			return java.nio.file.Files.isRegularFile(f) && AppUtil.filterFileTypeForModule(type, module);
+		}).forEach(file -> {
+			File f = file.toFile();
+			try {
+				filesMap.put(f.getName(), f.getCanonicalPath().substring(basePath.length()));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
+
+		return filesMap;
+
+	}
+
+	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, BASE_FOLDERS folder,
+			MODULE module) {
 		Map<String, Object> finalPaths = new HashMap<>();
 		try {
-			String basePath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder()
-					+ File.separatorChar + userId;
 			Map<String, String> files = new HashMap<>();
-			Tika tika = new Tika();
-
-			// stream the user directory and prepare a map of file and file path
-			java.nio.file.Files
-					.find(java.nio.file.Paths.get(basePath),
-							Integer.MAX_VALUE,
-							(f, bfa) -> {
-								String type = tika.detect(f.getFileName().toString());
-								return java.nio.file.Files.isRegularFile(f) && AppUtil.filterFileTypeForModule(type, module);
-							})
-					.forEach(file -> {
-						File f = file.toFile();
-						try {
-							files.put(f.getName(), f.getCanonicalPath().substring(basePath.length()));
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					});
-
+			files = getAllFilePathsByUser(userId, folder, module);
 			System.out.println("\n\n***** All files in User " + userId + ": " + files + " *****\n\n");
 
 			List<String> filesWithPath = new ArrayList<>();
@@ -549,11 +586,12 @@ public class FileUploadService {
 					filesWithPath.add(files.get(file));
 				}
 			}
-			Map<String, Object> result = moveFilesFromUploads(userId, filesWithPath, folder.toString());
+			Map<String, Object> result = moveFilesFromUploads(userId, filesWithPath, folder.toString(),module);
 			if (result != null && !result.isEmpty()) {
 				for (Map.Entry<String, Object> file : result.entrySet()) {
 					String fileNameWithPath = file.getKey();
-					finalPaths.put(fileNameWithPath.substring(fileNameWithPath.lastIndexOf(File.separatorChar) + 1), file.getValue());
+					finalPaths.put(fileNameWithPath.substring(fileNameWithPath.lastIndexOf(File.separatorChar) + 1),
+							file.getValue());
 				}
 			}
 		} catch (Exception ex) {

@@ -26,14 +26,13 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.rabbitmq.client.Channel;
 import com.strandls.file.RabbitMqConnection;
-import com.strandls.file.util.ImageUtil;
+import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.PropertyFileUtil;
 import com.strandls.mail_utility.model.EnumModel.FIELDS;
 import com.strandls.mail_utility.model.EnumModel.INFO_FIELDS;
@@ -45,13 +44,13 @@ import com.strandls.mail_utility.util.JsonUtil;
 public class QuartzJob implements Job {
 
 	private static final Logger logger = LoggerFactory.getLogger(QuartzJob.class);
-	
+
 	private static final String DELIMITER = "@@@";
-	private static final String DATE_FOMRAT = "dd/MM/yyyy";
+	private static final String DATE_FORMAT = "dd/MM/yyyy";
 	private static final String BASE_PATH;
 	private static final long MAIL_THRESHOLD;
 	private static final long DELETE_THRESHOLD;
-	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FOMRAT);
+	private static final SimpleDateFormat dateFormatter = new SimpleDateFormat(DATE_FORMAT);
 
 	static {
 		Properties props = PropertyFileUtil.fetchProperty("config.properties");
@@ -59,7 +58,7 @@ public class QuartzJob implements Job {
 		MAIL_THRESHOLD = Long.parseLong(props.getProperty("scheduler_mail_trigger"));
 		DELETE_THRESHOLD = Long.parseLong(props.getProperty("scheduler_delete_trigger"));
 	}
-	
+
 	@Inject
 	SessionFactory sessionFactory;
 
@@ -67,7 +66,7 @@ public class QuartzJob implements Job {
 	Channel channel;
 
 	@Override
-	public void execute(JobExecutionContext context) throws JobExecutionException {
+	public void execute(JobExecutionContext context) {
 		Session session = null;
 		try {
 			System.out.println("\n\n***** SCHEDULER STARTS *****\n\n");
@@ -81,16 +80,13 @@ public class QuartzJob implements Job {
 					continue;
 				}
 				String user = getUserInfo(session, Long.parseLong(folder));
-				if (user == null || user.contains("@ibp.org")) {
+				if (user == null) {
 					continue;
 				}
 				List<String> files = Files.walk(Paths.get(BASE_PATH + File.separatorChar + folder))
 						.filter(Files::isRegularFile).filter(f -> {
 							long noOfDays = getDifference(getFileCreationDate(f));
-							if (noOfDays >= MAIL_THRESHOLD) {
-								return true;
-							}
-							return false;
+							return noOfDays >= MAIL_THRESHOLD;
 						}).map(f -> {
 							File tmp = f.toFile();
 							long noOfDays = getDifference(getFileCreationDate(f));
@@ -104,13 +100,12 @@ public class QuartzJob implements Job {
 					Map<String, Object> data = new HashMap<>();
 					data.put(FIELDS.TYPE.getAction(), MAIL_TYPE.MY_UPLOADS_DELETE_MAIL.getAction());
 					data.put(FIELDS.TO.getAction(), new String[] { userData[0] });
-					data.put(FIELDS.SUBSCRIPTION.getAction(), new Boolean(userData[2]));
+					data.put(FIELDS.SUBSCRIPTION.getAction(), Boolean.valueOf(userData[2]));
 					Map<String, Object> model = new HashMap<>();
 					model.put(MY_UPLOADS_DELETE_MAIL.USERNAME.getAction(), userData[1]);
 					model.put(MY_UPLOADS_DELETE_MAIL.FROM_DATE.getAction(), getFormattedDate(new Date(), -18));
 					model.put(MY_UPLOADS_DELETE_MAIL.TO_DATE.getAction(), getFormattedDate(new Date(), 2));
 					data.put(FIELDS.DATA.getAction(), JsonUtil.unflattenJSON(model));
-					
 
 					Map<String, Object> mailData = new HashMap<String, Object>();
 					mailData.put(INFO_FIELDS.TYPE.getAction(), MAIL_TYPE.MY_UPLOADS_DELETE_MAIL.getAction());
@@ -143,7 +138,9 @@ public class QuartzJob implements Job {
 	public static String getUserInfo(Session session, Long id) {
 		String sql = "select email, username, send_notification from suser where id = ?";
 		Object[] userData = (Object[]) session.createNativeQuery(sql).setParameter(1, id).getSingleResult();
-		return userData != null && userData.length == 3 ? String.join(DELIMITER, userData[0].toString(), userData[1].toString(), userData[2].toString()) : null;
+		return userData != null && userData.length == 3
+				? String.join(DELIMITER, userData[0].toString(), userData[1].toString(), userData[2].toString())
+				: null;
 	}
 
 	public static LocalDate getFileCreationDate(Path f) {
@@ -154,11 +151,11 @@ public class QuartzJob implements Job {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		LocalDate creation = Instant.ofEpochMilli(attributes.creationTime().toMillis())
-				.atZone(ZoneId.systemDefault()).toLocalDate();
+		LocalDate creation = Instant.ofEpochMilli(attributes.creationTime().toMillis()).atZone(ZoneId.systemDefault())
+				.toLocalDate();
 		return creation;
 	}
-	
+
 	public static LocalDateTime getFileCreationDateTime(Path f) {
 		File tmp = f.toFile();
 		BasicFileAttributes attributes = null;
@@ -175,7 +172,7 @@ public class QuartzJob implements Job {
 	public static long getDifference(LocalDate date) {
 		return ChronoUnit.DAYS.between(date, LocalDate.now());
 	}
-	
+
 	public static long getDifferenceMinutes(LocalDateTime date) {
 		return ChronoUnit.MINUTES.between(date, LocalDateTime.now());
 	}
@@ -186,7 +183,7 @@ public class QuartzJob implements Job {
 		c.add(Calendar.DATE, offset);
 		return dateFormatter.format(c.getTime());
 	}
-	
+
 	public static boolean isNumeric(String folder) {
 		if (folder == null || folder.isEmpty()) {
 			return false;

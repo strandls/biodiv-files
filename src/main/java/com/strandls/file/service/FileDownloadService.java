@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.io.Files;
 import com.strandls.file.ApiContants;
 import com.strandls.file.util.AppUtil;
+import com.strandls.file.util.AppUtil.BASE_FOLDERS;
 import com.strandls.file.util.ImageUtil;
 import com.strandls.file.util.AppUtil.BASE_FOLDERS;
 import com.strandls.file.util.ThumbnailUtil;
@@ -205,10 +206,10 @@ public class FileDownloadService {
 
 			String extension = name.substring(name.indexOf(".") + 1);
 			String thumbnailFolder = storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.getFolder()
-			+ file.getParentFile().getAbsolutePath().substring(storageBasePath.length());
+					+ file.getParentFile().getAbsolutePath().substring(storageBasePath.length());
 			String command = null;
-			command = AppUtil.generateCommand(file.getAbsolutePath(), thumbnailFolder,
-					width, height, preserve ? extension : format, null, fit);
+			command = AppUtil.generateCommand(file.getAbsolutePath(), thumbnailFolder, width, height,
+					preserve ? extension : format, null, fit);
 			File thumbnailFile = AppUtil.getResizedImage(command);
 			File resizedFile;
 			Tika tika = new Tika();
@@ -290,7 +291,8 @@ public class FileDownloadService {
 		}
 	}
 
-	public Response getLogo(HttpServletRequest req, String directory, String fileName, Integer width, Integer height) throws Exception {
+	public Response getLogo(HttpServletRequest req, String directory, String fileName, Integer width, Integer height)
+			throws Exception {
 		try {
 
 			String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
@@ -307,10 +309,9 @@ public class FileDownloadService {
 
 			String extension = name.substring(name.indexOf(".") + 1);
 			String thumbnailFolder = storageBasePath + File.separatorChar + BASE_FOLDERS.thumbnails.getFolder()
-			+ file.getParentFile().getAbsolutePath().substring(storageBasePath.length());
+					+ file.getParentFile().getAbsolutePath().substring(storageBasePath.length());
 			String command = null;
-			command = AppUtil.generateCommandLogo(file.getAbsolutePath(), thumbnailFolder,
-					width, height, extension);
+			command = AppUtil.generateCommandLogo(file.getAbsolutePath(), thumbnailFolder, width, height, extension);
 			System.out.println("\n\n***** Command: " + command + " *****\n\n");
 			File thumbnailFile = AppUtil.getResizedImage(command);
 			File resizedFile;
@@ -343,9 +344,8 @@ public class FileDownloadService {
 					out.close();
 				}
 			};
-			return Response.ok(sout)
-					.type(contentType)
-					.header("Content-Length", contentLength).cacheControl(AppUtil.getCacheControl()).build();
+			return Response.ok(sout).type(contentType).header("Content-Length", contentLength)
+					.cacheControl(AppUtil.getCacheControl()).build();
 		} catch (FileNotFoundException fe) {
 			fe.printStackTrace();
 			logger.error(fe.getMessage());

@@ -5,7 +5,16 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.core.CacheControl;
@@ -24,14 +33,10 @@ public class AppUtil {
 
 	private static final List<String> PREVENTIVE_TOKENS = Arrays.asList("&", "|", "`", "$", ";");
 	private static final int QUALITY = 90;
-	
-	private static final Logger logger = LoggerFactory.getLogger(AppUtil.class);
-	
-	public static final Map<MODULE, List<String>> ALLOWED_CONTENT_TYPES = new HashMap<MODULE, List<String>>();
 
-	public static enum MODULE {
-		OBSERVATION, SPECIES, DOCUMENT, DATASETS
-	};
+	private static final Logger logger = LoggerFactory.getLogger(AppUtil.class);
+
+	public static final Map<MODULE, List<String>> ALLOWED_CONTENT_TYPES = new HashMap<>();
 
 	static {
 		ALLOWED_CONTENT_TYPES.put(MODULE.OBSERVATION, Arrays.asList("image", "video", "audio"));
@@ -40,18 +45,19 @@ public class AppUtil {
 		ALLOWED_CONTENT_TYPES.put(MODULE.DATASETS, Arrays.asList("vnd.ms-excel", "spreadsheetml.sheet", "csv"));
 	};
 
+	public enum MODULE {
+		OBSERVATION, SPECIES, DOCUMENT, DATASETS
+	}
+
+	public enum FILE_UPLOAD_TYPES {
+		UPLOAD, MOVE
+	}
+
 	public static enum BASE_FOLDERS {
-		observations("observations"),
-		img("img"),
-		species("species"),
-		userGroups("userGroups"),
-		users("users"),
-		traits("traits"),
-		myUploads("myUploads"),
-		thumbnails("thumbnails"),
-		landscape("landscape"),
-		documents(String.join(String.valueOf(File.separatorChar), "content", "documents")),
-		temp("temp"),
+		observations("observations"), img("img"), species("species"), userGroups("userGroups"), users("users"),
+		pages("pages"), traits("traits"), myUploads("myUploads"), thumbnails("thumbnails"), landscape("landscape"),
+		documents(String.join(String.valueOf(File.separatorChar), "content", "documents")), temp("temp"),
+		datatables(String.join(String.valueOf(File.separatorChar), "content", "dataTables")),
 		datasets(String.join(String.valueOf(File.separatorChar), "content", "datasets"));
 
 		private String folder;
@@ -70,7 +76,7 @@ public class AppUtil {
 		if (directory == null) {
 			return hasFolder;
 		}
-		for (BASE_FOLDERS folders: BASE_FOLDERS.values()) {
+		for (BASE_FOLDERS folders : BASE_FOLDERS.values()) {
 			if (folders.name().equalsIgnoreCase(directory)) {
 				hasFolder = true;
 				break;
@@ -83,7 +89,7 @@ public class AppUtil {
 		if (directory == null || directory.isEmpty()) {
 			return null;
 		}
-		for (BASE_FOLDERS folders: BASE_FOLDERS.values()) {
+		for (BASE_FOLDERS folders : BASE_FOLDERS.values()) {
 			if (folders.name().equalsIgnoreCase(directory)) {
 				return folders;
 			}
@@ -110,14 +116,15 @@ public class AppUtil {
 			List<FileHeader> headers = zipFile.getFileHeaders();
 			Iterator<FileHeader> it = headers.iterator();
 			Tika tika = new Tika();
+			System.out.println("==================Bulk Upload for Unzip started==================");
 			while (it.hasNext()) {
 				String hash = String.join("", "ibpmu-", UUID.randomUUID().toString());
-				String destinationPath = storageBasePath + File.separatorChar + hash
-						+ File.separatorChar;
+				String destinationPath = storageBasePath + File.separatorChar + hash + File.separatorChar;
 				FileHeader header = it.next();
 				final String contentType = tika.detect(header.getFileName());
-				boolean allowedType = ALLOWED_CONTENT_TYPES.get(module).stream().allMatch((type) -> contentType.toLowerCase().startsWith(type)
-						|| contentType.toLowerCase().endsWith(type));
+				boolean allowedType = ALLOWED_CONTENT_TYPES.get(module).stream()
+						.anyMatch((type) -> contentType.toLowerCase().startsWith(type)
+								|| contentType.toLowerCase().endsWith(type));
 				if (!allowedType) {
 					continue;
 				}
@@ -131,6 +138,7 @@ public class AppUtil {
 				upload.setHashKey(hash);
 				files.add(upload);
 			}
+			System.out.println("=====================Completed UnZip bulk Uploads=================");
 		} catch (ZipException ex) {
 			logger.error(ex.getMessage());
 		} catch (Exception ex) {
@@ -138,7 +146,7 @@ public class AppUtil {
 		}
 		return files;
 	}
-	
+
 	public static boolean filterFileTypeForModule(String contentType, MODULE module) {
 		boolean addToList = false;
 		if (contentType == null) {
@@ -148,6 +156,13 @@ public class AppUtil {
 			return contentType.toLowerCase().startsWith(type) || contentType.toLowerCase().endsWith(type);
 		});
 		return addToList;
+	}
+
+	public static boolean filterFileByName(String filename, List<String> fileList) {
+		if (fileList.size() > 1) {
+			return true;
+		}
+		return filename.contains(fileList.get(0));
 	}
 
 	public static CacheControl getCacheControl() {
