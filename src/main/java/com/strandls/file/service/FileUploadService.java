@@ -1,6 +1,7 @@
 package com.strandls.file.service;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,8 +24,9 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
+import org.apache.commons.compress.archivers.sevenz.SevenZFile;
 import org.apache.tika.Tika;
-import org.glassfish.jersey.media.multipart.ContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.pac4j.core.profile.CommonProfile;
@@ -187,7 +189,7 @@ public class FileUploadService {
 	/**
 	 * Upload File to My-Uploads
 	 */
-	public MyUpload saveFile(InputStream is, MODULE module, ContentDisposition contentDisposition, String hash,
+	public MyUpload saveFile(InputStream is, MODULE module, String contentFileName, String hash,
 			Long userId) throws Exception {
 		String dir = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
 				+ userId + File.separatorChar + hash;
@@ -196,7 +198,7 @@ public class FileUploadService {
 			dirFile.mkdirs();
 		}
 		Tika tika = new Tika();
-		String fileName = dir + File.separatorChar + contentDisposition.getFileName();
+		String fileName = dir + File.separatorChar + contentFileName;
 		File file = new File(fileName);
 		if (file.getCanonicalPath().startsWith(dir) && file.getCanonicalFile().exists()) {
 			return getExistingFileData(file);
@@ -465,6 +467,61 @@ public class FileUploadService {
 		return finalPaths;
 	}
 
+	public List<MyUpload> moveFilesToMyUploads(Long userId, MODULE module, String sourceDir) throws Exception {
+		List<MyUpload> finalPaths = new ArrayList<MyUpload>();
+		File f = new File(sourceDir);
+		File[] fileList = f.listFiles();
+		Tika tika = new Tika();
+		if (!f.exists() && fileList.length <= 0) {
+			throw new Exception("Specified folder is empty or Invalid");
+		}
+		for (File file : fileList) {
+			String probeContentType = tika.detect(file);
+			if (probeContentType.contains("7z")) {
+				List<File> extractedFiles = extract7ZipFile(file, sourceDir);
+				for (File extFile : extractedFiles) {
+					boolean allowedContentType = AppUtil.filterFileTypeForModule(tika.detect(extFile), module);
+					if (!allowedContentType) {
+						extractedFiles.forEach((item) -> {
+							item.delete();
+						});
+						throw new Exception("Invalid file type. Allowed types are "
+								+ String.join(", ", AppUtil.ALLOWED_CONTENT_TYPES.get(module)));
+					}
+					InputStream targetStream = new FileInputStream(extFile);
+					String hash = UUID.randomUUID().toString();
+					
+					MyUpload myUploads = saveFile(targetStream, module, extFile.getName(), hash, userId);
+					finalPaths.add(myUploads);
+					extFile.delete();
+
+				}
+
+			}
+		}
+
+		return finalPaths;
+	}
+
+	private List<File> extract7ZipFile(File file, String basePath) {
+
+		List<File> extractFileList = new ArrayList<File>();
+		try (SevenZFile sevenZFile = new SevenZFile(file)) {
+			SevenZArchiveEntry entry;
+			while ((entry = sevenZFile.getNextEntry()) != null) {
+				File outFile = new File(basePath + entry.getName());
+				byte[] content = new byte[(int) entry.getSize()];
+				sevenZFile.read(content);
+				Files.write(content, outFile);
+				extractFileList.add(outFile);
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return extractFileList;
+	}
+
 	private boolean writeToFile(InputStream inputStream, String fileLocation) {
 		try {
 			System.out.println("\n\n FileLocation: " + fileLocation + " *****\n\n");
@@ -518,7 +575,7 @@ public class FileUploadService {
 				} else {
 					f = new File(myUploadsPath + File.separatorChar + hash + File.separatorChar
 							+ file.getFormDataContentDisposition().getFileName());
-					savedFiles.add(saveFile(file.getEntityAs(InputStream.class), module, file.getContentDisposition(),
+					savedFiles.add(saveFile(file.getEntityAs(InputStream.class), module, file.getFormDataContentDisposition().getFileName(),
 							hash, userId));
 				}
 				boolean deleted = f.delete() && f.getParentFile().delete();
