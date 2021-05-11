@@ -61,7 +61,7 @@ public class FileUploadApi {
 		if (inputStream == null) {
 			return Response.status(Status.BAD_REQUEST).entity("Input upload  Stream required").build();
 		}
-		
+
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
@@ -130,13 +130,13 @@ public class FileUploadApi {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			
+
 			MODULE module = AppUtil.getModule(filesDTO.getModule() != null ? filesDTO.getModule() : null);
 			if (module == null) {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid Module").build();
 			}
 			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(),
-					filesDTO.getFolder(),module);
+					filesDTO.getFolder(), module);
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
@@ -221,8 +221,6 @@ public class FileUploadApi {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}
-	
-	
 
 	@POST
 	@Path(ApiContants.BULK + ApiContants.FILES_PATH)
@@ -232,7 +230,7 @@ public class FileUploadApi {
 	@ApiOperation(value = "Provides cononical hash map list of all files from myUploads for a given userId and Module ", notes = "Returns uploaded file data", response = Map.class)
 	public Response getAllFilePathsByUser(@Context HttpServletRequest request,
 			@ApiParam("filesDTO") FilesDTO filesDTO) {
-		
+
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
@@ -244,15 +242,13 @@ public class FileUploadApi {
 			if (module == null) {
 				throw new Exception("Invalid module");
 			}
-			Map<String, String> files = fileUploadService.getAllFilePathsByUser(userId, folder,
-					module);
+			Map<String, String> files = fileUploadService.getAllFilePathsByUser(userId, folder, module);
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
-		
+
 	}
-	
 
 	@POST
 	@Path(ApiContants.BULK + ApiContants.MOVE_FILES)
