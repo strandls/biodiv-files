@@ -39,6 +39,7 @@ import com.strandls.file.model.comparator.UploadDateSort;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.AppUtil.BASE_FOLDERS;
 import com.strandls.file.util.AppUtil.MODULE;
+import com.strandls.file.util.CompressedFileUploaderThread;
 import com.strandls.file.util.ThumbnailUtil;
 
 public class FileUploadService {
@@ -467,60 +468,21 @@ public class FileUploadService {
 		return finalPaths;
 	}
 
-	public List<MyUpload> moveFilesToMyUploads(Long userId, MODULE module, String sourceDir) throws Exception {
-		List<MyUpload> finalPaths = new ArrayList<MyUpload>();
+	public  void moveFilesToMyUploads(Long userId, MODULE module, String sourceDir) throws Exception {
 		File f = new File(sourceDir);
 		File[] fileList = f.listFiles();
-		Tika tika = new Tika();
+		String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads + File.separatorChar;
 		if (!f.exists() && fileList.length <= 0) {
 			throw new Exception("Specified folder is empty or Invalid");
 		}
 		for (File file : fileList) {
-			String probeContentType = tika.detect(file);
-			if (probeContentType.contains("7z")) {
-				List<File> extractedFiles = extract7ZipFile(file, sourceDir);
-				for (File extFile : extractedFiles) {
-					boolean allowedContentType = AppUtil.filterFileTypeForModule(tika.detect(extFile), module);
-					if (!allowedContentType) {
-						extractedFiles.forEach((item) -> {
-							item.delete();
-						});
-						throw new Exception("Invalid file type. Allowed types are "
-								+ String.join(", ", AppUtil.ALLOWED_CONTENT_TYPES.get(module)));
-					}
-					InputStream targetStream = new FileInputStream(extFile);
-					String hash = UUID.randomUUID().toString();
-					
-					MyUpload myUploads = saveFile(targetStream, module, extFile.getName(), hash, userId);
-					finalPaths.add(myUploads);
-					extFile.delete();
-
-				}
-
-			}
+			
+			CompressedFileUploaderThread fileUploadThread = new CompressedFileUploaderThread(userId,file,myUploadsPath, sourceDir,module);
+			Thread thread = new Thread(fileUploadThread);
+			thread.start();
 		}
-
-		return finalPaths;
 	}
 
-	private List<File> extract7ZipFile(File file, String basePath) {
-
-		List<File> extractFileList = new ArrayList<File>();
-		try (SevenZFile sevenZFile = new SevenZFile(file)) {
-			SevenZArchiveEntry entry;
-			while ((entry = sevenZFile.getNextEntry()) != null) {
-				File outFile = new File(basePath + entry.getName());
-				byte[] content = new byte[(int) entry.getSize()];
-				sevenZFile.read(content);
-				Files.write(content, outFile);
-				extractFileList.add(outFile);
-			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return extractFileList;
-	}
 
 	private boolean writeToFile(InputStream inputStream, String fileLocation) {
 		try {

@@ -264,8 +264,8 @@ public class FileUploadApi {
 			if (module == null) {
 				throw new Exception("Invalid module");
 			}
-			List<MyUpload> files = fileUploadService.moveFilesToMyUploads(userId, module, folder);
-			return Response.ok().entity(files).build();
+			fileUploadService.moveFilesToMyUploads(userId, module, folder);
+			return Response.ok().entity("File extraction in progress from" + folder).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
