@@ -1,31 +1,5 @@
 package com.strandls.file.api;
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.pac4j.core.profile.CommonProfile;
-
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.file.ApiContants;
@@ -42,6 +16,26 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.pac4j.core.profile.CommonProfile;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Path(ApiContants.UPLOAD)
 @Api("Upload")
@@ -63,6 +57,11 @@ public class FileUploadApi {
 		if (hash == null || hash.isEmpty()) {
 			return Response.status(Status.BAD_REQUEST).entity("Hash required").build();
 		}
+
+		if (inputStream == null) {
+			return Response.status(Status.BAD_REQUEST).entity("Input upload  Stream required").build();
+		}
+
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
@@ -131,8 +130,13 @@ public class FileUploadApi {
 		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
+
+			MODULE module = AppUtil.getModule(filesDTO.getModule() != null ? filesDTO.getModule() : null);
+			if (module == null) {
+				return Response.status(Status.BAD_REQUEST).entity("Invalid Module").build();
+			}
 			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(),
-					filesDTO.getFolder());
+					filesDTO.getFolder(), module);
 			return Response.ok().entity(files).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
@@ -216,6 +220,34 @@ public class FileUploadApi {
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
+	}
+
+	@POST
+	@Path(ApiContants.BULK + ApiContants.FILES_PATH)
+	@ValidateUser
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Provides cononical hash map list of all files from myUploads for a given userId and Module ", notes = "Returns uploaded file data", response = Map.class)
+	public Response getAllFilePathsByUser(@Context HttpServletRequest request,
+			@ApiParam("filesDTO") FilesDTO filesDTO) {
+
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			BASE_FOLDERS folder = AppUtil.getFolder(filesDTO.getFolder());
+			if (folder == null) {
+				throw new Exception("Invalid folder");
+			}
+			MODULE module = AppUtil.getModule(filesDTO.getModule());
+			if (module == null) {
+				throw new Exception("Invalid module");
+			}
+			Map<String, String> files = fileUploadService.getAllFilePathsByUser(userId, folder, module);
+			return Response.ok().entity(files).build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+
 	}
 
 	@POST

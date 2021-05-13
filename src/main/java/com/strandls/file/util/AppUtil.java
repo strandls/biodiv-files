@@ -57,6 +57,7 @@ public class AppUtil {
 		observations("observations"), img("img"), species("species"), userGroups("userGroups"), users("users"),
 		pages("pages"), traits("traits"), myUploads("myUploads"), thumbnails("thumbnails"), landscape("landscape"),
 		documents(String.join(String.valueOf(File.separatorChar), "content", "documents")), temp("temp"),
+		datatables(String.join(String.valueOf(File.separatorChar), "content", "dataTables")),
 		datasets(String.join(String.valueOf(File.separatorChar), "content", "datasets"));
 
 		private String folder;
@@ -115,13 +116,14 @@ public class AppUtil {
 			List<FileHeader> headers = zipFile.getFileHeaders();
 			Iterator<FileHeader> it = headers.iterator();
 			Tika tika = new Tika();
+			System.out.println("==================Bulk Upload for Unzip started==================");
 			while (it.hasNext()) {
 				String hash = String.join("", "ibpmu-", UUID.randomUUID().toString());
 				String destinationPath = storageBasePath + File.separatorChar + hash + File.separatorChar;
 				FileHeader header = it.next();
 				final String contentType = tika.detect(header.getFileName());
 				boolean allowedType = ALLOWED_CONTENT_TYPES.get(module).stream()
-						.allMatch((type) -> contentType.toLowerCase().startsWith(type)
+						.anyMatch((type) -> contentType.toLowerCase().startsWith(type)
 								|| contentType.toLowerCase().endsWith(type));
 				if (!allowedType) {
 					continue;
@@ -136,6 +138,7 @@ public class AppUtil {
 				upload.setHashKey(hash);
 				files.add(upload);
 			}
+			System.out.println("=====================Completed UnZip bulk Uploads=================");
 		} catch (ZipException ex) {
 			logger.error(ex.getMessage());
 		} catch (Exception ex) {
@@ -153,6 +156,13 @@ public class AppUtil {
 			return contentType.toLowerCase().startsWith(type) || contentType.toLowerCase().endsWith(type);
 		});
 		return addToList;
+	}
+
+	public static boolean filterFileByName(String filename, List<String> fileList) {
+		if (fileList.size() > 1) {
+			return true;
+		}
+		return filename.contains(fileList.get(0));
 	}
 
 	public static CacheControl getCacheControl() {

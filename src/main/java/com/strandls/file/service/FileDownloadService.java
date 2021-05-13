@@ -25,6 +25,7 @@ import com.strandls.file.ApiContants;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.AppUtil.BASE_FOLDERS;
 import com.strandls.file.util.ImageUtil;
+import com.strandls.file.util.AppUtil.BASE_FOLDERS;
 import com.strandls.file.util.ThumbnailUtil;
 
 public class FileDownloadService {
