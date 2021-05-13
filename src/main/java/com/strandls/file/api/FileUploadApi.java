@@ -69,7 +69,8 @@ public class FileUploadApi {
 			if (mod == null) {
 				return Response.status(Status.BAD_REQUEST).entity("Invalid Module").build();
 			}
-			MyUpload uploadModel = fileUploadService.saveFile(inputStream, mod, fileDetails, hash, userId);
+			MyUpload uploadModel = fileUploadService.saveFile(inputStream, mod, fileDetails.getFileName(), hash,
+					userId);
 			return Response.ok().entity(uploadModel).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
@@ -272,6 +273,31 @@ public class FileUploadApi {
 			Map<String, Object> files = fileUploadService.moveFilesFromUploads(userId, filesDTO.getFiles(), folder,
 					module);
 			return Response.ok().entity(files).build();
+		} catch (Exception ex) {
+			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiContants.MOVE_TO_MYUPLOAD)
+	@ValidateUser
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Moves files from specified directory source to myUploads", notes = "Returns uploaded file data", response = Map.class)
+	public Response moveFilesToMyUpload(@Context HttpServletRequest request, @ApiParam("filesDTO") FilesDTO filesDTO) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+			String folder = filesDTO.getFolder();
+			if (folder == null) {
+				throw new Exception("Invalid folder");
+			}
+			MODULE module = AppUtil.getModule(filesDTO.getModule());
+			if (module == null) {
+				throw new Exception("Invalid module");
+			}
+			fileUploadService.moveFilesToMyUploads(userId, module, folder);
+			return Response.ok().entity("File extraction in progress from" + folder).build();
 		} catch (Exception ex) {
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}

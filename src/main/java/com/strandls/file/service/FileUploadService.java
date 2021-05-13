@@ -1,6 +1,7 @@
 package com.strandls.file.service;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,6 +24,8 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
+import org.apache.commons.compress.archivers.sevenz.SevenZFile;
 import org.apache.tika.Tika;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.ContentDisposition;
@@ -38,6 +41,7 @@ import com.strandls.file.model.comparator.UploadDateSort;
 import com.strandls.file.util.AppUtil;
 import com.strandls.file.util.AppUtil.BASE_FOLDERS;
 import com.strandls.file.util.AppUtil.MODULE;
+import com.strandls.file.util.CompressedFileUploaderThread;
 import com.strandls.file.util.SheetUtil;
 import com.strandls.file.util.ThumbnailUtil;
 
@@ -189,8 +193,8 @@ public class FileUploadService {
 	/**
 	 * Upload File to My-Uploads
 	 */
-	public MyUpload saveFile(InputStream is, MODULE module, ContentDisposition contentDisposition, String hash,
-							 Long userId) throws Exception {
+	public MyUpload saveFile(InputStream is, MODULE module, String contentFileName, String hash,
+			Long userId) throws Exception {
 		String dir = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
 				+ userId + File.separatorChar + hash;
 		File dirFile = new File(dir);
@@ -198,7 +202,7 @@ public class FileUploadService {
 			dirFile.mkdirs();
 		}
 		Tika tika = new Tika();
-		String fileName = dir + File.separatorChar + contentDisposition.getFileName();
+		String fileName = dir + File.separatorChar + contentFileName;
 		File file = new File(fileName);
 		if (file.getCanonicalPath().startsWith(dir) && file.getCanonicalFile().exists()) {
 			return getExistingFileData(file,module);
@@ -481,6 +485,22 @@ public class FileUploadService {
 		return finalPaths;
 	}
 
+	public  void moveFilesToMyUploads(Long userId, MODULE module, String sourceDir) throws Exception {
+		File f = new File(sourceDir);
+		File[] fileList = f.listFiles();
+		String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads + File.separatorChar;
+		if (!f.exists() && fileList.length <= 0) {
+			throw new Exception("Specified folder is empty or Invalid");
+		}
+		for (File file : fileList) {
+			
+			CompressedFileUploaderThread fileUploadThread = new CompressedFileUploaderThread(userId,file,myUploadsPath, sourceDir,module);
+			Thread thread = new Thread(fileUploadThread);
+			thread.start();
+		}
+	}
+
+
 	private boolean writeToFile(InputStream inputStream, String fileLocation) {
 		try {
 			System.out.println("\n\n FileLocation: " + fileLocation + " *****\n\n");
@@ -535,7 +555,7 @@ public class FileUploadService {
 				} else {
 					f = new File(myUploadsPath + File.separatorChar + hash + File.separatorChar
 							+ file.getFormDataContentDisposition().getFileName());
-					savedFiles.add(saveFile(file.getEntityAs(InputStream.class), module, file.getContentDisposition(),
+					savedFiles.add(saveFile(file.getEntityAs(InputStream.class), module, file.getFormDataContentDisposition().getFileName(),
 							hash, userId));
 				}
 				boolean deleted = f.delete() && f.getParentFile().delete();
