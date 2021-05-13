@@ -21,5 +21,6 @@ public class ApiContants {
 	public static final String LOGO = "/logo";
 	public static final String RESOURCE_UPLOAD = "/resource-upload";
 	public static final String BULK_UPLOAD = "/bulk-upload";
+	public static final String FILES_PATH = "/files-path";
 	public static final String ICON = "/icon";
 }
