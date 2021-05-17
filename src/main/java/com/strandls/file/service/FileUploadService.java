@@ -152,7 +152,7 @@ public class FileUploadService {
 
 		if ("".equals(hashKey)) {
 			File dir = new File(dirPath);
-				boolean created = dir.mkdirs();
+			boolean created = dir.mkdirs();
 			if (!created) {
 				fileUploadModel.setError("Directory creation failed");
 				return fileUploadModel;
@@ -193,8 +193,8 @@ public class FileUploadService {
 	/**
 	 * Upload File to My-Uploads
 	 */
-	public MyUpload saveFile(InputStream is, MODULE module, String contentFileName, String hash,
-			Long userId) throws Exception {
+	public MyUpload saveFile(InputStream is, MODULE module, String contentFileName, String hash, Long userId)
+			throws Exception {
 		String dir = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads.getFolder() + File.separatorChar
 				+ userId + File.separatorChar + hash;
 		File dirFile = new File(dir);
@@ -205,7 +205,7 @@ public class FileUploadService {
 		String fileName = dir + File.separatorChar + contentFileName;
 		File file = new File(fileName);
 		if (file.getCanonicalPath().startsWith(dir) && file.getCanonicalFile().exists()) {
-			return getExistingFileData(file,module);
+			return getExistingFileData(file, module);
 		}
 		String probeContentType = tika.detect(fileName);
 		boolean allowedContentType = AppUtil.filterFileTypeForModule(probeContentType, module);
@@ -256,7 +256,7 @@ public class FileUploadService {
 				}
 			} else if (allowedContentType && module == MODULE.DATASETS) {
 				SheetUtil sheetUtil = new SheetUtil(file.getAbsolutePath());
-				 Map<String,Object> excelJson = sheetUtil.convertObjects2JsonString();
+				Map<String, Object> excelJson = sheetUtil.convertObjects2JsonString();
 				uploadModel.setExcelJson(excelJson);
 
 			}
@@ -402,10 +402,10 @@ public class FileUploadService {
 				File.separatorChar + tmpFile.getParentFile().getName() + File.separatorChar + tmpFile.getName());
 		uploadModel.setType(probeContentType);
 		uploadModel.setFileSize(String.valueOf(tmpFile.length()));
-		 if (module == MODULE.DATASETS) {
-				SheetUtil sheetUtil = new SheetUtil(tmpFile.getAbsolutePath());
-				Map<String,Object> excelJson = sheetUtil.convertObjects2JsonString();
-				uploadModel.setExcelJson(excelJson);
+		if (module == MODULE.DATASETS) {
+			SheetUtil sheetUtil = new SheetUtil(tmpFile.getAbsolutePath());
+			Map<String, Object> excelJson = sheetUtil.convertObjects2JsonString();
+			uploadModel.setExcelJson(excelJson);
 		}
 		return uploadModel;
 	}
@@ -428,7 +428,7 @@ public class FileUploadService {
 	/**
 	 * Move Files from My-Uploads
 	 */
-	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr,MODULE module)
+	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr, MODULE module)
 			throws Exception {
 		Map<String, Object> finalPaths = new HashMap<>();
 		BASE_FOLDERS folder = AppUtil.getFolder(folderStr);
@@ -457,7 +457,7 @@ public class FileUploadService {
 						String fileSize = String.valueOf(java.nio.file.Files.size(f.toPath()));
 						String fileName = f.getName();
 						FileUploadModel model = uploadFile(f.getAbsolutePath(), folder.getFolder(),
-								existingHash == null ? hash : existingHash, fileName,module);
+								existingHash == null ? hash : existingHash, fileName, module);
 						String uri = model.getUri();
 						uri = uri.substring(uri.lastIndexOf(File.separatorChar) + 1);
 						uploadedMetaDataService.saveUploadedFileMetadata(userId, fileName, uri,
@@ -485,21 +485,21 @@ public class FileUploadService {
 		return finalPaths;
 	}
 
-	public  void moveFilesToMyUploads(Long userId, MODULE module, String sourceDir) throws Exception {
+	public void moveFilesToMyUploads(Long userId, MODULE module, String sourceDir) throws Exception {
 		File f = new File(sourceDir);
 		File[] fileList = f.listFiles();
-		String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads + File.separatorChar;
+		String myUploadsPath = storageBasePath + File.separatorChar + BASE_FOLDERS.myUploads + File.separatorChar
+				+ userId;
 		if (!f.exists() && fileList.length <= 0) {
 			throw new Exception("Specified folder is empty or Invalid");
 		}
 		for (File file : fileList) {
-			
-			CompressedFileUploaderThread fileUploadThread = new CompressedFileUploaderThread(userId,file,myUploadsPath, sourceDir,module);
+			CompressedFileUploaderThread fileUploadThread = new CompressedFileUploaderThread(userId, file,
+					myUploadsPath, sourceDir, module);
 			Thread thread = new Thread(fileUploadThread);
 			thread.start();
 		}
 	}
-
 
 	private boolean writeToFile(InputStream inputStream, String fileLocation) {
 		try {
@@ -555,8 +555,8 @@ public class FileUploadService {
 				} else {
 					f = new File(myUploadsPath + File.separatorChar + hash + File.separatorChar
 							+ file.getFormDataContentDisposition().getFileName());
-					savedFiles.add(saveFile(file.getEntityAs(InputStream.class), module, file.getFormDataContentDisposition().getFileName(),
-							hash, userId));
+					savedFiles.add(saveFile(file.getEntityAs(InputStream.class), module,
+							file.getFormDataContentDisposition().getFileName(), hash, userId));
 				}
 				boolean deleted = f.delete() && f.getParentFile().delete();
 			}
@@ -605,7 +605,7 @@ public class FileUploadService {
 					filesWithPath.add(files.get(file));
 				}
 			}
-			Map<String, Object> result = moveFilesFromUploads(userId, filesWithPath, folder.toString(),module);
+			Map<String, Object> result = moveFilesFromUploads(userId, filesWithPath, folder.toString(), module);
 			if (result != null && !result.isEmpty()) {
 				for (Map.Entry<String, Object> file : result.entrySet()) {
 					String fileNameWithPath = file.getKey();
