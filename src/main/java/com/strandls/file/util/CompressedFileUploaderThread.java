@@ -69,32 +69,15 @@ public class CompressedFileUploaderThread implements Runnable {
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(file);
 		if (probeContentType.contains("7z")) {
-			List<File> extractedFiles = extract7ZipFile(file, sourceDir);
-			for (File extFile : extractedFiles) {
-				boolean allowedContentType = AppUtil.filterFileTypeForModule(tika.detect(extFile), module);
-				if (!allowedContentType) {
-					extractedFiles.forEach((item) -> {
-						item.delete();
-					});
-					throw new Exception("Invalid file type. Allowed types are "
-							+ String.join(", ", AppUtil.ALLOWED_CONTENT_TYPES.get(module)));
-				}
-				InputStream targetStream = new FileInputStream(extFile);
-				String hash = UUID.randomUUID().toString();
-
-				fileUploadService.saveFile(targetStream, module, extFile.getName(), hash, userId);
-				extFile.delete();
-			}
-
+			extract7ZipFile(file, sourceDir);
 		} else if (probeContentType.endsWith("zip")) {
 			AppUtil.parseZipFiles(absDestinationPath, file.getCanonicalPath(), module);
 		}
 		System.out.println("***Completed compressed file extraction to:  "+absDestinationPath+"***");
 	}
 
-	public List<File> extract7ZipFile(File file, String basePath) {
-
-		List<File> extractFileList = new ArrayList<File>();
+	public void extract7ZipFile(File file, String basePath) throws Exception {
+		Tika tika = new Tika();
 		try (SevenZFile sevenZFile = new SevenZFile(file)) {
 			SevenZArchiveEntry entry;
 			while ((entry = sevenZFile.getNextEntry()) != null) {
@@ -102,13 +85,23 @@ public class CompressedFileUploaderThread implements Runnable {
 				byte[] content = new byte[(int) entry.getSize()];
 				sevenZFile.read(content);
 				Files.write(content, outFile);
-				extractFileList.add(outFile);
+				boolean allowedContentType = AppUtil.filterFileTypeForModule(tika.detect(outFile), module);
+				if (!allowedContentType) {
+					outFile.delete();
+					throw new Exception("Invalid file type. Allowed types are "
+							+ String.join(", ", AppUtil.ALLOWED_CONTENT_TYPES.get(module)));
+				}
+				InputStream targetStream = new FileInputStream(outFile);
+				String hash = UUID.randomUUID().toString();
+
+				fileUploadService.saveFile(targetStream, module, outFile.getName(), hash, userId);
+				outFile.delete();
+				
 			}
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return extractFileList;
 	}
 
 }
