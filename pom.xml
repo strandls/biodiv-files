@@ -1,6 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.strandls.biodiv</groupId>
@@ -8,9 +6,8 @@
 	<packaging>war</packaging>
 	<version>1.0.0</version>
 
-	<name>Biodiv Files API</name>
-	<!-- FIXME change it to the project's web site -->
-	<url>http://maven.apache.org</url>
+	<name>biodiv-files</name>
+	<url>https://github.com/strandls/biodiv-files</url>
 
 	<properties>
 		<!-- Code -->
@@ -149,7 +146,6 @@
 		</dependency>
 
 
-
 		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -253,7 +249,7 @@
 			<groupId>org.tukaani</groupId>
 			<artifactId>xz</artifactId>
 			<version>1.8</version>
-		</dependency>		
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.opencsv/opencsv -->
 		<dependency>
 			<groupId>com.opencsv</groupId>
@@ -287,7 +283,7 @@
 			<plugin>
 				<!-- Download Swagger UI webjar. -->
 				<artifactId>maven-dependency-plugin</artifactId>
-				<version>${maven-dependency-plugin.version}</version><!--$NO-MVN-MAN-VER$ -->
+				<version>${maven-dependency-plugin.version}</version> <!--$NO-MVN-MAN-VER$ -->
 				<executions>
 					<execution>
 						<phase>prepare-package</phase>
