@@ -13,9 +13,7 @@
 	<url>http://maven.apache.org</url>
 
 	<properties>
-
 		<!-- Code -->
-
 		<org.pac4j.version>3.7.0</org.pac4j.version>
 		<jax-rs-pac4j.version>2.3.0</jax-rs-pac4j.version>
 
@@ -40,6 +38,11 @@
 		<srcDir>src/main/webapp</srcDir>
 		<base-path>/files-api/api</base-path>
 		<location>com.strandls.file</location>
+
+		<!-- Sonar Cloud -->
+		<sonar.projectKey>strandls_biodiv-files</sonar.projectKey>
+		<sonar.organization>strandls</sonar.organization>
+		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 	</properties>
 
 	<distributionManagement>
