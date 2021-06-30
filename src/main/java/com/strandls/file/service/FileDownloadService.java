@@ -41,7 +41,7 @@ public class FileDownloadService {
 		try {
 			properties.load(in);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 
 		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
@@ -242,12 +242,10 @@ public class FileDownloadService {
 			return Response.ok(sout)
 					.type(preserve ? contentType : format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
 					.header("Content-Length", contentLength).cacheControl(AppUtil.getCacheControl()).build();
-		} catch (FileNotFoundException fe) {
-			fe.printStackTrace();
+		} catch (FileNotFoundException fe) {		
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			logger.error(ex.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
@@ -347,11 +345,9 @@ public class FileDownloadService {
 			return Response.ok(sout).type(contentType).header("Content-Length", contentLength)
 					.cacheControl(AppUtil.getCacheControl()).build();
 		} catch (FileNotFoundException fe) {
-			fe.printStackTrace();
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			logger.error(ex.getMessage());
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}

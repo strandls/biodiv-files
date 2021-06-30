@@ -19,6 +19,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.tika.io.FilenameUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -30,7 +31,12 @@ import com.strandls.file.model.FileDownloadCredentials;
 import com.strandls.file.model.FileDownloads;
 import com.strandls.file.util.AppUtil;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class FileAccessService {
+
+	private static final Logger logger = LoggerFactory.getLogger(FileAccessService.class);
 
 	String storageBasePath = null;
 
@@ -41,7 +47,7 @@ public class FileAccessService {
 		try {
 			properties.load(in);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 
 		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv");
@@ -62,8 +68,9 @@ public class FileAccessService {
 			Query<FileDownloadCredentials> query = session.createQuery(sql);
 			query.setParameter("key", accessKey);
 			credentials = query.getSingleResult();			
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+
 		}
 		return credentials;
 	}
@@ -75,8 +82,8 @@ public class FileAccessService {
 			download.setDate(new Date());
 			download.setFileName(fileName);
 			download = fileAccessDao.save(download);
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
 		return download;
 	}
@@ -116,8 +123,9 @@ public class FileAccessService {
 	}
 	
 	public Response genericFileDownload(String filePath ) throws IOException {
-		File inputFile = new File(filePath);
-		InputStream in = new FileInputStream(filePath);
+		String path = FilenameUtils.normalize(filePath);
+		File inputFile = new File(path);
+		InputStream in = new FileInputStream(path);
 		String contentType = URLConnection.guessContentTypeFromStream(in);
 		StreamingOutput sout;
 		sout = new StreamingOutput() {

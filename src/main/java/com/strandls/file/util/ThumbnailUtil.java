@@ -5,10 +5,14 @@ import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.imageio.ImageIO;
 
 public class ThumbnailUtil implements Runnable {
+
+	private static final Logger logger = LoggerFactory.getLogger(ThumbnailUtil.class);
+
 
 	private static final int GALLERY_WIDTH = 500;
 	private static final int GALLERY_HEIGHT = 300;
@@ -37,7 +41,7 @@ public class ThumbnailUtil implements Runnable {
 		try {
 			generateMultipleFiles(filePath, dirPath, filename, extension);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 	}
 

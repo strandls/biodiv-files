@@ -12,12 +12,15 @@ import java.util.UUID;
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
 import org.apache.commons.compress.archivers.sevenz.SevenZFile;
 import org.apache.tika.Tika;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 import com.strandls.file.service.FileUploadService;
 import com.strandls.file.util.AppUtil.MODULE;
 
 public class CompressedFileUploaderThread implements Runnable {
+	private static final Logger logger = LoggerFactory.getLogger(CompressedFileUploaderThread.class);
 
 	
 	private Long userId;
@@ -59,7 +62,7 @@ public class CompressedFileUploaderThread implements Runnable {
 		try {
 			extractFilesToMyUploads(userId, file, absDestinationPath, sourceDir, module);
 		} catch (Exception e) {
-			e.printStackTrace();
+		  logger.error(e.getMessage());
 		}
 
 	}
@@ -100,7 +103,7 @@ public class CompressedFileUploaderThread implements Runnable {
 			}
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			 logger.error(e.getMessage());
 		}
 	}
 

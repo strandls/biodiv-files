@@ -8,6 +8,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +27,8 @@ import java.nio.file.Paths;
 @Path(ApiContants.GET)
 @Api("Download")
 public class FileDownloadApi {
+    
+	private static final Logger logger = LoggerFactory.getLogger(FileDownloadApi.class);
 
 	@Inject
 	private FileDownloadService fileDownloadService;
@@ -149,7 +153,7 @@ public class FileDownloadApi {
 					new LinkOption[] { LinkOption.NOFOLLOW_LINKS }))
 				return accessService.genericFileDownload(path + File.separator + fileName);
 		} catch (IOException e) {
-			e.printStackTrace();
+			 logger.error(e.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 
 		}

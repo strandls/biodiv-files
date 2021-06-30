@@ -6,6 +6,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.strandls.file.ApiContants;
 import com.strandls.file.model.FileDownloadCredentials;
@@ -13,6 +15,8 @@ import com.strandls.file.service.FileAccessService;
 
 @Path(ApiContants.DOWNLOAD)
 public class FileDownloadOthers {
+    
+	private static final Logger logger = LoggerFactory.getLogger(FileDownloadOthers.class);
 
 	@Inject
 	private FileAccessService accessService;
@@ -27,7 +31,7 @@ public class FileDownloadOthers {
 			}
 			return Response.status(Status.FORBIDDEN).build();
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			 logger.error(ex.getMessage());
 			return Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build();
 		}
 	}

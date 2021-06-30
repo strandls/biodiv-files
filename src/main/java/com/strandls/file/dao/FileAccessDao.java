@@ -5,9 +5,14 @@ import org.hibernate.SessionFactory;
 
 import javax.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.strandls.file.model.FileDownloads;
 
 public class FileAccessDao extends AbstractDao<FileDownloads, Long> {
+
+	private static final Logger logger = LoggerFactory.getLogger(FileAccessDao.class);
 
 	@Inject
 	protected FileAccessDao(SessionFactory sessionFactory) {
@@ -22,7 +27,7 @@ public class FileAccessDao extends AbstractDao<FileDownloads, Long> {
 		try {
 			entity = session.get(FileDownloads.class, id);
 		} catch (Exception e) {
-			e.printStackTrace();
+			 logger.error(e.getMessage());
 		} finally {
 			session.close();
 		}

@@ -64,8 +64,4 @@ public abstract class  AbstractService<T> {
 			throw re;
 		}
 	}
-	
-	public T findByPropertyWithCondtion(String property, String value, String condition) {
-		return dao.findByPropertyWithCondition(property, value, condition);
-	}
 }

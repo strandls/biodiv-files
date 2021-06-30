@@ -20,6 +20,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -36,6 +38,7 @@ import com.strandls.file.service.ServiceModule;
 
 public class FileServeletContextListener extends GuiceServletContextListener {
 
+private static final Logger logger = LoggerFactory.getLogger(FileServeletContextListener.class);
 	private Scheduler scheduler;
 
 	@Override
@@ -52,7 +55,7 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 						configuration.addAnnotatedClass(cls);
 					}
 				} catch (ClassNotFoundException | IOException | URISyntaxException e) {
-					e.printStackTrace();
+				 logger.error(e.getMessage());
 				}
 
 				configuration = configuration.configure();
@@ -72,7 +75,7 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 					channel = connection.setRabbitMQConnetion();
 					bind(Channel.class).toInstance(channel);
 				} catch (Exception ex) {
-					ex.printStackTrace();
+					logger.error(ex.getMessage());
 				}
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(ServletContainer.class, props);
@@ -86,7 +89,7 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 			quScheduler.scheduleJob(scheduler);
 
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			logger.error(ex.getMessage());
 		}
 
 		return injector;
@@ -153,7 +156,7 @@ public class FileServeletContextListener extends GuiceServletContextListener {
 			}
 			channel.getConnection().close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 		super.contextDestroyed(servletContextEvent);
 	}

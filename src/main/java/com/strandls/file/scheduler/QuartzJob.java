@@ -126,7 +126,6 @@ public class QuartzJob implements Job {
 			}
 			System.out.println("\n\n***** SCHEDULER ENDS *****\n\n");
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			logger.error(ex.getMessage());
 		} finally {
 			if (session.isOpen()) {
@@ -149,7 +148,7 @@ public class QuartzJob implements Job {
 		try {
 			attributes = Files.readAttributes(Paths.get(tmp.toURI()), BasicFileAttributes.class);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 		LocalDate creation = Instant.ofEpochMilli(attributes.creationTime().toMillis()).atZone(ZoneId.systemDefault())
 				.toLocalDate();
@@ -162,7 +161,7 @@ public class QuartzJob implements Job {
 		try {
 			attributes = Files.readAttributes(Paths.get(tmp.toURI()), BasicFileAttributes.class);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 		LocalDateTime creation = Instant.ofEpochMilli(attributes.creationTime().toMillis())
 				.atZone(ZoneId.systemDefault()).toLocalDateTime();

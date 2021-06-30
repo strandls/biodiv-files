@@ -1,8 +1,13 @@
 package com.strandls.file.util;
 
 import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PropertyFileUtil {
+
+    private static final Logger logger = LoggerFactory.getLogger(PropertyFileUtil.class);
+
 	
 	public static Properties fetchProperty(String fileName) {
         Properties properties = new Properties();
@@ -11,7 +16,7 @@ public class PropertyFileUtil {
             properties.load(classLoader.getResourceAsStream(fileName));
         } catch (Exception e) {
         	properties = null;
-            e.printStackTrace();
+            logger.error(e.getMessage());
         }
         return properties;
     }
@@ -24,7 +29,7 @@ public class PropertyFileUtil {
             properties.load(classLoader.getResourceAsStream(fileName));
             result = properties.getProperty(propertyName);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
         } finally {
         }
 		return result;

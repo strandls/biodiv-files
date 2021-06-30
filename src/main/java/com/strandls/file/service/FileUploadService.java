@@ -45,7 +45,12 @@ import com.strandls.file.util.CompressedFileUploaderThread;
 import com.strandls.file.util.SheetUtil;
 import com.strandls.file.util.ThumbnailUtil;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class FileUploadService {
+	private static final Logger logger = LoggerFactory.getLogger(FileUploadService.class);
+
 
 	@Inject
 	private UploadedMetaDataService uploadedMetaDataService;
@@ -60,7 +65,7 @@ public class FileUploadService {
 		try {
 			properties.load(in);
 		} catch (IOException e) {
-			e.printStackTrace();
+				logger.error(e.getMessage());
 		}
 		sdf = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss");
 
@@ -337,7 +342,7 @@ public class FileUploadService {
 							uploadedDate = new Date(attributes.creationTime().toMillis());
 							uploadModel.setDateUploaded(uploadedDate);
 						} catch (IOException e) {
-							e.printStackTrace();
+						 logger.error(e.getMessage());
 						}
 						uploadModel.setPath(uri);
 						uploadModel.setType(probeContentType);
@@ -347,7 +352,7 @@ public class FileUploadService {
 			files.addAll(filesList);
 			Collections.sort(files, new UploadDateSort());
 		} catch (Exception ex) {
-			ex.printStackTrace();
+				logger.error(ex.getMessage());;
 		}
 		return files;
 	}
@@ -450,7 +455,7 @@ public class FileUploadService {
 
 			for (String file : fileList) {
 				File folderFile = new File(folderBasePath + file);
-				if (file.startsWith(File.separatorChar + "ibpmu-")) {
+			if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					File f = new File(basePath + file);
 					System.out.println("Folder base path" + f.exists());
 					if (f.exists()) {
@@ -480,7 +485,7 @@ public class FileUploadService {
 				}
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			logger.error(ex.getMessage());
 		}
 		return finalPaths;
 	}
@@ -522,7 +527,7 @@ public class FileUploadService {
 
 			return true;
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 		return false;
 	}
@@ -561,7 +566,7 @@ public class FileUploadService {
 				boolean deleted = f.delete() && f.getParentFile().delete();
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			logger.error(ex.getMessage());
 		}
 		return savedFiles;
 	}
@@ -583,7 +588,7 @@ public class FileUploadService {
 			try {
 				filesMap.put(f.getName(), f.getCanonicalPath().substring(basePath.length()));
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(e.getMessage());
 			}
 		});
 
@@ -614,7 +619,7 @@ public class FileUploadService {
 				}
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+		 logger.error(ex.getMessage());
 		}
 		return finalPaths;
 	}

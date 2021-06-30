@@ -29,8 +29,10 @@ import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
 
-public class AppUtil {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+public class AppUtil {
 	private static final List<String> PREVENTIVE_TOKENS = Arrays.asList("&", "|", "`", "$", ";");
 	private static final int QUALITY = 90;
 
@@ -183,7 +185,7 @@ public class AppUtil {
 		try {
 			isFileGenerated = executeCommandWithExitValue(command);
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			logger.error(ex.getMessage());
 		}
 		return isFileGenerated;
 	}
@@ -318,7 +320,7 @@ public class AppUtil {
 			String delimiter = "-quality " + String.valueOf(QUALITY);
 			resizedImage = new File(command.substring(command.indexOf(delimiter) + delimiter.length()).trim());
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			logger.error(ex.getMessage());
 		}
 		return resizedImage;
 	}
@@ -339,7 +341,7 @@ public class AppUtil {
 				p.waitFor();
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			logger.error(ex.getMessage());
 		}
 		return output.toString();
 	}
@@ -354,7 +356,7 @@ public class AppUtil {
 				output = p.waitFor(5, TimeUnit.SECONDS);
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			logger.error(ex.getMessage());
 		}
 		return output;
 	}
@@ -383,7 +385,7 @@ public class AppUtil {
 				value = new Double(h + (m / 60) + (s / 3600));
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			logger.error(ex.getMessage());
 		}
 		return value;
 	}
