@@ -70,50 +70,10 @@ public class CompressedFileUploaderThread implements Runnable {
 			MODULE module) throws Exception {
 		Tika tika = new Tika();
 		String probeContentType = tika.detect(file);
-		if (probeContentType.contains("7z")) {
-			extract7ZipFile(file, sourceDir);
-		} else if (probeContentType.endsWith("zip")) {
+		if (probeContentType.endsWith("zip")) {
 			AppUtil.parseZipFiles(absDestinationPath, file.getCanonicalPath(), module);
 		}
 		System.out.println("***Completed compressed file extraction to:  " + absDestinationPath + "***");
-	}
-
-	private void cleanUp(Path path) {
-		try {
-			Files.delete(path);
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		}
-
-	}
-
-	public void extract7ZipFile(File file, String basePath) throws Exception {
-		Tika tika = new Tika();
-		try (SevenZFile sevenZFile = new SevenZFile(file)) {
-			SevenZArchiveEntry entry;
-			while ((entry = sevenZFile.getNextEntry()) != null) {
-				File outFile = new File(basePath + entry.getName());
-				Path path = Paths.get(basePath + entry.getName());
-				byte[] content = new byte[(int) entry.getSize()];
-				sevenZFile.read(content);
-				com.google.common.io.Files.write(content, outFile);
-				boolean allowedContentType = AppUtil.filterFileTypeForModule(tika.detect(outFile), module);
-				if (!allowedContentType) {
-					cleanUp(path);
-					throw new Exception("Invalid file type. Allowed types are "
-							+ String.join(", ", AppUtil.ALLOWED_CONTENT_TYPES.get(module)));
-				}
-				InputStream targetStream = new FileInputStream(outFile);
-				String hash = UUID.randomUUID().toString();
-
-				fileUploadService.saveFile(targetStream, module, outFile.getName(), hash, userId);
-				cleanUp(path);
-
-			}
-
-		} catch (IOException e) {
-			logger.error(e.getMessage());
-		}
 	}
 
 }

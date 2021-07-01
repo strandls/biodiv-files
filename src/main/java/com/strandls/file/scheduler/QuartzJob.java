@@ -66,10 +66,9 @@ public class QuartzJob implements Job {
 
 	@Override
 	public void execute(JobExecutionContext context) {
-		Session session = null;
+		Session session = sessionFactory.openSession();
 		try {
 			System.out.println("\n\n***** SCHEDULER STARTS *****\n\n");
-			session = sessionFactory.openSession();
 			RabbitMQProducer producer = new RabbitMQProducer(channel);
 			try (Stream<Path> stream = Files.list(Paths.get(BASE_PATH)).filter(Files::isDirectory)) {
 				List<Path> paths = stream.collect(Collectors.toList());
