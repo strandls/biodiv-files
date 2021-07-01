@@ -47,7 +47,7 @@ public class FileDownloadService {
 		storageBasePath = properties.getProperty("storage_dir", "/home/apps/biodiv-image");
 	}
 
-	public Response getFile(String hashKey, String fileName, String imageVariation) throws FileNotFoundException {
+	public Response getFile(String hashKey, String fileName, String imageVariation) throws IOException {
 		if (!ApiContants.ORIGINAL.equals(imageVariation)) {
 			String extension = Files.getFileExtension(fileName);
 			String fileNameWithoutExtension = Files.getNameWithoutExtension(fileName);
@@ -56,20 +56,23 @@ public class FileDownloadService {
 
 		String fileLocation = storageBasePath + File.separatorChar + hashKey + File.separatorChar + fileName;
 
-		InputStream in = new FileInputStream(new File(fileLocation));
 		StreamingOutput sout;
-		sout = new StreamingOutput() {
-			@Override
-			public void write(OutputStream out) throws IOException, WebApplicationException {
-				byte[] buf = new byte[8192];
-				int c;
-				while ((c = in.read(buf, 0, buf.length)) > 0) {
-					out.write(buf, 0, c);
-					out.flush();
+		try (InputStream in = new FileInputStream(new File(fileLocation))) {
+
+			sout = new StreamingOutput() {
+				@Override
+				public void write(OutputStream out) throws IOException, WebApplicationException {
+					byte[] buf = new byte[8192];
+					int c;
+					while ((c = in.read(buf, 0, buf.length)) > 0) {
+						out.write(buf, 0, c);
+						out.flush();
+					}
+					out.close();
 				}
-				out.close();
-			}
-		};
+			};
+		}
+
 		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation))
 				.cacheControl(AppUtil.getCacheControl()).build();
 	}
@@ -109,20 +112,22 @@ public class FileDownloadService {
 		ImageIO.write(outputImage, extension, output);
 
 		@SuppressWarnings("resource")
-		InputStream in = new FileInputStream(output);
 		StreamingOutput sout;
-		sout = new StreamingOutput() {
-			@Override
-			public void write(OutputStream out) throws IOException, WebApplicationException {
-				byte[] buf = new byte[8192];
-				int c;
-				while ((c = in.read(buf, 0, buf.length)) > 0) {
-					out.write(buf, 0, c);
-					out.flush();
+		try (InputStream in = new FileInputStream(output)) {
+			sout = new StreamingOutput() {
+				@Override
+				public void write(OutputStream out) throws IOException, WebApplicationException {
+					byte[] buf = new byte[8192];
+					int c;
+					while ((c = in.read(buf, 0, buf.length)) > 0) {
+						out.write(buf, 0, c);
+						out.flush();
+					}
+					out.close();
 				}
-				out.close();
-			}
-		};
+			};
+		}
+
 		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation))
 				.cacheControl(AppUtil.getCacheControl()).build();
 	}
@@ -132,7 +137,6 @@ public class FileDownloadService {
 
 		String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
 		String fileLocation = dirPath + fileName;
-//		File file = new File(fileLocation);
 		File file = AppUtil.findFile(fileLocation);
 		if (file == null) {
 			return Response.status(Status.NOT_FOUND).entity("File not found").build();
@@ -171,21 +175,23 @@ public class FileDownloadService {
 			webpOutput = new File(dirPath + fileNameWithoutExtension + "_" + imgWidth + "*" + imgHeight + "." + format);
 			ImageUtil.toWEBP(req, output, webpOutput);
 		}
-		InputStream in = new FileInputStream(isWebp ? webpOutput : output);
 		StreamingOutput sout;
-		sout = new StreamingOutput() {
-			@Override
-			public void write(OutputStream out) throws IOException, WebApplicationException {
-				byte[] buf = new byte[8192];
-				int c;
-				while ((c = in.read(buf, 0, buf.length)) > 0) {
-					out.write(buf, 0, c);
-					out.flush();
+		try (InputStream in = new FileInputStream(isWebp ? webpOutput : output)) {
+
+			sout = new StreamingOutput() {
+				@Override
+				public void write(OutputStream out) throws IOException, WebApplicationException {
+					byte[] buf = new byte[8192];
+					int c;
+					while ((c = in.read(buf, 0, buf.length)) > 0) {
+						out.write(buf, 0, c);
+						out.flush();
+					}
+					out.close();
 				}
-				in.close();
-				out.close();
-			}
-		};
+			};
+		}
+
 		return Response.ok(sout).type(isWebp ? "image/webp" : contentType).cacheControl(AppUtil.getCacheControl())
 				.build();
 	}
@@ -223,26 +229,26 @@ public class FileDownloadService {
 			}
 			System.out.println("\n\n***** Resized File: " + resizedFile.getName() + " *****\n\n");
 			String contentType = tika.detect(resizedFile.getName());
-			InputStream in = new FileInputStream(resizedFile);
 			long contentLength = resizedFile.length();
 			StreamingOutput sout;
-			sout = new StreamingOutput() {
-				@Override
-				public void write(OutputStream out) throws IOException, WebApplicationException {
-					byte[] buf = new byte[8192];
-					int c;
-					while ((c = in.read(buf, 0, buf.length)) > 0) {
-						out.write(buf, 0, c);
-						out.flush();
+			try (InputStream in = new FileInputStream(resizedFile)) {
+				sout = new StreamingOutput() {
+					@Override
+					public void write(OutputStream out) throws IOException, WebApplicationException {
+						byte[] buf = new byte[8192];
+						int c;
+						while ((c = in.read(buf, 0, buf.length)) > 0) {
+							out.write(buf, 0, c);
+							out.flush();
+						}
+						out.close();
 					}
-					in.close();
-					out.close();
-				}
-			};
+				};
+			}
 			return Response.ok(sout)
 					.type(preserve ? contentType : format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
 					.header("Content-Length", contentLength).cacheControl(AppUtil.getCacheControl()).build();
-		} catch (FileNotFoundException fe) {		
+		} catch (FileNotFoundException fe) {
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();
 		} catch (Exception ex) {
@@ -254,30 +260,29 @@ public class FileDownloadService {
 	public Response getRawResource(String directory, String fileName) throws Exception {
 		try {
 			String inputFile = storageBasePath + File.separatorChar + directory + File.separatorChar + fileName;
-//		File file = new File(inputFile);
 			File file = AppUtil.findFile(inputFile);
 			if (file == null) {
 				return Response.status(Status.NOT_FOUND).entity("File not found").build();
 			}
-			InputStream in = new FileInputStream(file.getAbsolutePath());
+			StreamingOutput sout;
 			Tika tika = new Tika();
 			String contentType = tika.detect(file.getName());
 			long contentLength = file.length();
-			StreamingOutput sout;
-			sout = new StreamingOutput() {
-
-				@Override
-				public void write(OutputStream output) throws IOException, WebApplicationException {
-					byte[] buf = new byte[8192];
-					int c;
-					while ((c = in.read(buf, 0, buf.length)) > 0) {
-						output.write(buf, 0, c);
-						output.flush();
+			try (InputStream in = new FileInputStream(file.getAbsolutePath())) {
+				sout = new StreamingOutput() {
+					@Override
+					public void write(OutputStream output) throws IOException, WebApplicationException {
+						byte[] buf = new byte[8192];
+						int c;
+						while ((c = in.read(buf, 0, buf.length)) > 0) {
+							output.write(buf, 0, c);
+							output.flush();
+						}
+						output.close();
 					}
-					in.close();
-					output.close();
-				}
-			};
+				};
+			}
+
 			return Response.ok(sout).type(contentType).header("Content-Length", contentLength)
 					.cacheControl(AppUtil.getCacheControl()).build();
 		} catch (FileNotFoundException fe) {
@@ -290,7 +295,7 @@ public class FileDownloadService {
 	}
 
 	public Response getLogo(HttpServletRequest req, String directory, String fileName, Integer width, Integer height)
-			throws Exception {
+			throws FileNotFoundException {
 		try {
 
 			String dirPath = storageBasePath + File.separatorChar + directory + File.separatorChar;
@@ -326,22 +331,23 @@ public class FileDownloadService {
 				resizedFile = thumbnailFile;
 			}
 			String contentType = tika.detect(resizedFile.getName());
-			InputStream in = new FileInputStream(resizedFile);
 			long contentLength = resizedFile.length();
 			StreamingOutput sout;
-			sout = new StreamingOutput() {
-				@Override
-				public void write(OutputStream out) throws IOException, WebApplicationException {
-					byte[] buf = new byte[8192];
-					int c;
-					while ((c = in.read(buf, 0, buf.length)) > 0) {
-						out.write(buf, 0, c);
-						out.flush();
+			try (InputStream in = new FileInputStream(resizedFile)) {
+				sout = new StreamingOutput() {
+					@Override
+					public void write(OutputStream out) throws IOException, WebApplicationException {
+						byte[] buf = new byte[8192];
+						int c;
+						while ((c = in.read(buf, 0, buf.length)) > 0) {
+							out.write(buf, 0, c);
+							out.flush();
+						}
+						out.close();
 					}
-					in.close();
-					out.close();
-				}
-			};
+				};
+			}
+
 			return Response.ok(sout).type(contentType).header("Content-Length", contentLength)
 					.cacheControl(AppUtil.getCacheControl()).build();
 		} catch (FileNotFoundException fe) {

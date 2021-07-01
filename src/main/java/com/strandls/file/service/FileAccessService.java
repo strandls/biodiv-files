@@ -67,10 +67,12 @@ public class FileAccessService {
 		try {
 			Query<FileDownloadCredentials> query = session.createQuery(sql);
 			query.setParameter("key", accessKey);
-			credentials = query.getSingleResult();			
+			credentials = query.getSingleResult();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 
+		} finally {
+			session.close();
 		}
 		return credentials;
 	}
@@ -121,8 +123,8 @@ public class FileAccessService {
 				.header("Content-Disposition", "attachment; filename=\"" + inputFile.getName() + "\"")
 				.cacheControl(AppUtil.getCacheControl()).build();
 	}
-	
-	public Response genericFileDownload(String filePath ) throws IOException {
+
+	public Response genericFileDownload(String filePath) throws IOException {
 		String path = FilenameUtils.normalize(filePath);
 		File inputFile = new File(path);
 		InputStream in = new FileInputStream(path);

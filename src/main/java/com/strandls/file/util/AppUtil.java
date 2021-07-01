@@ -141,8 +141,6 @@ public class AppUtil {
 				files.add(upload);
 			}
 			System.out.println("=====================Completed UnZip bulk Uploads=================");
-		} catch (ZipException ex) {
-			logger.error(ex.getMessage());
 		} catch (Exception ex) {
 			logger.error(ex.getMessage());
 		}
@@ -340,6 +338,9 @@ public class AppUtil {
 				}
 				p.waitFor();
 			}
+		} catch (InterruptedException ie) {
+			logger.error("InterruptedException: ", ie);
+			Thread.currentThread().interrupt();
 		} catch (Exception ex) {
 			logger.error(ex.getMessage());
 		}
@@ -355,6 +356,9 @@ public class AppUtil {
 				p = Runtime.getRuntime().exec(commands);
 				output = p.waitFor(5, TimeUnit.SECONDS);
 			}
+		} catch (InterruptedException ie) {
+			logger.error("InterruptedException: ", ie);
+			Thread.currentThread().interrupt();
 		} catch (Exception ex) {
 			logger.error(ex.getMessage());
 		}
