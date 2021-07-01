@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -93,10 +94,12 @@ public class FileAccessService {
 	public Response downloadFile(FileDownloadCredentials credentials) throws IOException {
 		String dirPath = storageBasePath + File.separatorChar + "data-archive" + File.separatorChar + "gbif"
 				+ File.separatorChar;
-
 		Path path = Paths.get(dirPath);
-		Optional<Path> file = Files.list(path).filter(f -> !Files.isDirectory(f))
-				.max(Comparator.comparingLong(f -> f.toFile().lastModified()));
+		Optional<Path> file;
+		try (Stream<Path> fileList = Files.list(path)) {
+			file = fileList.filter(f -> !Files.isDirectory(f))
+					.max(Comparator.comparingLong(f -> f.toFile().lastModified()));
+		}
 		if (!file.isPresent()) {
 			throw new FileNotFoundException("Folder is empty");
 		}

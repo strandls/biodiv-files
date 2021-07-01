@@ -13,9 +13,8 @@ import org.hibernate.Transaction;
 
 public abstract class AbstractDao<T, K extends Serializable> {
 
-
 	protected SessionFactory sessionFactory;
-	
+
 	protected Class<? extends T> daoType;
 
 	protected AbstractDao(SessionFactory sessionFactory) {
@@ -29,9 +28,9 @@ public abstract class AbstractDao<T, K extends Serializable> {
 		try {
 			tx = session.beginTransaction();
 			session.save(entity);
-			tx.commit();			
+			tx.commit();
 		} catch (Exception e) {
-			if(tx!=null)
+			if (tx != null)
 				tx.rollback();
 			throw e;
 		} finally {
@@ -46,9 +45,9 @@ public abstract class AbstractDao<T, K extends Serializable> {
 		try {
 			tx = session.beginTransaction();
 			session.update(entity);
-			tx.commit();			
+			tx.commit();
 		} catch (Exception e) {
-			if(tx!=null)
+			if (tx != null)
 				tx.rollback();
 			throw e;
 		} finally {
@@ -63,9 +62,9 @@ public abstract class AbstractDao<T, K extends Serializable> {
 		try {
 			tx = session.beginTransaction();
 			session.delete(entity);
-			tx.commit();			
+			tx.commit();
 		} catch (Exception e) {
-			if(tx!=null)
+			if (tx != null)
 				tx.rollback();
 			throw e;
 		} finally {
@@ -78,10 +77,16 @@ public abstract class AbstractDao<T, K extends Serializable> {
 
 	@SuppressWarnings("unchecked")
 	public List<T> findAll() {
-		Session session = sessionFactory.openSession();
-		Criteria criteria = session.createCriteria(daoType);
-		List<T> entities = criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
+		List<T> entities = null;
+		try (Session session = sessionFactory.openSession()) {
+			Criteria criteria = session.createCriteria(daoType);
+			entities = criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
+			return entities;
+		} catch (Exception e) {
+
+		}
 		return entities;
+
 	}
-	
+
 }

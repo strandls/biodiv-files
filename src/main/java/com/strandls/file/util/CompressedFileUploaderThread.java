@@ -4,10 +4,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
+import java.util.UUID;
 
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
 import org.apache.commons.compress.archivers.sevenz.SevenZFile;
@@ -15,14 +16,12 @@ import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.Files;
 import com.strandls.file.service.FileUploadService;
 import com.strandls.file.util.AppUtil.MODULE;
 
 public class CompressedFileUploaderThread implements Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(CompressedFileUploaderThread.class);
 
-	
 	private Long userId;
 	private File file;
 	private String absDestinationPath;
@@ -62,7 +61,7 @@ public class CompressedFileUploaderThread implements Runnable {
 		try {
 			extractFilesToMyUploads(userId, file, absDestinationPath, sourceDir, module);
 		} catch (Exception e) {
-		  logger.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 
 	}
@@ -76,7 +75,16 @@ public class CompressedFileUploaderThread implements Runnable {
 		} else if (probeContentType.endsWith("zip")) {
 			AppUtil.parseZipFiles(absDestinationPath, file.getCanonicalPath(), module);
 		}
-		System.out.println("***Completed compressed file extraction to:  "+absDestinationPath+"***");
+		System.out.println("***Completed compressed file extraction to:  " + absDestinationPath + "***");
+	}
+
+	private void cleanUp(Path path) {
+		try {
+			Files.delete(path);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
 	}
 
 	public void extract7ZipFile(File file, String basePath) throws Exception {
@@ -85,12 +93,13 @@ public class CompressedFileUploaderThread implements Runnable {
 			SevenZArchiveEntry entry;
 			while ((entry = sevenZFile.getNextEntry()) != null) {
 				File outFile = new File(basePath + entry.getName());
+				Path path = Paths.get(basePath + entry.getName());
 				byte[] content = new byte[(int) entry.getSize()];
 				sevenZFile.read(content);
-				Files.write(content, outFile);
+				com.google.common.io.Files.write(content, outFile);
 				boolean allowedContentType = AppUtil.filterFileTypeForModule(tika.detect(outFile), module);
 				if (!allowedContentType) {
-					outFile.delete();
+					cleanUp(path);
 					throw new Exception("Invalid file type. Allowed types are "
 							+ String.join(", ", AppUtil.ALLOWED_CONTENT_TYPES.get(module)));
 				}
@@ -98,12 +107,12 @@ public class CompressedFileUploaderThread implements Runnable {
 				String hash = UUID.randomUUID().toString();
 
 				fileUploadService.saveFile(targetStream, module, outFile.getName(), hash, userId);
-				outFile.delete();
-				
+				cleanUp(path);
+
 			}
 
 		} catch (IOException e) {
-			 logger.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 	}
 

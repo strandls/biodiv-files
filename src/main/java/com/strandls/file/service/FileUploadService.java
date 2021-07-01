@@ -457,6 +457,7 @@ public class FileUploadService {
 				File folderFile = new File(folderBasePath + file);
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					File f = new File(basePath + file);
+					Path path = Paths.get(basePath + file);
 					System.out.println("Folder base path" + f.exists());
 					if (f.exists()) {
 						String fileSize = String.valueOf(java.nio.file.Files.size(f.toPath()));
@@ -472,7 +473,7 @@ public class FileUploadService {
 						fileAttributes.put("mimeType", tika.detect(fileName));
 						fileAttributes.put("size", fileSize);
 						finalPaths.put(file, fileAttributes);
-						f.getParentFile().delete();
+						java.nio.file.Files.delete(path);
 					}
 				} else if (folderFile.exists()) {
 					String folderFileSize = String.valueOf(java.nio.file.Files.size(folderFile.toPath()));
@@ -507,15 +508,13 @@ public class FileUploadService {
 	}
 
 	private boolean writeToFile(InputStream inputStream, String fileLocation) {
-		OutputStream out = null;
-		try {
-			System.out.println("\n\n FileLocation: " + fileLocation + " *****\n\n");
-			File f = new File(fileLocation);
-			if (!f.getParentFile().exists()) {
-				boolean created = f.getParentFile().mkdirs();
-				System.out.println(created ? "Folder Created" : "Not Created");
-			}
-			out = new FileOutputStream(f);
+		System.out.println("\n\n FileLocation: " + fileLocation + " *****\n\n");
+		File f = new File(fileLocation);
+		if (!f.getParentFile().exists()) {
+			boolean created = f.getParentFile().mkdirs();
+			System.out.println(created ? "Folder Created" : "Not Created");
+		}
+		try (OutputStream out = new FileOutputStream(f)) {
 			int read = 0;
 			byte[] bytes = new byte[1024];
 
@@ -523,12 +522,13 @@ public class FileUploadService {
 				out.write(bytes, 0, read);
 			}
 			out.flush();
-			out.close();
 			return true;
 		} catch (IOException e) {
 			logger.error(e.getMessage());
 		}
+
 		return false;
+
 	}
 
 	@SuppressWarnings("unused")

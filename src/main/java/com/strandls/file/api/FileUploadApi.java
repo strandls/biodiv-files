@@ -30,6 +30,8 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.pac4j.core.profile.CommonProfile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
@@ -41,6 +43,8 @@ import java.util.Map;
 @Api("Upload")
 public class FileUploadApi {
 
+	private static final Logger logger = LoggerFactory.getLogger(FileUploadApi.class);
+ 
 	@Inject
 	private FileUploadService fileUploadService;
 
@@ -115,7 +119,11 @@ public class FileUploadApi {
 			int exitCode = process.waitFor();
 			if (exitCode == 0)
 				return Response.status(Status.OK).entity("File Creation Successful!").build();
-		} catch (Exception e) {
+		}catch (InterruptedException ie) {
+			logger.error("InterruptedException: ", ie);
+			Thread.currentThread().interrupt();
+		} 
+		catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 		return Response.status(Status.BAD_REQUEST).entity("File Creation Failed").build();
