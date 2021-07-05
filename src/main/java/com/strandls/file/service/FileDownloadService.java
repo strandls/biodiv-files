@@ -11,7 +11,6 @@ import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
@@ -52,10 +51,7 @@ public class FileDownloadService {
 		}
 
 		String fileLocation = storageBasePath + File.separatorChar + hashKey + File.separatorChar + fileName;
-        StreamingOutput sout = FileUtil.fromFileToStream(new File(fileLocation));
-
-		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation))
-				.cacheControl(AppUtil.getCacheControl()).build();
+                return FileUtil.fromFileToStream(new File(fileLocation), "image/" + Files.getFileExtension(fileLocation));
 	}
 
 	public Response getCustomSizeFile(String hashKey, String fileName, int outputWidth, int outputHeight) throws IOException
@@ -91,10 +87,7 @@ public class FileDownloadService {
 		File output = new File(
 				dirPath + fileNameWithoutExtension + "_" + imageWidth + "*" + imageHeight + "." + extension);
 		ImageIO.write(outputImage, extension, output);
-                StreamingOutput sout = FileUtil.fromFileToStream(output);
-                
-		return Response.ok(sout).type("image/" + Files.getFileExtension(fileLocation))
-				.cacheControl(AppUtil.getCacheControl()).build();
+                return FileUtil.fromFileToStream(output, "image/" + Files.getFileExtension(fileLocation));
 	}
 
 	public Response getImageResource(HttpServletRequest req, String directory, String fileName, Integer width,
@@ -141,10 +134,7 @@ public class FileDownloadService {
 			ImageUtil.toWEBP(req, output, webpOutput);
 		}
                 
-                StreamingOutput sout = FileUtil.fromFileToStream(isWebp ? webpOutput : output);
-
-		return Response.ok(sout).type(isWebp ? "image/webp" : contentType).cacheControl(AppUtil.getCacheControl())
-				.build();
+                return FileUtil.fromFileToStream(isWebp ? webpOutput : output, isWebp ? "image/webp" : contentType);
 	}
 
 	public Response getImage(HttpServletRequest req, String directory, String fileName, Integer width, Integer height,
@@ -179,13 +169,10 @@ public class FileDownloadService {
 				resizedFile = thumbnailFile;
 			}
 			logger.info("[files-api] Resized File: {}.", resizedFile.getName());
-			String contentType = tika.detect(resizedFile.getName());
-			long contentLength = resizedFile.length();
-                        StreamingOutput sout = FileUtil.fromFileToStream(resizedFile);
+			String detactedContentType = tika.detect(resizedFile.getName());
+                        String contentType = preserve ? detactedContentType : format.equalsIgnoreCase("webp") ? "image/webp" : detactedContentType;
 
-			return Response.ok(sout)
-					.type(preserve ? contentType : format.equalsIgnoreCase("webp") ? "image/webp" : contentType)
-					.header("Content-Length", contentLength).cacheControl(AppUtil.getCacheControl()).build();
+                        return FileUtil.fromFileToStream(resizedFile, contentType);
 		} catch (FileNotFoundException fe) {
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();
@@ -204,11 +191,7 @@ public class FileDownloadService {
 			}
 			Tika tika = new Tika();
 			String contentType = tika.detect(file.getName());
-			long contentLength = file.length();
-                        StreamingOutput sout = FileUtil.fromFileToStream(file);
-
-			return Response.ok(sout).type(contentType).header("Content-Length", contentLength)
-					.cacheControl(AppUtil.getCacheControl()).build();
+                        return FileUtil.fromFileToStream(file, contentType);
 		} catch (FileNotFoundException fe) {
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();
@@ -253,11 +236,8 @@ public class FileDownloadService {
                             resizedFile = thumbnailFile;
 			}
 			String contentType = tika.detect(resizedFile.getName());
-			long contentLength = resizedFile.length();
-                        StreamingOutput sout = FileUtil.fromFileToStream(resizedFile);
 
-			return Response.ok(sout).type(contentType).header("Content-Length", contentLength)
-					.cacheControl(AppUtil.getCacheControl()).build();
+                        return FileUtil.fromFileToStream(resizedFile, contentType);
 		} catch (FileNotFoundException fe) {
 			logger.error(fe.getMessage());
 			return Response.status(Status.NOT_FOUND).build();
