@@ -18,6 +18,7 @@ import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -56,7 +57,7 @@ public class FileDownloadApi {
 	public Response getImage(@Context HttpServletRequest request, @PathParam("directory") String directory,
 			@PathParam("fileName") String fileName, @QueryParam("w") Integer width, @QueryParam("h") Integer height,
 			@DefaultValue("webp") @QueryParam("fm") String format, @DefaultValue("") @QueryParam("fit") String fit,
-			@DefaultValue("false") @QueryParam("preserve") String presereve) throws Exception {
+			@DefaultValue("false") @QueryParam("preserve") String presereve) throws UnsupportedEncodingException {
 		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
 		if (height == null && width == null) {
 			return Response.status(Status.BAD_REQUEST).entity("Height or Width required").build();
@@ -106,8 +107,8 @@ public class FileDownloadApi {
 	@Path("raw/{directory:.+}/{fileName}")
 	@GET
 	@ApiOperation(value = "Get the raw resource", response = StreamingOutput.class)
-	public Response getRawResource(@PathParam("directory") String directory, @PathParam("fileName") String fileName)
-			throws Exception {
+	public Response getRawResource(@PathParam("directory") String directory, @PathParam("fileName") String fileName) throws UnsupportedEncodingException
+			 {
 		fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
 		if (directory.contains("..") || fileName.contains("..")) {
 			return Response.status(Status.NOT_ACCEPTABLE).build();
@@ -135,7 +136,7 @@ public class FileDownloadApi {
 		if (directory == null || directory.isEmpty() || fileName == null || fileName.isEmpty()) {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
-		return fileDownloadService.getLogo(request, directory, fileName, width, height);
+		return fileDownloadService.getLogo(directory, fileName, width, height);
 	}
 
 	@GET
