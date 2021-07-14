@@ -1,7 +1,6 @@
 package com.strandls.file.service;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,14 +24,12 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
-import org.apache.commons.compress.archivers.sevenz.SevenZFile;
 import org.apache.tika.Tika;
-import org.glassfish.jersey.media.multipart.BodyPartEntity;
-import org.glassfish.jersey.media.multipart.ContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.pac4j.core.profile.CommonProfile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 import com.strandls.authentication_utility.util.AuthUtil;
@@ -45,9 +42,6 @@ import com.strandls.file.util.AppUtil.MODULE;
 import com.strandls.file.util.CompressedFileUploaderThread;
 import com.strandls.file.util.SheetUtil;
 import com.strandls.file.util.ThumbnailUtil;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class FileUploadService {
 	private static final Logger logger = LoggerFactory.getLogger(FileUploadService.class);
@@ -435,12 +429,7 @@ public class FileUploadService {
 	 */
 	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr, MODULE module)
 			throws Exception {
-		
-		for (String file : fileList) {
-			System.out.println("inside file moevemnt " + file);
-		}
-		
-		
+
 		Map<String, Object> finalPaths = new HashMap<>();
 		BASE_FOLDERS folder = AppUtil.getFolder(folderStr);
 		if (folder == null) {
@@ -459,15 +448,8 @@ public class FileUploadService {
 			}
 			Tika tika = new Tika();
 
-			
-			System.out.println("after all the validation has passed");
-			
 			for (String file : fileList) {
-				System.out.println("inside file moevemnt " + file);
-			}
-
-			for (String file : fileList) {
-				System.out.println("inside the file movement loop :"+ file);
+				System.out.println("inside the file movement loop :" + file);
 				File folderFile = new File(folderBasePath + file);
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					File f = new File(basePath + file);
@@ -487,7 +469,9 @@ public class FileUploadService {
 						fileAttributes.put("mimeType", tika.detect(fileName));
 						fileAttributes.put("size", fileSize);
 						finalPaths.put(file, fileAttributes);
+						System.out.println("before deleting the existing path" + path);
 						java.nio.file.Files.delete(path);
+						System.out.println("after deleting the existing path" + path);
 					}
 				} else if (folderFile.exists()) {
 					String folderFileSize = String.valueOf(java.nio.file.Files.size(folderFile.toPath()));
@@ -499,7 +483,9 @@ public class FileUploadService {
 					finalPaths.put(file, fileAttributes);
 				}
 			}
+			System.out.println("to be executed");
 		} catch (Exception ex) {
+			System.out.println("exception occured");
 			logger.error(ex.getMessage());
 		}
 		return finalPaths;
