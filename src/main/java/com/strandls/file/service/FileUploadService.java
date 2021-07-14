@@ -453,7 +453,6 @@ public class FileUploadService {
 				File folderFile = new File(folderBasePath + file);
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					File f = new File(basePath + file);
-					Path path = Paths.get(basePath + file);
 					System.out.println("Folder base path" + f.exists());
 					if (f.exists()) {
 						String fileSize = String.valueOf(java.nio.file.Files.size(f.toPath()));
@@ -468,10 +467,10 @@ public class FileUploadService {
 						fileAttributes.put("name", model.getUri());
 						fileAttributes.put("mimeType", tika.detect(fileName));
 						fileAttributes.put("size", fileSize);
-						finalPaths.put(file, fileAttributes);
-						System.out.println("before deleting the existing path" + path);
-						java.nio.file.Files.delete(path);
-						System.out.println("after deleting the existing path" + path);
+						boolean isDeleted = f.getParentFile().delete();
+						if (isDeleted)
+							finalPaths.put(file, fileAttributes);
+
 					}
 				} else if (folderFile.exists()) {
 					String folderFileSize = String.valueOf(java.nio.file.Files.size(folderFile.toPath()));
@@ -483,9 +482,7 @@ public class FileUploadService {
 					finalPaths.put(file, fileAttributes);
 				}
 			}
-			System.out.println("to be executed");
 		} catch (Exception ex) {
-			System.out.println("exception occured");
 			logger.error(ex.getMessage());
 		}
 		return finalPaths;
