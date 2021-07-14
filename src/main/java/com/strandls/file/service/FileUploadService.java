@@ -435,6 +435,12 @@ public class FileUploadService {
 	 */
 	public Map<String, Object> moveFilesFromUploads(Long userId, List<String> fileList, String folderStr, MODULE module)
 			throws Exception {
+		
+		for (String file : fileList) {
+			System.out.println("inside file moevemnt " + file);
+		}
+		
+		
 		Map<String, Object> finalPaths = new HashMap<>();
 		BASE_FOLDERS folder = AppUtil.getFolder(folderStr);
 		if (folder == null) {
@@ -453,7 +459,15 @@ public class FileUploadService {
 			}
 			Tika tika = new Tika();
 
+			
+			System.out.println("after all the validation has passed");
+			
 			for (String file : fileList) {
+				System.out.println("inside file moevemnt " + file);
+			}
+
+			for (String file : fileList) {
+				System.out.println("inside the file movement loop :"+ file);
 				File folderFile = new File(folderBasePath + file);
 				if (file.startsWith(File.separatorChar + "ibpmu-")) {
 					File f = new File(basePath + file);
